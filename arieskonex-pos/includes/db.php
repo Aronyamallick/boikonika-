@@ -10,10 +10,14 @@ if (!defined('APP_ROOT')) {
 $configFile = APP_ROOT . '/config/config.php';
 
 if (!file_exists($configFile)) {
-    // এখনো ইনস্টল করা হয়নি
-    $installUrl = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
-    header('Location: ' . (strpos($_SERVER['SCRIPT_NAME'] ?? '', '/install/') !== false ? '' : '/install/index.php'));
-    if (strpos($_SERVER['SCRIPT_NAME'] ?? '', '/install/') === false) {
+    // এখনো ইনস্টল করা হয়নি — ইনস্টলারে পাঠানো হয়। আগে "/install/index.php" (ডোমেইন রুট)
+    // ধরে নেওয়া হতো, ফলে সাবফোল্ডারে (যেমন example.com/pos/) আপলোড করলে ভুল পাতায় যেত।
+    $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+    if (strpos($scriptName, '/install/') === false) {
+        $scriptDir = rtrim(dirname($scriptName), '/');
+        // modules/ ফোল্ডারের ভেতরের পাতা হলে এক ধাপ উপরে অ্যাপের রুট
+        $appBase = preg_match('#/modules$#', $scriptDir) ? rtrim(dirname($scriptDir), '/') : $scriptDir;
+        header('Location: ' . $appBase . '/install/index.php');
         exit;
     }
 }

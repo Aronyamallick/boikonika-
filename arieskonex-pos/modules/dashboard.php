@@ -309,22 +309,23 @@ $extraScripts = '';
 if ($canSeeStockInsights && $isOwner) {
     $extraScripts = '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script>
     const ctx = document.getElementById("salesChart");
-    new Chart(ctx, {
+    // ইন্টারনেট না থাকলে (CDN লোড না হলে) চার্ট বাদ দিয়ে বাকি পাতা স্বাভাবিক থাকবে
+    if (window.Chart && ctx) new Chart(ctx, {
         type: "line",
         data: {
             labels: ' . json_encode($graphLabels, JSON_UNESCAPED_UNICODE) . ',
             datasets: [{
                 label: ' . json_encode(t('sales_chart_label'), JSON_UNESCAPED_UNICODE) . ',
                 data: ' . json_encode($graphData) . ',
-                borderColor: "#C026D3",
-                backgroundColor: "rgba(192,38,212,.10)",
-                pointBackgroundColor: "#6D28D9",
+                borderColor: "#7C3AED",
+                backgroundColor: "rgba(124,58,237,.12)",
+                pointBackgroundColor: "#4F46E5",
                 tension: .35, fill: true, borderWidth: 2.5, pointRadius: 2
             }]
         },
         options: {
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: "#EFEAF7" } }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, grid: { color: "#EEF0FB" } }, x: { grid: { display: false } } }
         }
     });
     </script>';

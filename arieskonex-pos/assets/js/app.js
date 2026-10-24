@@ -1,4 +1,4 @@
-// মল্লিক বুক হাউজ এন্ড কম্পিউটার — শেয়ার্ড জাভাস্ক্রিপ্ট
+// Arieskonex POS — শেয়ার্ড জাভাস্ক্রিপ্ট (Developed by Arieskonex Technologies)
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -90,15 +90,129 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     initInstantNav();
+    initGlobalScanner();
 });
 
 /* ---------------------------------------------------------------------
-   ইনস্ট্যান্ট নেভিগেশন (PJAX)
-   সাইডবার / বটম-ট্যাব / স্ট্যাট-কার্ড লিঙ্কে ক্লিক করলে পুরো পেজ রিলোড
-   হয় না — নতুন পেজ ফেচ হয়ে <main> ও <title> সাথে সাথে বদলে যায়।
-   ফলাফল: ক্লিক-থেকে-স্ক্রিন পরিবর্তন প্রায় তাৎক্ষণিক হয়।
-   সতর্কতা: ক্যাশ ৩০ সেকেন্ডের জন্য রাখা হয় যাতে ডাটা অনেক পুরনো না হয়।
-   POS (sales_pos.php) ও ফর্ম-সাবমিটগুলো স্বাভাবিক নেভিগেশনে থাকে।
+   শেয়ার্ড হেল্পার
+   --------------------------------------------------------------------- */
+function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
+
+/* স্ক্যানারের একটি কী-প্রেস থেকে আসল অক্ষর বের করা।
+   কম্পিউটারের কীবোর্ড লেআউট বাংলা থাকলে স্ক্যানারের "1" হয়ে যায় "১", "P" হয়ে যায় "প" —
+   তখন বারকোড মেলে না। তাই ফিজিক্যাল কী (e.code: Digit1, KeyP ...) থেকে ইংরেজি অক্ষর নেওয়া হয়,
+   আর বাংলা অঙ্ক ইংরেজিতে রূপান্তর করা হয়। প্রিন্টযোগ্য অক্ষর না হলে null। */
+function scanCharFromEvent(e) {
+    var k = e.key || '';
+    if (k.length === 1 && k.charCodeAt(0) < 128) return k;
+    var c = e.code || '', m;
+    if ((m = /^(?:Digit|Numpad)(\d)$/.exec(c))) return m[1];
+    if ((m = /^Key([A-Z])$/.exec(c))) return e.shiftKey ? m[1] : m[1].toLowerCase();
+    if (k.length === 1) return toEnglishDigits(k);
+    return null;
+}
+
+/* ছোট টোস্ট নোটিফিকেশন (POS স্ক্যান ফিডব্যাক ইত্যাদি) — type: success | warning | danger */
+function appToast(msg, type) {
+    var wrap = document.getElementById('appToastWrap');
+    if (!wrap) {
+        wrap = document.createElement('div');
+        wrap.id = 'appToastWrap';
+        wrap.className = 'pos-toast-wrap';
+        wrap.setAttribute('aria-live', 'polite');
+        document.body.appendChild(wrap);
+    }
+    var el = document.createElement('div');
+    el.className = 'pos-toast ' + (type || 'success');
+    el.innerHTML = '<i class="bi ' + (type === 'danger' ? 'bi-x-octagon-fill' : type === 'warning' ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill') + '"></i><span></span>';
+    el.querySelector('span').textContent = msg;
+    wrap.appendChild(el);
+    while (wrap.children.length > 3) wrap.removeChild(wrap.firstChild);
+    setTimeout(function () {
+        el.classList.add('out');
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    }, type === 'danger' ? 3200 : 1800);
+}
+
+/* পাতায় কোনো ফর্মে অসংরক্ষিত পরিবর্তন আছে কিনা (তাহলে স্ক্যানে অন্য পাতায় চলে যাওয়া হবে না) */
+function pageHasUnsavedInput() {
+    var els = document.querySelectorAll('.content input, .content textarea, .content select');
+    for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.disabled || el.type === 'hidden' || el.type === 'submit' || el.type === 'button') continue;
+        if (el.type === 'checkbox' || el.type === 'radio') {
+            if (el.checked !== el.defaultChecked) return true;
+        } else if (el.tagName === 'SELECT') {
+            // কোনো অপশনে selected অ্যাট্রিবিউট না থাকলে ব্রাউজার নিজে প্রথমটি বাছাই করে — সেটিই ডিফল্ট
+            var hasDefault = false, j;
+            for (j = 0; j < el.options.length; j++) { if (el.options[j].defaultSelected) { hasDefault = true; break; } }
+            for (j = 0; j < el.options.length; j++) {
+                var def = hasDefault ? el.options[j].defaultSelected : (j === 0 && !el.multiple && el.size <= 1);
+                if (el.options[j].selected !== def) return true;
+            }
+        } else if (el.value !== el.defaultValue) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* ---------------------------------------------------------------------
+   গ্লোবাল বারকোড স্ক্যানার
+   POS পাতার বাইরে (ড্যাশবোর্ড, ইনভয়েস, তালিকা ইত্যাদি) থাকা অবস্থায় বারকোড স্ক্যান
+   করলে সরাসরি POS পাতা খোলে এবং স্ক্যান করা পণ্য/সার্ভিসটি কার্টে যুক্ত হয়ে যায়।
+   হার্ডওয়্যার স্ক্যানার খুব দ্রুত (প্রতি অক্ষরে ~১০-৩০ms) টাইপ করে শেষে Enter পাঠায় —
+   সেই প্যাটার্ন দেখেই স্ক্যান চেনা হয়, তাই মানুষের সাধারণ টাইপিং-এ এটি ট্রিগার হয় না।
+   সুরক্ষা: কোনো ইনপুটে টাইপ চলাকালীন (যেমন ক্রয়ে পণ্য খোঁজা), খোলা মডালে, বা পাতায়
+   অসংরক্ষিত ফর্ম থাকলে অন্য পাতায় যাওয়া হয় না — শুধু একটি বার্তা দেখায়।
+   --------------------------------------------------------------------- */
+function initGlobalScanner() {
+    if (!window.APP_SCAN_TO_POS) return;
+    if (document.body.classList.contains('page-pos')) return; // POS-এর নিজস্ব স্ক্যানার আছে
+    var MAX_GAP = 50, MIN_LEN = 3;
+    var buf = '', start = 0, last = 0, origin = null;
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.isComposing) return;
+        var now = performance.now();
+        if (e.key === 'Enter' || e.key === 'Tab') {
+            var avg = buf.length > 1 ? (last - start) / (buf.length - 1) : Infinity;
+            var isScan = buf.length >= MIN_LEN && (now - last) < 120 && avg < MAX_GAP;
+            var fromInput = origin && origin.matches && origin.matches('input, textarea, select, [contenteditable]');
+            var code = buf.trim();
+            buf = ''; start = 0; last = 0; origin = null;
+            // কোনো ইনপুটে স্ক্যান হলে সেই পাতার নিজস্ব লজিক কাজ করুক (যেমন ক্রয়ে পণ্য যোগ)
+            if (!isScan || fromInput || !code) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (document.querySelector('.modal.show') || pageHasUnsavedInput()) {
+                appToast('স্ক্যান: ' + code + ' — এই পাতায় অসংরক্ষিত তথ্য আছে। বিক্রয়ের জন্য আগে POS খুলুন।', 'warning');
+                return;
+            }
+            var loader = document.getElementById('pjaxLoader');
+            if (loader) loader.classList.add('loading');
+            location.href = (window.APP_BASE_URL || '') + '/modules/sales_pos.php?scan=' + encodeURIComponent(code);
+            return;
+        }
+        var ch = scanCharFromEvent(e);
+        if (ch === null) return; // Shift ইত্যাদি বাফার ভাঙে না
+        if (now - last > MAX_GAP * 2 || !buf) { buf = ''; start = now; origin = e.target; }
+        buf += ch;
+        last = now;
+    }, true);
+}
+
+/* ---------------------------------------------------------------------
+   নেভিগেশন ফিডব্যাক ও অ্যাপ ইনস্টল
+   আগে এখানে PJAX (fetch করে <main> বদলানো) ব্যবহৃত হতো। কিন্তু প্রায় প্রতিটি পাতার
+   নিজস্ব ইনলাইন স্ক্রিপ্ট আছে — সেগুলো গ্লোবাল স্কোপে বারবার চালানোয় `const` ঘোষণা
+   সংঘর্ষ (SyntaxError), Chart.js/QR লাইব্রেরি লোডের আগে কোড চলা, এবং ইভেন্ট লিসেনার
+   জমে যাওয়ার মতো সমস্যা হতো — পাতা "ফ্রিজ" হয়ে যেত, রিলোড করলে আবার ঠিক হতো।
+   এখন স্বাভাবিক (নির্ভরযোগ্য) নেভিগেশন হয়, আর ক্লিকের সাথে সাথে উপরে একটি লোডিং বার
+   দেখায় যাতে ব্যবহারকারী তাৎক্ষণিক ফিডব্যাক পান।
    --------------------------------------------------------------------- */
 function initInstantNav() {
     var loader = document.getElementById('pjaxLoader');
@@ -106,46 +220,24 @@ function initInstantNav() {
     var backdrop = document.getElementById('sidebarBackdrop');
     var installBtn = document.getElementById('installAppBtn');
     var installPromptEvent = null;
-    var hrefCache = {};
-    var CACHE_TTL = 30000; // মিলিসেকেন্ডে
-
-    function showLoader() {
-        if (loader) {
-            loader.classList.remove('done');
-            loader.classList.add('loading');
-        }
-    }
-    function doneLoader() {
-        if (loader) {
-            loader.classList.remove('loading');
-            loader.classList.add('done');
-            setTimeout(function () { loader.classList.remove('done'); }, 480);
-        }
-    }
-    function cacheGet(url) {
-        var entry = hrefCache[url];
-        if (entry && Date.now() - entry.t < CACHE_TTL) return entry.html;
-        delete hrefCache[url];
-        return null;
-    }
 
     document.addEventListener('click', function (e) {
         if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         var a = e.target.closest('.sidebar-nav a.nav-link, .bottom-tabbar a, .stat-card-link, .brand-link');
         if (!a) return;
         var href = a.getAttribute('href');
-        if (!href || href.charAt(0) === '#' || href.indexOf('http') === 0 || href.indexOf('logout') !== -1) return;
-        // POS পাতা (sales_pos.php) সবসময় স্বাভাবিক (পূর্ণ) নেভিগেশনে লোড হবে —
-        // ইনস্ট্যান্ট-ন্যাভ দিয়ে লোড হলে scanInput-এ autofocus নির্ভরযোগ্যভাবে কাজ করে না
-        // এবং পণ্যের তালিকা ৩০ সেকেন্ডের ক্যাশ থেকে পুরনো (স্টেল) হতে পারে —
-        // ফলে বারকোড স্ক্যান করলে মাঝে মাঝে কার্টে যোগ হয় না।
-        if (href.indexOf('sales_pos.php') !== -1) return;
-        e.preventDefault();
-        navigateTo(href);
-        closeSidebar();
+        if (!href || href.charAt(0) === '#' || a.target === '_blank') return;
+        if (loader) { loader.classList.remove('done'); loader.classList.add('loading'); }
+        if (sidebar) sidebar.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('open');
+    });
+    // ব্যাক-বাটনে ব্রাউজার ক্যাশ থেকে ফিরলে লোডার বন্ধ
+    window.addEventListener('pageshow', function () {
+        if (loader) loader.classList.remove('loading', 'done');
     });
 
     if (installBtn) {
+        installBtn.style.display = 'none';
         installBtn.addEventListener('click', function () {
             if (!installPromptEvent) return;
             installPromptEvent.prompt();
@@ -155,154 +247,12 @@ function initInstantNav() {
             });
         });
     }
-
     window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();
         installPromptEvent = e;
-        if (installBtn) {
-            installBtn.style.display = 'inline-flex';
-        }
+        if (installBtn) installBtn.style.display = 'inline-flex';
     });
     window.addEventListener('appinstalled', function () {
-        if (installBtn) {
-            installBtn.style.display = 'none';
-        }
+        if (installBtn) installBtn.style.display = 'none';
     });
-
-    function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('open');
-        if (backdrop) backdrop.classList.remove('open');
-    }
-
-    function navKeyFor(url) {
-        var path = url.split('?')[0].split('#')[0].split('/').pop();
-        if (path === 'sales_pos.php') return 'sales';
-        if (path === 'sales_list.php') return 'sales_list';
-        if (path === 'sales_return.php') return 'sales_return';
-        if (path === 'customers.php') return 'customers';
-        if (path === 'reports.php') return 'reports';
-        if (path === 'dashboard.php') return 'dashboard';
-        if (path === 'stock.php') return 'stock';
-        if (path === 'purchase.php') return 'purchase';
-        if (path === 'suppliers.php') return 'suppliers';
-        if (path === 'users.php') return 'users';
-        if (path === 'payment_api.php') return 'payment_api';
-        if (path === 'backup.php') return 'backup';
-        if (path === 'services.php') return 'services';
-        return '';
-    }
-
-    // পাতা ফাইল → নেভ কী ম্যাপ (সাবস্ট্রিং গোলমাল এড়াতে সঠিক ফাইল ম্যাচ)
-    var NAV_KEY_BY_FILE = {
-        'dashboard.php': 'dashboard',
-        'stock.php': 'stock',
-        'purchase.php': 'purchase',
-        'services.php': 'services',
-        'sales_pos.php': 'sales',
-        'sales_list.php': 'sales_list',
-        'sales_return.php': 'sales_return',
-        'customers.php': 'customers',
-        'suppliers.php': 'suppliers',
-        'reports.php': 'reports',
-        'users.php': 'users',
-        'payment_api.php': 'payment_api',
-        'backup.php': 'backup'
-    };
-
-    function updateActiveNav(key) {
-        document.querySelectorAll('.sidebar-nav a.nav-link, .bottom-tabbar a').forEach(function (a) {
-            var href = a.getAttribute('href') || '';
-            var file = href.split('?')[0].split('#')[0].split('/').pop();
-            var match = key && NAV_KEY_BY_FILE[file] === key;
-            a.classList.toggle('active', !!match);
-        });
-    }
-
-    function navigateTo(url) {
-        var cached = cacheGet(url);
-        if (cached) {
-            swapPages(cached, url);
-            return;
-        }
-        showLoader();
-        fetch(url, { headers: { 'X-Instant-Nav': '1' }, credentials: 'same-origin' })
-            .then(function (res) { return res.text(); })
-            .then(function (html) {
-                var doc = new DOMParser().parseFromString(html, 'text/html');
-                if (!doc.querySelector('.content')) {
-                    // সেশন শেষ হলে/login পেজ চলে এলে স্বাভাবik নেভিগেশনে ফিরে যাই
-                    location.href = url;
-                    return;
-                }
-                hrefCache[url] = { html: html, t: Date.now() };
-                swapPages(html, url);
-            })
-            .catch(function () {
-                location.href = url;
-            });
-    }
-
-    function swapPages(html, url) {
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        var main = doc.querySelector('.content');
-        var newTitle = doc.querySelector('title');
-        var oldMain = document.querySelector('.content');
-        if (main && oldMain) {
-            oldMain.replaceWith(main);
-        }
-        if (newTitle) {
-            document.title = newTitle.textContent;
-        }
-        // গতিশীল স্ক্রিপ্ট পুনরায় চালু (চার্ট, POS ইত্যাদি)
-        Array.prototype.slice.call(main ? main.querySelectorAll('script') : []).forEach(function (s) {
-            var ns = document.createElement('script');
-            if (s.src) { ns.src = s.src; }
-            else { ns.textContent = s.textContent; }
-            document.body.appendChild(ns);
-            document.body.removeChild(ns);
-        });
-        // URL ব্যাক-বাটন সাপোর্টসহ হালনাগাদ
-        if (url && location.href.split('#')[0] !== url.split('#')[0]) {
-            history.pushState({ pjax: url }, '', url);
-        }
-        updateActiveNav(navKeyFor(url));
-        bindPageBehaviors();
-        doneLoader();
-        window.scrollTo(0, 0);
-    }
-
-    // ব্রাউজারের ব্যাক/ফরোয়ার্ড — ক্যাশ থেকে তাৎক্ষণিক দেখাও, না হলে নেটওয়ার্ক
-    window.addEventListener('popstate', function (e) {
-        if (e.state && e.state.pjax) {
-            var cached = cacheGet(e.state.pjax);
-            if (cached) { swapPages(cached, e.state.pjax); return; }
-            navigateTo(e.state.pjax);
-        } else {
-            location.reload();
-        }
-    });
-
-    function bindPageBehaviors() {
-        document.querySelectorAll('.alert[data-autohide]').forEach(function (el) {
-            setTimeout(function () {
-                el.style.transition = 'opacity .4s ease';
-                el.style.opacity = '0';
-                setTimeout(function () { el.remove(); }, 400);
-            }, 4000);
-        });
-        document.querySelectorAll('[data-confirm]').forEach(function (el) {
-            if (el.dataset.bound === '1') return;
-            el.dataset.bound = '1';
-            el.addEventListener('click', function (e) {
-                if (!confirm(el.getAttribute('data-confirm'))) {
-                    e.preventDefault();
-                }
-            });
-        });
-    }
-
-    if (installBtn) {
-        installBtn.style.display = 'none';
-    }
-    updateActiveNav(navKeyFor(location.href));
 }

@@ -39,6 +39,14 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', '');
 }
 
+// CSS/JS হালনাগাদ হলে এই সংস্করণ বদলান — ব্রাউজার ও সার্ভিস ওয়ার্কার পুরোনো ক্যাশ ফেলে নতুন ফাইল নেবে
+if (!defined('APP_ASSET_VERSION')) {
+    define('APP_ASSET_VERSION', '4.0.0');
+}
+if (!defined('APP_DEVELOPER')) {
+    define('APP_DEVELOPER', 'Arieskonex Technologies');
+}
+
 /**
  * হালনাগাদ সংস্করণে নতুন কলাম যোগ হলে আগে থেকে ইনস্টল করা কপিতে
  * স্বয়ংক্রিয়ভাবে তা যুক্ত করে (ম্যানুয়াল SQL চালানোর প্রয়োজন নেই)।
@@ -416,6 +424,24 @@ if (empty($_SESSION['schema_v2_checked'])) {
         // নীরবে উপেক্ষা করুন — টেবিল/কলাম না থাকলেও অ্যাপ চলতে থাকবে
     }
     $_SESSION['schema_v2_checked'] = true;
+}
+
+/**
+ * স্কিমা v3: সার্ভিসেরও বারকোড/কোড — POS-এ স্ক্যান করলেই সার্ভিস সরাসরি কার্টে যুক্ত হয়।
+ * বিদ্যমান সার্ভিসগুলোতে স্বয়ংক্রিয়ভাবে S00001, S00002 ... কোড বসানো হয়।
+ */
+if (empty($_SESSION['schema_v3_checked'])) {
+    try {
+        $colSvc = $pdo->query("SHOW COLUMNS FROM services LIKE 'code'")->fetch();
+        if (!$colSvc) {
+            $pdo->exec("ALTER TABLE services ADD COLUMN code VARCHAR(50) DEFAULT NULL AFTER id");
+            $pdo->exec("UPDATE services SET code = CONCAT('S', LPAD(id, 5, '0')) WHERE code IS NULL OR code = ''");
+            try { $pdo->exec("ALTER TABLE services ADD UNIQUE INDEX uniq_services_code (code)"); } catch (Exception $e) {}
+        }
+    } catch (Exception $e) {
+        // নীরবে উপেক্ষা — কলাম না থাকলেও অ্যাপ চলবে
+    }
+    $_SESSION['schema_v3_checked'] = true;
 }
 
 

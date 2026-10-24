@@ -48,19 +48,23 @@ $langNames = ['bn' => 'বাংলা', 'en' => 'English'];
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= APP_ASSET_VERSION ?>">
 <link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#4F46E5">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="মল্লিক বুক হাউজ">
+<meta name="apple-mobile-web-app-title" content="<?= e(mb_substr($shopName, 0, 20)) ?>">
 <link rel="icon" href="<?= BASE_URL ?>/assets/img/favicon.ico">
 <link rel="apple-touch-icon" href="<?= BASE_URL ?>/assets/img/apple-touch-icon.png">
-<script>window.APP_BASE_URL = "<?= addslashes(BASE_URL) ?>";</script>
-<script src="<?= BASE_URL ?>/assets/js/app.js?v=3"></script>
+<script>
+window.APP_BASE_URL = <?= json_encode(BASE_URL) ?>;
+// গ্লোবাল বারকোড স্ক্যানার: POS ছাড়া অন্য যেকোনো পাতায় স্ক্যান করলে সরাসরি POS-এ গিয়ে আইটেমটি কার্টে যুক্ত হয়
+window.APP_SCAN_TO_POS = <?= (has_permission($user, 'sales') && empty($disableGlobalScan)) ? 'true' : 'false' ?>;
+</script>
+<script src="<?= BASE_URL ?>/assets/js/app.js?v=<?= APP_ASSET_VERSION ?>"></script>
 </head>
-<body>
+<body class="<?= e($bodyClass ?? '') ?>">
 <div class="app-shell">
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
@@ -69,7 +73,7 @@ $langNames = ['bn' => 'বাংলা', 'en' => 'English'];
             <a href="dashboard.php" class="brand-link" title="<?= e(t('go_to_dashboard', 'Go to dashboard')) ?>">
                 <div class="brand-lockup">
                     <div class="book-spine-mark"><span></span><span></span><span></span><span></span></div>
-                    <div class="shop-name"><?= e($shopName) ?><small>Powered by Askurex Technologies</small></div>
+                    <div class="shop-name"><?= e($shopName) ?><small><?= e(t('powered_by', 'Powered by Arieskonex Technologies')) ?></small></div>
                 </div>
             </a>
         </div>
@@ -84,7 +88,7 @@ $langNames = ['bn' => 'বাংলা', 'en' => 'English'];
         </nav>
         <div class="sidebar-footer">
             &copy; <?= date('Y') ?> <?= e($shopName) ?><br>
-            Developed by <a href="#" onclick="return false;">Askurex Technologies</a>
+            Developed by <a href="#" onclick="return false;" class="dev-brand">Arieskonex Technologies</a>
         </div>
     </aside>
 

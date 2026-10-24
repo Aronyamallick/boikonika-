@@ -11,14 +11,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name']);
         $price = (float)$_POST['price'];
         $unit = trim($_POST['unit']) ?: t('unit_piece', 'টি');
+        // সার্ভিস কোড/বারকোড — POS-এ স্ক্যান করলে সরাসরি কার্টে যুক্ত হয়
+        $code = strtoupper(trim($_POST['code'] ?? ''));
+        $code = $code !== '' ? $code : null;
+        if ($code !== null) {
+            $dup = $pdo->prepare("SELECT id FROM services WHERE code = ? AND id != ? LIMIT 1");
+            $dup->execute([$code, $id]);
+            $dupP = $pdo->prepare("SELECT id FROM products WHERE barcode = ? OR item_code = ? LIMIT 1");
+            $dupP->execute([$code, $code]);
+            if ($dup->fetch() || $dupP->fetch()) {
+                flash_set(t('err_service_code_taken', 'এই কোডটি ইতোমধ্যে অন্য কোনো সার্ভিস/পণ্যে ব্যবহৃত হচ্ছে।'), 'danger');
+                redirect('services.php');
+            }
+        }
         if ($id) {
-            $stmt = $pdo->prepare("UPDATE services SET name=?, price=?, unit=? WHERE id=?");
-            $stmt->execute([$name, $price, $unit, $id]);
+            $stmt = $pdo->prepare("UPDATE services SET name=?, price=?, unit=?, code=? WHERE id=?");
+            $stmt->execute([$name, $price, $unit, $code, $id]);
             flash_set(t('service_updated', 'সার্ভিস হালনাগাদ হয়েছে।'));
             log_activity($pdo, t('log_service_updated', 'সার্ভিস হালনাগাদ') . ': ' . $name . ' (৳' . money($price) . ')');
         } else {
-            $stmt = $pdo->prepare("INSERT INTO services (name, price, unit) VALUES (?,?,?)");
-            $stmt->execute([$name, $price, $unit]);
+            $stmt = $pdo->prepare("INSERT INTO services (name, price, unit, code) VALUES (?,?,?,?)");
+            $stmt->execute([$name, $price, $unit, $code]);
+            $newId = (int)$pdo->lastInsertId();
+            if ($code === null) {
+                $pdo->prepare("UPDATE services SET code = ? WHERE id = ?")->execute(['S' . str_pad((string)$newId, 5, '0', STR_PAD_LEFT), $newId]);
+            }
             flash_set(t('service_added', 'নতুন সার্ভিস যুক্ত হয়েছে।'));
             log_activity($pdo, t('log_service_new', 'নতুন সার্ভিস') . ': ' . $name);
         }
@@ -88,13 +105,14 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="table-wrap">
     <table class="data-table">
-        <thead><tr><th><?= e(t('service_name', 'সার্ভিসের নাম')) ?></th><th><?= e(t('unit', 'একক')) ?></th><th class="num"><?= e(t('price_bdt', 'মূল্য (৳)')) ?></th><th><?= e(t('status', 'অবস্থা')) ?></th><th></th></tr></thead>
+        <thead><tr><th><?= e(t('service_code', 'কোড / বারকোড')) ?></th><th><?= e(t('service_name', 'সার্ভিসের নাম')) ?></th><th><?= e(t('unit', 'একক')) ?></th><th class="num"><?= e(t('price_bdt', 'মূল্য (৳)')) ?></th><th><?= e(t('status', 'অবস্থা')) ?></th><th></th></tr></thead>
         <tbody>
         <?php if (empty($services)): ?>
-            <tr><td colspan="5"><div class="empty-state"><i class="bi bi-printer"></i><?= e(t('no_services', 'এখনো কোনো সার্ভিস যুক্ত হয়নি।')) ?></div></td></tr>
+            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-printer"></i><?= e(t('no_services', 'এখনো কোনো সার্ভিস যুক্ত হয়নি।')) ?></div></td></tr>
         <?php endif; ?>
         <?php foreach ($services as $s): ?>
             <tr>
+                <td><?= !empty($s['code']) ? '<span class="badge badge-purple num"><i class="bi bi-upc"></i> ' . e($s['code']) . '</span>' : '<span style="color:var(--text-secondary);">—</span>' ?></td>
                 <td><strong><?= e($s['name']) ?></strong></td>
                 <td><?= e($s['unit']) ?></td>
                 <td class="num">
@@ -135,6 +153,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="modal-header"><h5 class="modal-title" id="s_modal_title"><?= e(t('new_service', 'নতুন সার্ভিস')) ?></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <div class="form-group"><label><?= e(t('service_name', 'সার্ভিসের নাম')) ?></label><input type="text" name="name" id="s_name" class="form-control" required placeholder="<?= e(t('service_name_ph', 'যেমনঃ ফটোকপি (প্রতি পাতা)')) ?>"></div>
+                    <div class="form-group"><label><?= e(t('service_code', 'কোড / বারকোড')) ?></label><input type="text" name="code" id="s_code" class="form-control" autocomplete="off" placeholder="<?= e(t('service_code_ph', 'ফাঁকা রাখলে স্বয়ংক্রিয় কোড (যেমন S00008) তৈরি হবে')) ?>"><div class="form-hint"><?= e(t('service_code_hint', 'এই কোডটি বারকোড লেবেলে প্রিন্ট করে রাখুন — POS-এ স্ক্যান করলেই সার্ভিসটি সরাসরি বিক্রয়ে যুক্ত হবে।')) ?></div></div>
                     <div class="row">
                         <div class="col-6 form-group"><label><?= e(t('price_bdt', 'মূল্য (৳)')) ?></label><input type="number" step="0.01" name="price" id="s_price" class="form-control" required></div>
                         <div class="col-6 form-group"><label><?= e(t('unit', 'একক')) ?></label><input type="text" name="unit" id="s_unit" class="form-control" placeholder="পাতা / টি"></div>
@@ -248,6 +267,7 @@ function renderMatResults(input) {
         });
     });
 }
+hardenScanInput(document.getElementById('s_code'));
 document.querySelectorAll('.mat-product-search').forEach(function (el) {
     hardenScanInput(el);
     el.addEventListener('input', function () {
@@ -284,6 +304,7 @@ document.addEventListener('DOMContentLoaded', function () { openMaterials(<?= (i
 function openAddService() {
     document.getElementById('s_modal_title').textContent = <?= json_encode(t('new_service', 'নতুন সার্ভিস'), JSON_UNESCAPED_UNICODE) ?>;
     document.getElementById('s_id').value = '';
+    document.getElementById('s_code').value = '';
     document.getElementById('s_name').value = '';
     document.getElementById('s_price').value = '';
     document.getElementById('s_unit').value = <?= json_encode(t('unit_piece', 'টি'), JSON_UNESCAPED_UNICODE) ?>;
@@ -291,6 +312,7 @@ function openAddService() {
 function openEditService(s) {
     document.getElementById('s_modal_title').textContent = <?= json_encode(t('edit_service', 'সার্ভিস সম্পাদনা'), JSON_UNESCAPED_UNICODE) ?>;
     document.getElementById('s_id').value = s.id;
+    document.getElementById('s_code').value = s.code || '';
     document.getElementById('s_name').value = s.name;
     document.getElementById('s_price').value = s.price;
     document.getElementById('s_unit').value = s.unit;

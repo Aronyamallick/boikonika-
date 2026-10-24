@@ -240,7 +240,7 @@ if ($view === 'create') {
             const card = document.createElement('div');
             card.className = 'card';
             card.style.cssText = 'padding:8px;cursor:pointer;text-align:center;font-size:12.5px;';
-            card.innerHTML = `<div style="font-weight:600;">${it.name}</div><div style="color:var(--text-secondary);">৳${Number(it._price).toFixed(2)}</div>`;
+            card.innerHTML = `<div style="font-weight:600;">${escHtml(it.name)}</div><div style="color:var(--text-secondary);">৳${Number(it._price).toFixed(2)}</div>`;
             card.onclick = () => addToCart(it._type, it.id, it.name, it.unit, it._price);
             grid.appendChild(card);
         });
@@ -269,16 +269,16 @@ if ($view === 'create') {
             row.className = 'pos-cart-row';
             row.innerHTML = `
                 <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:600;">${item.name}</div>
+                    <div style="font-size:13px;font-weight:600;">${escHtml(item.name)}</div>
                     <input type="number" step="0.01" min="0" class="form-control" style="width:90px;display:inline-block;margin-top:4px;" value="${item.price}" onchange="updatePrice(${idx}, this.value)">
                 </div>
                 <input type="number" min="1" class="form-control qty-input" value="${item.qty}" onchange="updateQty(${idx}, this.value)">
                 <button type="button" class="btn btn-sm btn-light" onclick="removeItem(${idx})"><i class="bi bi-x"></i></button>
-                <input type="hidden" name="item_type[]" value="${item.type}">
+                <input type="hidden" name="item_type[]" value="${escHtml(item.type)}">
                 <input type="hidden" name="item_id[]" value="${item.id}">
                 <input type="hidden" name="item_qty[]" value="${item.qty}">
                 <input type="hidden" name="item_price[]" value="${item.price}">
-                <input type="hidden" name="item_desc[]" value="${item.desc}">
+                <input type="hidden" name="item_desc[]" value="${escHtml(item.desc)}">
             `;
             wrap.appendChild(row);
         });

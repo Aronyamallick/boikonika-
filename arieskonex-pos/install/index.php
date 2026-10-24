@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . "define('DB_PASS', " . var_export($pass, true) . ");\n"
                 . "define('BASE_URL', " . var_export($baseUrl, true) . ");\n"
                 . "define('APP_NAME', 'Mallik Book House & Computer');\n"
-                . "define('APP_DEVELOPER', 'Askurex Technologies');\n"
+                . "define('APP_DEVELOPER', 'Arieskonex Technologies');\n"
                 . "define('APP_SECRET', " . var_export(bin2hex(random_bytes(32)), true) . ");\n";
 
             if (!file_put_contents($configFile, $configContent)) {
@@ -108,14 +108,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/style.css?v=4.0.0">
 </head>
 <body>
 <div class="auth-shell">
     <div class="auth-card wide">
         <div class="brand-lockup">
             <div class="book-spine-mark lg"><span></span><span></span><span></span><span></span></div>
-            <div class="shop-name">Mallik Book House &amp; Computer<small>Powered by Askurex Technologies</small></div>
+            <div class="shop-name">Mallik Book House &amp; Computer<small>Powered by Arieskonex Technologies</small></div>
         </div>
 
         <div class="install-steps">

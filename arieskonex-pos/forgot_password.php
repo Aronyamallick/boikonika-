@@ -60,9 +60,9 @@ $shopName = $settings['shop_name'] ?? 'Mallik Book House & Computer';
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=4.0.0">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2C1650">
+<meta name="theme-color" content="#4F46E5">
 <link rel="icon" href="assets/img/favicon.ico">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 </head>
@@ -71,7 +71,7 @@ $shopName = $settings['shop_name'] ?? 'Mallik Book House & Computer';
     <div class="auth-card">
         <div class="brand-lockup">
             <div class="book-spine-mark lg"><span></span><span></span><span></span><span></span></div>
-            <div class="shop-name"><?= e($shopName) ?><small>Powered by Askurex Technologies</small></div>
+            <div class="shop-name"><?= e($shopName) ?><small>Powered by Arieskonex Technologies</small></div>
         </div>
 
         <h5 style="text-align:center;margin:6px 0 10px;"><?= e(t('forgot_password_title', 'পাসওয়ার্ড রিসেট')) ?></h5>

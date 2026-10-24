@@ -14,7 +14,7 @@ define('DB_PASS', 'your_database_password');
 define('BASE_URL', 'https://example.com');
 
 define('APP_NAME', 'Mallik Book House & Computer');
-define('APP_DEVELOPER', 'Askurex Technologies');
+define('APP_DEVELOPER', 'Arieskonex Technologies');
 
 // ইনভয়েস QR-কোড যাচাইকরণ টোকেনের জন্য গোপন কী — ইনস্টলের সময় এলোমেলো মান বসান
 // (না বসালেও চলবে, কিন্তু নিরাপত্তার জন্য এলোমেলো একটি মান দেওয়া ভালো)

@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Mallik Book House & Computer — Shop Management (Desktop Edition)",
   "main": "main.js",
-  "author": "Askurex Technologies",
+  "author": "Arieskonex Technologies",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -16,7 +16,7 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.askurex.mallikbookhouse",
+    "appId": "com.arieskonex.mallikbookhouse",
     "productName": "Mallik Book House",
     "files": [
       "main.js",

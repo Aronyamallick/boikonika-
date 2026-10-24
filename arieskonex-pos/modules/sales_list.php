@@ -1,7 +1,14 @@
 <?php
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_login();
-require_permission('sales_list');
+// ক্যাশিয়ার নিজে এইমাত্র যে বিক্রয়টি সম্পন্ন করলেন, তার ইনভয়েস দেখা/প্রিন্ট করতে পারবেন —
+// "বিক্রয় তালিকা" অনুমতি না থাকলেও (আগে এ অবস্থায় ড্যাশবোর্ডে ফেরত পাঠানো হতো, ইনভয়েস প্রিন্ট করা যেত না)
+$ownCompletedSale = ($_GET['view'] ?? '') === 'show'
+    && in_array((int)($_GET['id'] ?? 0), array_map('intval', array_values($_SESSION['pos_done'] ?? [])), true)
+    && has_permission(current_user(), 'sales');
+if (!$ownCompletedSale) {
+    require_permission('sales_list');
+}
 
 $settings = shop_settings($pdo);
 $isOwner = is_owner();
@@ -162,7 +169,11 @@ if ($view === 'show') {
         .invoice-doc.bw-mode .badge-info { background:#fff !important; color:#000 !important; border:1px solid #000 !important; }
     </style>
     <div class="page-head no-print">
+        <?php if ($ownCompletedSale && !has_permission(current_user(), 'sales_list')): ?>
+        <a href="sales_pos.php" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> POS-এ ফিরুন</a>
+        <?php else: ?>
         <a href="sales_list.php" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> তালিকায় ফিরুন</a>
+        <?php endif; ?>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <a href="sales_return.php?sale_id=<?= (int)$sale['id'] ?>" class="btn btn-light btn-sm"><i class="bi bi-arrow-counterclockwise"></i> বিক্রয় ফেরত</a>
             <button onclick="printInvoice(false)" class="btn btn-outline btn-sm"><i class="bi bi-printer-fill" style="color:var(--brand-magenta);"></i> কালার প্রিন্ট</button>
@@ -176,7 +187,70 @@ if ($view === 'show') {
     </div>
 
     <?php if (!empty($_GET['fresh'])): ?>
-        <div class="alert alert-success no-print">বিক্রয় সফলভাবে সম্পন্ন হয়েছে — ইনভয়েস <?= e($sale['invoice_no']) ?></div>
+        <!-- বিক্রয় সম্পন্ন: কয়েক সেকেন্ড পর স্বয়ংক্রিয়ভাবে এই বিক্রয় বন্ধ হয়ে নতুন বিক্রয়ের (POS) পাতা খোলে -->
+        <div class="sale-done-banner no-print" id="saleDoneBanner">
+            <div class="sdb-icon"><i class="bi bi-check2-circle"></i></div>
+            <div class="sdb-text">
+                <strong>বিক্রয় সফলভাবে সম্পন্ন হয়েছে — ইনভয়েস <?= e($sale['invoice_no']) ?></strong>
+                <span id="sdbCountdownText">নতুন বিক্রয় খুলছে <b id="sdbCountdown">8</b> সেকেন্ডে... (পরবর্তী পণ্য স্ক্যান করলেও সাথে সাথে নতুন বিক্রয় শুরু হবে)</span>
+            </div>
+            <div class="sdb-actions">
+                <button type="button" class="btn btn-light btn-sm" id="sdbPrint"><i class="bi bi-printer"></i> প্রিন্ট করে নতুন বিক্রয়</button>
+                <a href="sales_pos.php" class="btn btn-primary btn-sm" id="sdbNew"><i class="bi bi-plus-circle"></i> নতুন বিক্রয় <kbd>Enter</kbd></a>
+                <button type="button" class="btn btn-light btn-sm" id="sdbStay" title="এই পাতায় থাকুন"><i class="bi bi-pause-circle"></i> থামুন <kbd>Esc</kbd></button>
+            </div>
+            <div class="sdb-progress"><span id="sdbProgress"></span></div>
+        </div>
+        <script>
+        (function () {
+            // সম্পন্ন বিক্রয়ের কার্ট মুছে ফেলা হয়, যাতে নতুন বিক্রয় খালি কার্ট দিয়ে শুরু হয়
+            try { sessionStorage.removeItem('arieskonex_pos_cart_v1'); } catch (e) {}
+            // রিলোড করলে যেন আবার কাউন্টডাউন শুরু না হয়
+            try {
+                var u = new URL(location.href); u.searchParams.delete('fresh');
+                history.replaceState(null, '', u.pathname + u.search);
+            } catch (e) {}
+
+            var SECONDS = 8, left = SECONDS, timer = null, stopped = false, goAfterPrint = false;
+            var posUrl = 'sales_pos.php';
+            var cd = document.getElementById('sdbCountdown');
+            var bar = document.getElementById('sdbProgress');
+            function go() { location.href = posUrl; }
+            function stop() {
+                stopped = true; clearInterval(timer);
+                document.getElementById('sdbCountdownText').textContent = 'স্বয়ংক্রিয় বন্ধ থামানো হয়েছে — প্রস্তুত হলে "নতুন বিক্রয়" চাপুন।';
+                bar.style.width = '0%';
+            }
+            function tick() {
+                left -= 1;
+                cd.textContent = left;
+                bar.style.width = ((SECONDS - left) / SECONDS * 100) + '%';
+                if (left <= 0) { clearInterval(timer); go(); }
+            }
+            bar.style.width = '0%';
+            timer = setInterval(tick, 1000);
+
+            document.getElementById('sdbStay').addEventListener('click', stop);
+            document.getElementById('sdbPrint').addEventListener('click', function () {
+                clearInterval(timer);
+                goAfterPrint = true;
+                if (typeof printInvoice === 'function') { printInvoice(false); } else { window.print(); }
+                // কিছু ব্রাউজারে afterprint আসে না — window.print() ব্লকিং, তাই এরপরই চলে যাওয়া নিরাপদ
+                setTimeout(function () { if (goAfterPrint) go(); }, 600);
+            });
+            window.addEventListener('afterprint', function () { if (goAfterPrint) go(); });
+            document.addEventListener('keydown', function (e) {
+                if (e.ctrlKey || e.altKey || e.metaKey) return;
+                var tag = (e.target && e.target.tagName) || '';
+                if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+                if (e.key === 'Escape') { e.preventDefault(); stop(); }
+                else if (e.key === 'Enter' && !e.repeat) {
+                    // স্ক্যানারের Enter গ্লোবাল স্ক্যানার আগেই ধরে নেয় (capture phase); এটি হাতে চাপা Enter
+                    e.preventDefault(); go();
+                }
+            });
+        })();
+        </script>
     <?php endif; ?>
 
     <div class="invoice-doc">

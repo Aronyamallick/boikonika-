@@ -563,13 +563,13 @@ elseif ($tab === 'category_sales'):
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script>
-    new Chart(document.getElementById('catChart'), {
+    if (window.Chart) new Chart(document.getElementById('catChart'), {
         type: 'doughnut',
         data: {
             labels: <?= json_encode(array_column($rows, 'category_name'), JSON_UNESCAPED_UNICODE) ?>,
             datasets: [{
                 data: <?= json_encode(array_map('floatval', array_column($rows, 'total_amount'))) ?>,
-                backgroundColor: ['#6D28D9','#C026D3','#F2650C','#F5A623','#2563EB','#16A34A','#DC2626']
+                backgroundColor: ['#4F46E5','#9333EA','#EC4899','#F59E0B','#06B6D4','#10B981','#EF4444']
             }]
         },
         options: { plugins: { legend: { position: 'bottom' } } }

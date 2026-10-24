@@ -177,7 +177,7 @@ $activeNav = 'purchase';
 
 // ---------- ভিউ: নতুন ক্রয় ফর্ম ----------
 if ($view === 'add') {
-    $products = $pdo->query("SELECT p.id, p.name, p.unit, p.cost_price, p.barcode, p.stock_qty, co.name AS company_name FROM products p LEFT JOIN companies co ON p.company_id = co.id WHERE p.status='active' ORDER BY p.name LIMIT 800")->fetchAll();
+    $products = $pdo->query("SELECT p.id, p.item_code, p.name, p.unit, p.cost_price, p.barcode, p.stock_qty, co.name AS company_name FROM products p LEFT JOIN companies co ON p.company_id = co.id WHERE p.status='active' ORDER BY p.name LIMIT 3000")->fetchAll();
     $suppliers = $pdo->query("SELECT id, name, mobile, company FROM suppliers ORDER BY name")->fetchAll();
     $companies = $pdo->query("SELECT * FROM companies ORDER BY name")->fetchAll();
     $categories = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
@@ -390,7 +390,7 @@ if ($view === 'add') {
         const box = document.getElementById('searchResults');
         const q = query.trim().toLowerCase();
         if (!q) { box.innerHTML = ''; box.style.display = 'none'; return; }
-        const matches = PRODUCTS.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.toLowerCase().includes(q))).slice(0, 12);
+        const matches = PRODUCTS.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.toLowerCase().includes(q)) || (p.item_code && p.item_code.toLowerCase().includes(q))).slice(0, 12);
         if (matches.length === 0) {
             box.innerHTML = '<div class="search-result-empty">' + I18N.noProductFound + '</div>';
             box.style.display = 'block';
@@ -398,8 +398,8 @@ if ($view === 'add') {
         }
         box.innerHTML = matches.map(p => `
             <div class="search-result-item" data-id="${p.id}">
-                <span>${p.name}</span>
-                <span style="color:var(--text-secondary);font-size:12px;">${p.company_name || ''}${p.company_name ? ' · ' : ''}${p.barcode || ''} · ${I18N.stockLabel} ${p.stock_qty}</span>
+                <span>${escHtml(p.name)}</span>
+                <span style="color:var(--text-secondary);font-size:12px;">${escHtml(p.company_name || '')}${p.company_name ? ' · ' : ''}${escHtml(p.barcode || '')} · ${I18N.stockLabel} ${p.stock_qty}</span>
             </div>`).join('');
         box.style.display = 'block';
         box.querySelectorAll('.search-result-item').forEach(el => {
@@ -418,13 +418,29 @@ if ($view === 'add') {
     document.getElementById('prodSearch').addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            const code = toEnglishDigits(this.value.trim());
-            const match = PRODUCTS.find(p => p.barcode && p.barcode === code);
+            // বারকোড বা আইটেম কোড (বড়/ছোট হাতের অক্ষর নির্বিশেষে) মিলিয়ে দেখা হয়
+            const code = toEnglishDigits(this.value.trim()).toLowerCase();
+            if (!code) return;
+            const match = PRODUCTS.find(p => (p.barcode && String(p.barcode).toLowerCase() === code) || (p.item_code && String(p.item_code).toLowerCase() === code));
             if (match) {
-                addRow(match);
+                // একই পণ্য আবার স্ক্যান করলে নতুন সারি নয় — আগের সারির পরিমাণ ১ বাড়ে
+                const existingRow = Array.from(document.querySelectorAll('#itemRows .item-row')).find(r => r.querySelector('.prod-id') && r.querySelector('.prod-id').value == match.id);
+                if (existingRow) {
+                    const qi = existingRow.querySelector('.item-qty');
+                    const max = qi.max !== '' ? Number(qi.max) : Infinity;
+                    qi.value = Math.min(max, (Number(qi.value) || 0) + 1);
+                    qi.dispatchEvent(new Event('change'));
+                    calcTotal();
+                } else {
+                    addRow(match);
+                }
+                appToast(match.name + ' ✓', 'success');
                 this.value = '';
                 document.getElementById('searchResults').innerHTML = '';
                 document.getElementById('searchResults').style.display = 'none';
+            } else if (document.getElementById('searchResults').querySelectorAll('.search-result-item').length === 0) {
+                appToast('এই বারকোড/কোডের কোনো পণ্য পাওয়া যায়নি: ' + this.value.trim(), 'danger');
+                this.select(); // পরের স্ক্যান যেন পুরোনো লেখার সাথে জুড়ে না যায় — সেটিকে প্রতিস্থাপন করবে
             }
         }
     });

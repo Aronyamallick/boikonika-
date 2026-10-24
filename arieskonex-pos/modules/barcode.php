@@ -25,33 +25,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'gener
     $ids = $_POST['item_id'] ?? [];
     $copies = $_POST['item_copies'] ?? [];
 
+    // পণ্য: সংখ্যা আইডি (যেমন "12"); সার্ভিস: "s" প্রিফিক্সসহ (যেমন "s3")
     $selected = [];
+    $selectedServices = [];
     foreach ($ids as $i => $id) {
         $c = max(1, min(100, (int)($copies[$i] ?? 1)));
+        if (is_string($id) && strtolower(substr($id, 0, 1)) === 's') {
+            $sid = (int)substr($id, 1);
+            if ($sid > 0) $selectedServices[$sid] = $c;
+            continue;
+        }
         $id = (int)$id;
         if ($id > 0) $selected[$id] = $c;
     }
 
-    if (empty($selected)) {
-        flash_set('অন্তত একটি পণ্য নির্বাচন করুন।', 'danger');
+    if (empty($selected) && empty($selectedServices)) {
+        flash_set('অন্তত একটি পণ্য বা সার্ভিস নির্বাচন করুন।', 'danger');
     } else {
-        // যেসব পণ্যের বারকোড ফাঁকা, প্রথমবার লেবেল বানানোর সময় item_code-কেই
-        // বারকোড হিসেবে বসিয়ে সংরক্ষণ করা হয় — এতে ভবিষ্যতে POS স্ক্যানে মিলবে।
-        $fillStmt = $pdo->prepare("UPDATE products SET barcode = item_code WHERE id = ? AND (barcode IS NULL OR barcode = '')");
-        foreach (array_keys($selected) as $id) {
-            $fillStmt->execute([$id]);
-        }
-
-        $inPlaceholders = implode(',', array_fill(0, count($selected), '?'));
-        $stmt = $pdo->prepare("SELECT id, name, item_code, barcode, sale_price, unit FROM products WHERE id IN ($inPlaceholders)");
-        $stmt->execute(array_keys($selected));
-        $rows = $stmt->fetchAll();
-
         $printItems = [];
-        foreach ($rows as $r) {
-            $copiesForThis = $selected[$r['id']] ?? 1;
-            for ($i = 0; $i < $copiesForThis; $i++) {
-                $printItems[] = $r;
+        if (!empty($selected)) {
+            // যেসব পণ্যের বারকোড ফাঁকা, প্রথমবার লেবেল বানানোর সময় item_code-কেই
+            // বারকোড হিসেবে বসিয়ে সংরক্ষণ করা হয় — এতে ভবিষ্যতে POS স্ক্যানে মিলবে।
+            $fillStmt = $pdo->prepare("UPDATE products SET barcode = item_code WHERE id = ? AND (barcode IS NULL OR barcode = '')");
+            foreach (array_keys($selected) as $id) {
+                $fillStmt->execute([$id]);
+            }
+
+            $inPlaceholders = implode(',', array_fill(0, count($selected), '?'));
+            $stmt = $pdo->prepare("SELECT id, name, item_code, barcode, sale_price, unit FROM products WHERE id IN ($inPlaceholders)");
+            $stmt->execute(array_keys($selected));
+            foreach ($stmt->fetchAll() as $r) {
+                $copiesForThis = $selected[$r['id']] ?? 1;
+                for ($i = 0; $i < $copiesForThis; $i++) {
+                    $printItems[] = $r;
+                }
+            }
+        }
+        if (!empty($selectedServices)) {
+            // কোড ফাঁকা থাকলে স্বয়ংক্রিয় S00001-ধাঁচের কোড বসানো হয়
+            $fillSvc = $pdo->prepare("UPDATE services SET code = CONCAT('S', LPAD(id, 5, '0')) WHERE id = ? AND (code IS NULL OR code = '')");
+            foreach (array_keys($selectedServices) as $sid) {
+                try { $fillSvc->execute([$sid]); } catch (Exception $e) {}
+            }
+            $inPlaceholders = implode(',', array_fill(0, count($selectedServices), '?'));
+            $stmt = $pdo->prepare("SELECT id, name, code AS barcode, price AS sale_price, unit FROM services WHERE id IN ($inPlaceholders)");
+            $stmt->execute(array_keys($selectedServices));
+            foreach ($stmt->fetchAll() as $r) {
+                $copiesForThis = $selectedServices[$r['id']] ?? 1;
+                for ($i = 0; $i < $copiesForThis; $i++) {
+                    $printItems[] = $r;
+                }
             }
         }
         $printMode = $mode;
@@ -98,6 +121,7 @@ if ($printItems !== null) {
         } catch (e) { el.outerHTML = '<div style="font-size:10px;color:red;">বারকোড তৈরি ব্যর্থ</div>'; }
     });
     document.querySelectorAll('.lbl-qr').forEach(function (el) {
+        if (!window.QRCode) { el.innerHTML = '<div style="font-size:10px;color:red;">QR লাইব্রেরি লোড হয়নি — ইন্টারনেট যাচাই করুন</div>'; return; }
         new QRCode(el, { text: el.dataset.value || '', width: 84, height: 84, correctLevel: QRCode.CorrectLevel.M });
     });
     </script>
@@ -118,6 +142,12 @@ if ($search !== '') {
 $stmt = $pdo->prepare("SELECT id, name, item_code, barcode, sale_price, unit FROM products WHERE status='active' $where ORDER BY name LIMIT 500");
 $stmt->execute($params);
 $products = $stmt->fetchAll();
+$servicesForLabels = [];
+try {
+    $svcStmt = $pdo->prepare("SELECT id, name, code, price, unit FROM services WHERE status='active' " . ($search !== '' ? "AND (name LIKE ? OR code LIKE ?)" : '') . " ORDER BY name");
+    $svcStmt->execute($search !== '' ? ["%$search%", "%$search%"] : []);
+    $servicesForLabels = $svcStmt->fetchAll();
+} catch (Exception $e) {}
 $missingBarcodeCount = (int)$pdo->query("SELECT COUNT(*) c FROM products WHERE status='active' AND (barcode IS NULL OR barcode = '')")->fetch()['c'];
 ?>
 <div class="page-head">
@@ -154,6 +184,19 @@ $missingBarcodeCount = (int)$pdo->query("SELECT COUNT(*) c FROM products WHERE s
                     <td><input type="number" min="1" max="100" value="1" class="form-control form-control-sm copy-input" data-id="<?= (int)$p['id'] ?>" disabled></td>
                 </tr>
             <?php endforeach; ?>
+            <?php if (!empty($servicesForLabels)): ?>
+                <tr><td colspan="6" style="background:var(--surface-alt);font-weight:700;"><i class="bi bi-printer"></i> সার্ভিস — স্ক্যান করলেই POS-এ সরাসরি যুক্ত হবে</td></tr>
+                <?php foreach ($servicesForLabels as $sv): ?>
+                <tr>
+                    <td><input type="checkbox" class="item-check" data-id="s<?= (int)$sv['id'] ?>" onchange="toggleItem(this)"></td>
+                    <td><span class="badge badge-info">সার্ভিস</span></td>
+                    <td><?= e($sv['name']) ?></td>
+                    <td><?= !empty($sv['code']) ? e($sv['code']) : '<span style="color:var(--text-secondary);">নেই — স্বয়ংক্রিয়ভাবে বসবে</span>' ?></td>
+                    <td class="num">৳<?= money($sv['price']) ?></td>
+                    <td><input type="number" min="1" max="100" value="1" class="form-control form-control-sm copy-input" data-id="s<?= (int)$sv['id'] ?>" disabled></td>
+                </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>

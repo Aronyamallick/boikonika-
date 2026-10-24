@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Mallik Book House & Computer — Database Schema
--- Developed by Askurex Technologies
+-- Developed by Arieskonex Technologies
 -- =====================================================================
 
 SET NAMES utf8mb4;
@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS products (
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS services (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) DEFAULT NULL UNIQUE,
     name VARCHAR(150) NOT NULL,
     price DECIMAL(12,2) NOT NULL DEFAULT 0,
     unit VARCHAR(50) DEFAULT 'টি',
@@ -603,13 +604,13 @@ INSERT INTO categories (name, type) VALUES
 ('গল্প ও উপন্যাস', 'book'),
 ('প্রিন্ট ও ফটোকপি কাগজ', 'print');
 
-INSERT INTO services (name, price, unit) VALUES
-('ফটোকপি (প্রতি পাতা)', 2.00, 'পাতা'),
-('প্রিন্ট - সাদাকালো (প্রতি পাতা)', 3.00, 'পাতা'),
-('প্রিন্ট - কালার (প্রতি পাতা)', 10.00, 'পাতা'),
-('স্ক্যান (প্রতি পাতা)', 5.00, 'পাতা'),
-('লেমিনেশন (প্রতি পিস)', 20.00, 'পিস'),
-('অনলাইন ফরম পূরণ', 50.00, 'টি'),
-('সিভি তৈরি', 100.00, 'টি');
+INSERT INTO services (code, name, price, unit) VALUES
+('S00001', 'ফটোকপি (প্রতি পাতা)', 2.00, 'পাতা'),
+('S00002', 'প্রিন্ট - সাদাকালো (প্রতি পাতা)', 3.00, 'পাতা'),
+('S00003', 'প্রিন্ট - কালার (প্রতি পাতা)', 10.00, 'পাতা'),
+('S00004', 'স্ক্যান (প্রতি পাতা)', 5.00, 'পাতা'),
+('S00005', 'লেমিনেশন (প্রতি পিস)', 20.00, 'পিস'),
+('S00006', 'অনলাইন ফরম পূরণ', 50.00, 'টি'),
+('S00007', 'সিভি তৈরি', 100.00, 'টি');
 
 SET FOREIGN_KEY_CHECKS = 1;

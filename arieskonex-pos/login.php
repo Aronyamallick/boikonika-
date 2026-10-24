@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($u['status'] !== 'active') {
             $error = t('err_inactive_account', 'আপনার অ্যাকাউন্ট নিষ্ক্রিয় করা আছে। মালিকের সাথে যোগাযোগ করুন।');
         } else {
+            // সেশন ফিক্সেশন প্রতিরোধ — লগইনের পর নতুন সেশন আইডি
+            session_regenerate_id(true);
             $_SESSION['user'] = [
                 'id' => $u['id'], 'name' => $u['name'], 'username' => $u['username'],
                 'role' => $u['role'], 'mobile' => $u['mobile'], 'email' => $u['email'],
@@ -50,12 +52,12 @@ $shopName = $settings['shop_name'] ?? 'Mallik Book House & Computer';
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=4.0.0">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2C1650">
+<meta name="theme-color" content="#4F46E5">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="মল্লিক বুক হাউজ">
+<meta name="apple-mobile-web-app-title" content="<?= e(mb_substr($shopName, 0, 20)) ?>">
 <link rel="icon" href="assets/img/favicon.ico">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 </head>
@@ -64,7 +66,7 @@ $shopName = $settings['shop_name'] ?? 'Mallik Book House & Computer';
     <div class="auth-card">
         <div class="brand-lockup">
             <div class="book-spine-mark lg"><span></span><span></span><span></span><span></span></div>
-            <div class="shop-name"><?= e($shopName) ?><small>Powered by Askurex Technologies</small></div>
+            <div class="shop-name"><?= e($shopName) ?><small>Powered by Arieskonex Technologies</small></div>
         </div>
 
         <?php if ($error): ?>
@@ -85,6 +87,7 @@ $shopName = $settings['shop_name'] ?? 'Mallik Book House & Computer';
         <div style="text-align:center;margin-top:14px;">
             <a href="forgot_password.php" style="font-size:13.5px;"><?= e(t('forgot_password')) ?></a>
         </div>
+        <div class="auth-credit">Developed by <strong>Arieskonex Technologies</strong></div>
     </div>
 </div>
 <script>
