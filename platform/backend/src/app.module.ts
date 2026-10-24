@@ -20,6 +20,9 @@ import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DevController } from './modules/dev/dev.controller';
 import { HealthModule } from './modules/health/health.module';
+import { KycModule } from './modules/kyc/kyc.module';
+import { ProfilesModule } from './modules/profiles/profiles.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 
@@ -50,9 +53,12 @@ const isProduction = process.env.NODE_ENV === 'production';
       }),
     }),
     AuditModule,
+    SettingsModule,
     NotificationsModule,
     RbacModule,
     AuthModule,
+    ProfilesModule,
+    KycModule,
     HealthModule,
   ],
   controllers: isProduction ? [] : [DevController],

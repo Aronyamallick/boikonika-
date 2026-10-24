@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { char, check, date, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { createdAt, id, timestamps } from './_columns';
-import { kycDocumentTypeEnum, kycPurposeEnum, kycStatusEnum } from './enums';
+import { kycDocumentTypeEnum, kycPurposeEnum, kycStatusEnum, roleKeyEnum } from './enums';
 import { users } from './identity';
 
 /**
@@ -16,6 +16,8 @@ export const kycVerifications = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     purpose: kycPurposeEnum('purpose').notNull(),
+    /** Role granted on approval (a seller purpose can mean book_seller or general_seller). */
+    requestedRole: roleKeyEnum('requested_role').notNull(),
     status: kycStatusEnum('status').notNull().default('pending'),
     legalName: varchar('legal_name', { length: 160 }).notNull(),
     dateOfBirth: date('date_of_birth'),

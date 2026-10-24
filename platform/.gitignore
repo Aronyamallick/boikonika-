@@ -17,3 +17,4 @@ mobile/ios/
 *.log
 .DS_Store
 web/src/styles/tokens.css
+storage-test/

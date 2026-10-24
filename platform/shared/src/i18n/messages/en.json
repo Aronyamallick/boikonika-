@@ -392,7 +392,12 @@
     "nameLength": "Enter a name between 2 and 120 characters.",
     "acceptTerms": "Please accept the Terms and Privacy Policy.",
     "recoveryCode": "Enter a recovery code like ABCD-1234.",
-    "invalidId": "Invalid reference."
+    "invalidId": "Invalid reference.",
+    "pickInterests": "Pick at least 3 interests.",
+    "confirmDelete": "Type DELETE to confirm.",
+    "declaration": "Please confirm this declaration.",
+    "reasonRequired": "Please give a reason (at least 5 characters).",
+    "fileMissing": "Please add the required documents."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -603,6 +608,28 @@
       "twoFactorEnabledBody": "Your account now asks for a code from your authenticator app when you sign in. Keep your recovery codes in a safe place.",
       "twoFactorDisabledTitle": "Two-step verification was turned off",
       "twoFactorDisabledBody": "Two-step verification was turned off for your account on {time}. If you did not do this, reset your password now."
+    },
+    "kyc": {
+      "submitted": "Your verification request was submitted. We usually review it within 3 working days.",
+      "alreadyOpen": "You already have a verification request in review for this.",
+      "alreadyVerified": "You are already verified for this role.",
+      "roleNotAllowed": "This role cannot be requested with this verification type.",
+      "organisationRequired": "Enter the business or institution name.",
+      "invalidNid": "Enter a valid NID number (10, 13 or 17 digits).",
+      "documentNumberRequired": "Enter the document number.",
+      "documentsMismatch": "Each uploaded file needs its document details.",
+      "selfReview": "You cannot review your own verification.",
+      "invalidTransition": "This request is no longer waiting for that decision.",
+      "approved": "Verification approved.",
+      "rejected": "Verification rejected.",
+      "resubmissionRequested": "Resubmission requested.",
+      "reviewStarted": "Review started.",
+      "approvedTitle": "Your verification is approved",
+      "approvedBody": "You are verified as {role}. The related tools are now available in your account.",
+      "rejectedTitle": "Your verification was not approved",
+      "rejectedBody": "Reason: {reason}. You can submit a new request with the correct documents.",
+      "resubmissionTitle": "Please resubmit your documents",
+      "resubmissionBody": "We need a little more: {reason}. Open your verification page to submit again."
     }
   }
 }
