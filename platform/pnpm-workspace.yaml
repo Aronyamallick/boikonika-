@@ -1,0 +1,14 @@
+packages:
+  - shared
+  - database
+  - backend
+  - web
+  - mobile
+  - tests
+
+# pnpm 10 blocks dependency build scripts by default; allow only the ones that need them.
+onlyBuiltDependencies:
+  - esbuild
+  - '@swc/core'
+  - '@parcel/watcher'
+  - sharp
