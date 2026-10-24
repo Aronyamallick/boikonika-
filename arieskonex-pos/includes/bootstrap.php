@@ -39,6 +39,23 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', '');
 }
 
+/**
+ * সাইটের রুট পাথ (যেমন "" বা "/pos") — প্রতিটি রিকোয়েস্ট থেকেই নির্ণয় করা হয়।
+ * CSS/JS ও ভেতরের রিডাইরেক্ট এই পাথ দিয়ে হয়, BASE_URL-এর পূর্ণ ঠিকানা দিয়ে নয়। আগে ইনস্টলের
+ * সময় http:// সেভ হয়ে থাকলে পরে https:// দিয়ে খুললে (বা www/নন-www পার্থক্যে) ব্রাউজার
+ * app.js/style.css ব্লক করত — ফলে POS ও স্ক্যানার একদম কাজ করত না। এখন সাইট যেভাবেই
+ * খোলা হোক, ফাইলগুলো সবসময় একই সাইট থেকে লোড হয়। (QR কোড/ইমেইলের মতো বাইরের লিংকে
+ * এখনো BASE_URL ব্যবহৃত হয়।)
+ */
+if (!defined('APP_BASE_PATH')) {
+    $appScriptDir = rtrim(str_replace('\\', '/', dirname(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''))), '/');
+    if (preg_match('#/(modules|install)$#', $appScriptDir)) {
+        $appScriptDir = rtrim(str_replace('\\', '/', dirname($appScriptDir)), '/');
+    }
+    define('APP_BASE_PATH', $appScriptDir === '.' ? '' : $appScriptDir);
+    unset($appScriptDir);
+}
+
 // CSS/JS হালনাগাদ হলে এই সংস্করণ বদলান — ব্রাউজার ও সার্ভিস ওয়ার্কার পুরোনো ক্যাশ ফেলে নতুন ফাইল নেবে
 if (!defined('APP_ASSET_VERSION')) {
     define('APP_ASSET_VERSION', '4.0.0');

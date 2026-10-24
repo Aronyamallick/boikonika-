@@ -7,5 +7,5 @@ if (!is_file(APP_ROOT . '/lang/' . $lang . '.php')) {
 }
 $_SESSION['lang'] = $lang;
 
-$back = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/modules/dashboard.php');
+$back = $_SERVER['HTTP_REFERER'] ?? (APP_BASE_PATH . '/modules/dashboard.php');
 redirect($back);

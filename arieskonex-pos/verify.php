@@ -72,8 +72,8 @@ $invoiceLabel = $type === 'purchase' ? 'ক্রয় ইনভয়েস' :
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= APP_ASSET_VERSION ?>">
-<link rel="icon" href="<?= BASE_URL ?>/assets/img/favicon.ico">
+<link rel="stylesheet" href="<?= e(APP_BASE_PATH) ?>/assets/css/style.css?v=<?= APP_ASSET_VERSION ?>">
+<link rel="icon" href="<?= e(APP_BASE_PATH) ?>/assets/img/favicon.ico">
 <style>
     body { background: var(--bg, #F5F3FA); margin:0; padding:18px; }
     .verify-wrap { max-width: 480px; margin: 0 auto; }

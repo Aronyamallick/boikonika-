@@ -84,7 +84,7 @@ function csrf_verify() {
     $token = $_POST['csrf_token'] ?? '';
     if (!$token || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
         flash_set('নিরাপত্তা যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন।', 'danger');
-        redirect($_SERVER['HTTP_REFERER'] ?? BASE_URL);
+        redirect($_SERVER['HTTP_REFERER'] ?? (APP_BASE_PATH . '/modules/dashboard.php'));
     }
 }
 
@@ -173,13 +173,13 @@ function require_permission($permission) {
     require_login();
     if (!has_permission(current_user(), $permission)) {
         flash_set('আপনার এই কাজের অনুমতি নেই।', 'danger');
-        redirect(BASE_URL . '/modules/dashboard.php');
+        redirect(APP_BASE_PATH . '/modules/dashboard.php');
     }
 }
 
 function require_login() {
     if (empty($_SESSION['user'])) {
-        redirect(BASE_URL . '/login.php');
+        redirect(APP_BASE_PATH . '/login.php');
     }
 }
 
@@ -207,7 +207,7 @@ function require_owner() {
     require_login();
     if (!is_owner()) {
         flash_set('এই পাতাটি শুধুমাত্র মালিকের জন্য। লাভ-ক্ষতির তথ্য দেখার অনুমতি একমাত্র মালিকের।', 'danger');
-        redirect(BASE_URL . '/modules/dashboard.php');
+        redirect(APP_BASE_PATH . '/modules/dashboard.php');
     }
 }
 

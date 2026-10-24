@@ -48,21 +48,21 @@ $langNames = ['bn' => 'বাংলা', 'en' => 'English'];
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= APP_ASSET_VERSION ?>">
-<link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
+<link rel="stylesheet" href="<?= e(APP_BASE_PATH) ?>/assets/css/style.css?v=<?= APP_ASSET_VERSION ?>">
+<link rel="manifest" href="<?= e(APP_BASE_PATH) ?>/manifest.json">
 <meta name="theme-color" content="#4F46E5">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="<?= e(mb_substr($shopName, 0, 20)) ?>">
-<link rel="icon" href="<?= BASE_URL ?>/assets/img/favicon.ico">
-<link rel="apple-touch-icon" href="<?= BASE_URL ?>/assets/img/apple-touch-icon.png">
+<link rel="icon" href="<?= e(APP_BASE_PATH) ?>/assets/img/favicon.ico">
+<link rel="apple-touch-icon" href="<?= e(APP_BASE_PATH) ?>/assets/img/apple-touch-icon.png">
 <script>
-window.APP_BASE_URL = <?= json_encode(BASE_URL) ?>;
+window.APP_BASE_URL = <?= json_encode(APP_BASE_PATH) ?>;
 // গ্লোবাল বারকোড স্ক্যানার: POS ছাড়া অন্য যেকোনো পাতায় স্ক্যান করলে সরাসরি POS-এ গিয়ে আইটেমটি কার্টে যুক্ত হয়
 window.APP_SCAN_TO_POS = <?= (has_permission($user, 'sales') && empty($disableGlobalScan)) ? 'true' : 'false' ?>;
 </script>
-<script src="<?= BASE_URL ?>/assets/js/app.js?v=<?= APP_ASSET_VERSION ?>"></script>
+<script src="<?= e(APP_BASE_PATH) ?>/assets/js/app.js?v=<?= APP_ASSET_VERSION ?>"></script>
 </head>
 <body class="<?= e($bodyClass ?? '') ?>">
 <div class="app-shell">
@@ -115,10 +115,10 @@ window.APP_SCAN_TO_POS = <?= (has_permission($user, 'sales') && empty($disableGl
                     <li><hr class="dropdown-divider"></li>
                     <li><h6 class="dropdown-header"><?= e(t('language')) ?></h6></li>
                     <?php foreach ($availableLangs as $lc): ?>
-                        <li><a class="dropdown-item <?= $GLOBALS['ACTIVE_LANG'] === $lc ? 'active' : '' ?>" href="<?= BASE_URL ?>/set_language.php?lang=<?= e($lc) ?>"><?= e($langNames[$lc] ?? strtoupper($lc)) ?></a></li>
+                        <li><a class="dropdown-item <?= $GLOBALS['ACTIVE_LANG'] === $lc ? 'active' : '' ?>" href="<?= e(APP_BASE_PATH) ?>/set_language.php?lang=<?= e($lc) ?>"><?= e($langNames[$lc] ?? strtoupper($lc)) ?></a></li>
                     <?php endforeach; ?>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>/logout.php"><i class="bi bi-box-arrow-right"></i> <?= e(t('logout')) ?></a></li>
+                    <li><a class="dropdown-item text-danger" href="<?= e(APP_BASE_PATH) ?>/logout.php"><i class="bi bi-box-arrow-right"></i> <?= e(t('logout')) ?></a></li>
                 </ul>
             </div>
         </header>
