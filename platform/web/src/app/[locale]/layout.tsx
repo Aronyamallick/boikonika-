@@ -4,9 +4,10 @@ import '../globals.css';
 import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { colors } from '@boikonika/shared';
+import { AuthProvider } from '@/components/auth/auth-provider';
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
@@ -52,6 +53,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations('common');
+  // The "api" namespace is only used by the server; keep it out of the client bundle.
+  const { api: _serverOnly, ...clientMessages } = await getMessages();
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -66,15 +69,17 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         >
           {t('skipToContent')}
         </a>
-        <NextIntlClientProvider>
-          <ToastProvider closeLabel={t('close')}>
-            <SiteHeader />
-            <main id="main" tabIndex={-1} className="flex-1 outline-none">
-              {children}
-            </main>
-            <SiteFooter />
-            <MobileTabBar />
-          </ToastProvider>
+        <NextIntlClientProvider messages={clientMessages}>
+          <AuthProvider>
+            <ToastProvider closeLabel={t('close')}>
+              <SiteHeader />
+              <main id="main" tabIndex={-1} className="flex-1 outline-none">
+                {children}
+              </main>
+              <SiteFooter />
+              <MobileTabBar />
+            </ToastProvider>
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { LOCALES } from '../i18n';
+import { LOCALES } from '../i18n/locales';
 import { normalizeBdPhone } from '../utils/phone';
-import { toEnglishDigits } from '../utils/bangla';
-import { PASSWORD_POLICY, passwordProblems } from '../constants/security';
+import { PASSWORD_POLICY } from '../constants/security';
+import { displayNameError, isValidUsername, normalizeOtp, parseIdentifier, passwordError } from '../validation/fields';
 
 /**
  * Field schemas shared by the API, the web forms and the mobile app. Error messages are i18n keys
@@ -27,23 +27,6 @@ export const bdPhoneSchema = z
     }
     return phone;
   });
-
-export type Identifier = { kind: 'email'; value: string } | { kind: 'phone'; value: string } | { kind: 'username'; value: string };
-
-/** Email, BD mobile number or username — normalised and tagged with its kind. */
-export function parseIdentifier(raw: string): Identifier | null {
-  const value = raw.trim();
-  if (!value) return null;
-  if (value.includes('@')) {
-    const parsed = emailSchema.safeParse(value);
-    return parsed.success ? { kind: 'email', value: parsed.data } : null;
-  }
-  const phone = normalizeBdPhone(value);
-  if (phone) return { kind: 'phone', value: phone };
-  // Usernames need a letter, so a mistyped phone number is reported as invalid instead of
-  // silently becoming a username lookup.
-  return /^[A-Za-z0-9._]{3,30}$/.test(value) && /[A-Za-z]/.test(value) ? { kind: 'username', value: value.toLowerCase() } : null;
-}
 
 /** Email or BD mobile (no usernames) — where a code will be sent. */
 export const contactSchema = z
@@ -78,28 +61,28 @@ export const passwordSchema = z
   .string({ error: 'validation.required' })
   .max(PASSWORD_POLICY.maxLength, { error: 'validation.passwordWeak' })
   .superRefine((value, ctx) => {
-    if (passwordProblems(value).length) ctx.addIssue({ code: 'custom', message: 'validation.passwordWeak' });
+    if (passwordError(value)) ctx.addIssue({ code: 'custom', message: 'validation.passwordWeak' });
   });
 
 export const usernameSchema = z
   .string({ error: 'validation.required' })
   .trim()
-  .regex(/^[A-Za-z0-9._]{3,30}$/, { error: 'validation.username' })
-  .refine((v) => /[A-Za-z]/.test(v) && !/^[._]|[._]$|\.\./.test(v), { error: 'validation.username' });
+  .refine(isValidUsername, { error: 'validation.username' });
 
 export const displayNameSchema = z
   .string({ error: 'validation.required' })
   .trim()
-  .min(2, { error: 'validation.nameLength' })
-  .max(120, { error: 'validation.nameLength' })
-  .refine((v) => !/[<>]/.test(v), { error: 'validation.nameLength' });
+  .refine((v) => !displayNameError(v), { error: 'validation.nameLength' });
 
 /** Six digits; Bangla digits are accepted and normalised. */
-export const otpCodeSchema = z
-  .string({ error: 'validation.otp' })
-  .trim()
-  .transform((v) => toEnglishDigits(v).replace(/\s/g, ''))
-  .pipe(z.string().regex(/^\d{6}$/, { error: 'validation.otp' }));
+export const otpCodeSchema = z.string({ error: 'validation.otp' }).transform((v, ctx) => {
+  const code = normalizeOtp(v);
+  if (!code) {
+    ctx.addIssue({ code: 'custom', message: 'validation.otp' });
+    return z.NEVER;
+  }
+  return code;
+});
 
 export const localeSchema = z.enum(LOCALES);
 

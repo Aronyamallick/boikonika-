@@ -73,7 +73,7 @@ export async function registerUser(ctx: TestContext, overrides: { phone?: string
 
 export function refreshCookie(res: request.Response): string {
   const header = ([] as string[]).concat(res.headers['set-cookie'] ?? []);
-  const cookie = header.find((c) => c.startsWith('bk_refresh='));
+  const cookie = header.find((c) => c.startsWith('bk_refresh=') && !c.startsWith('bk_refresh=;'));
   if (!cookie) throw new Error('No refresh cookie set');
   return cookie.split(';')[0]!;
 }

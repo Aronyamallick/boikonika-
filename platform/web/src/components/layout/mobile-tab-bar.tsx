@@ -1,7 +1,8 @@
 'use client';
 
-import { BookMarked, Compass, Home, User, Users } from 'lucide-react';
+import { BookMarked, Compass, Home, LogIn, User, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useAuth } from '@/components/auth/auth-provider';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 
@@ -10,17 +11,23 @@ const TABS = [
   { href: '/explore', key: 'explore', Icon: Compass },
   { href: '/community', key: 'community', Icon: Users },
   { href: '/library', key: 'library', Icon: BookMarked },
-  { href: '/profile', key: 'profile', Icon: User },
 ] as const;
 
 /** Five-item bottom navigation for phones (Home, Explore, Community, Library, Profile). */
 export function MobileTabBar() {
   const t = useTranslations('nav');
   const pathname = usePathname();
+  const { status, user } = useAuth();
+  // The last tab is the profile when signed in and the way to log in otherwise.
+  const account =
+    status === 'authenticated' && user
+      ? { href: `/u/${user.username}`, key: 'profile' as const, Icon: User }
+      : { href: '/login', key: 'login' as const, Icon: LogIn };
+  const tabs = [...TABS, account];
   return (
     <nav aria-label={t('home')} className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
       <ul className="grid grid-cols-5">
-        {TABS.map(({ href, key, Icon }) => {
+        {tabs.map(({ href, key, Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
           return (
             <li key={key}>

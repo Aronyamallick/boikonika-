@@ -1,6 +1,7 @@
 import { negotiateLocale, translate } from '../i18n';
 import { loginSchema, registerSchema, twoFactorLoginSchema } from './auth';
-import { contactSchema, emailSchema, identifierSchema, otpCodeSchema, parseIdentifier, passwordSchema, usernameSchema } from './common';
+import { parseIdentifier } from '../validation/fields';
+import { contactSchema, emailSchema, identifierSchema, otpCodeSchema, passwordSchema, usernameSchema } from './common';
 
 describe('identifier parsing', () => {
   it.each([

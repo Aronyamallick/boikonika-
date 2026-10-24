@@ -2,7 +2,7 @@ import { ShoppingCart } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Suspense } from 'react';
 import { Link } from '@/i18n/navigation';
-import { buttonClasses } from '../ui/button';
+import { UserMenu } from '../auth/user-menu';
 import { LocaleSwitcher } from './locale-switcher';
 import { Logo } from './logo';
 import { SearchBox } from './search-box';
@@ -44,9 +44,7 @@ export async function SiteHeader() {
           <Link href="/cart" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-fg-muted hover:bg-subtle hover:text-fg" aria-label={t('nav.cart')}>
             <ShoppingCart className="h-5 w-5" aria-hidden="true" />
           </Link>
-          <Link href="/login" className={buttonClasses({ variant: 'primary', size: 'sm', className: 'ml-1 hidden sm:inline-flex' })}>
-            {t('nav.login')}
-          </Link>
+          <UserMenu />
         </div>
       </div>
       <div className="container-page pb-3 md:hidden">

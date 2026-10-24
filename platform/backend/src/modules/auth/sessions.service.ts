@@ -12,6 +12,8 @@ import { DB } from '../../infra/database/database.module';
 import { REDIS } from '../../infra/redis/redis.module';
 
 export const REFRESH_COOKIE = 'bk_refresh';
+/** Non-secret companion cookie readable by scripts: tells the web app a session exists, so it only tries a silent refresh when it can succeed. */
+export const SESSION_HINT_COOKIE = 'bk_session';
 /** Concurrent refreshes (two tabs) within this window are told to retry instead of being treated as theft. */
 const ROTATION_GRACE_MS = 30_000;
 /** A session can be refreshed for at most this long after sign-in, even when used every day. */
@@ -169,11 +171,18 @@ export class SessionsService {
 
   /** Persistent sessions get a dated cookie; others a browser-session cookie that ends with the browser. */
   setRefreshCookie(res: Response, token: string, session: SessionRow): void {
-    res.cookie(REFRESH_COOKIE, token, { ...this.cookieOptions(), ...(session.persistent ? { expires: session.expiresAt } : {}) });
+    const lifetime = session.persistent ? { expires: session.expiresAt } : {};
+    res.cookie(REFRESH_COOKIE, token, { ...this.cookieOptions(), ...lifetime });
+    res.cookie(SESSION_HINT_COOKIE, '1', { ...this.hintCookieOptions(), ...lifetime });
   }
 
   clearRefreshCookie(res: Response): void {
     res.clearCookie(REFRESH_COOKIE, this.cookieOptions());
+    res.clearCookie(SESSION_HINT_COOKIE, this.hintCookieOptions());
+  }
+
+  private hintCookieOptions(): CookieOptions {
+    return { httpOnly: false, secure: this.config.COOKIE_SECURE, sameSite: 'lax', path: '/', domain: this.config.COOKIE_DOMAIN || undefined };
   }
 
   private cookieOptions(): CookieOptions {

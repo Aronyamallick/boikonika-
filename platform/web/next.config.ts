@@ -4,17 +4,21 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+/** Where the Next.js server forwards /api/v1 (in production the reverse proxy usually routes it directly). */
+const apiInternalUrl = (process.env.API_INTERNAL_URL ?? apiUrl).replace(/\/$/, '');
+const google = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? ' https://accounts.google.com' : '';
 const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL ?? apiUrl;
 const isDev = process.env.NODE_ENV !== 'production';
 
 const toWs = (url: string) => url.replace(/^http/, 'ws');
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
-  "style-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}${google}`,
+  `style-src 'self' 'unsafe-inline'${google}`,
   `img-src 'self' data: blob: ${assetsUrl} ${apiUrl} https:`,
   "font-src 'self' data:",
-  `connect-src 'self' ${apiUrl} ${toWs(apiUrl)}${isDev ? ' ws://localhost:3000' : ''}`,
+  `connect-src 'self' ${apiUrl} ${toWs(apiUrl)}${isDev ? ' ws://localhost:3000' : ''}${google}`,
+  `frame-src 'self'${google}`,
   "media-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -46,6 +50,10 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
+  },
+  async rewrites() {
+    // Same-origin API calls keep the refresh cookie first-party and avoid CORS preflights.
+    return [{ source: '/api/v1/:path*', destination: `${apiInternalUrl}/api/v1/:path*` }];
   },
 };
 
