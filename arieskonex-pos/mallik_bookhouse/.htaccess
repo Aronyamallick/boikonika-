@@ -1,0 +1,13 @@
+Options -Indexes
+
+<IfModule mod_php.c>
+    php_flag display_errors off
+</IfModule>
+
+<FilesMatch "\.(sql|log|md)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+</IfModule>

@@ -1,0 +1,17 @@
+{
+  "name": "মল্লিক বুক হাউজ এন্ড কম্পিউটার",
+  "short_name": "মল্লিক বুক হাউজ",
+  "description": "মল্লিক বুক হাউজ এন্ড কম্পিউটার — শপ ম্যানেজমেন্ট সিস্টেম",
+  "start_url": "./login.php",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F7F6FB",
+  "theme_color": "#2C1650",
+  "lang": "bn",
+  "icons": [
+    { "src": "assets/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

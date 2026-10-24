@@ -1,0 +1,35 @@
+{
+  "name": "mallik-bookhouse-desktop",
+  "productName": "Mallik Book House",
+  "version": "1.0.0",
+  "description": "Mallik Book House & Computer — Shop Management (Desktop Edition)",
+  "main": "main.js",
+  "author": "Askurex Technologies",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.askurex.mallikbookhouse",
+    "productName": "Mallik Book House",
+    "files": [
+      "main.js",
+      "preload.js",
+      "config.json",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
