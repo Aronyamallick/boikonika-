@@ -588,6 +588,22 @@ table.data-table td.num, table.data-table th.num { text-align: right; }
 .pos-toast.out { opacity: 0; transform: translateX(16px); transition: opacity .3s, transform .3s; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: none; } }
 
+/* স্ক্যান/খোঁজে পণ্য না পেলে — এখান থেকেই নতুন পণ্য যুক্ত করার বার ও ফর্ম */
+.scan-miss-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin: -4px 0 14px; padding: 10px 12px 10px 14px; border-radius: 14px;
+    background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(225,29,72,.22);
+    font-size: 14px; font-weight: 600; animation: contentIn .2s ease;
+}
+.scan-miss-bar[hidden], .qp-duplicate[hidden], #qpError[hidden] { display: none; }
+.scan-miss-bar .smb-text { flex: 1; min-width: 160px; word-break: break-all; }
+.scan-miss-bar .smb-close { border: none; background: transparent; color: inherit; width: 30px; height: 30px; border-radius: 9px; cursor: pointer; flex: none; }
+.scan-miss-bar .smb-close:hover { background: rgba(225,29,72,.12); }
+.pos-new-product-btn { align-self: center; }
+.qp-duplicate { margin-bottom: 14px; padding: 12px 14px; border-radius: 12px; background: var(--info-bg); color: var(--info); border: 1px solid rgba(37,99,235,.22); font-size: 13.5px; }
+.qp-duplicate .qpd-title { font-weight: 600; margin-bottom: 10px; }
+.qp-duplicate .qpd-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
 /* বিক্রয় সম্পন্ন ব্যানার (ইনভয়েস পাতায়) — স্বয়ংক্রিয়ভাবে নতুন বিক্রয় খোলে */
 .sale-done-banner {
     position: relative; overflow: hidden;

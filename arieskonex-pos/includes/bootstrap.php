@@ -58,7 +58,7 @@ if (!defined('APP_BASE_PATH')) {
 
 // CSS/JS হালনাগাদ হলে এই সংস্করণ বদলান — ব্রাউজার ও সার্ভিস ওয়ার্কার পুরোনো ক্যাশ ফেলে নতুন ফাইল নেবে
 if (!defined('APP_ASSET_VERSION')) {
-    define('APP_ASSET_VERSION', '4.0.0');
+    define('APP_ASSET_VERSION', '4.1.0');
 }
 if (!defined('APP_DEVELOPER')) {
     define('APP_DEVELOPER', 'Arieskonex Technologies');

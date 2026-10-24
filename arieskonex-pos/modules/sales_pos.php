@@ -305,6 +305,12 @@ if (empty($paymentMethods)) {
     $paymentMethods = [['method_key' => 'cash', 'method_name' => 'ক্যাশ']];
 }
 
+// বিক্রয়ের সময় না পাওয়া পণ্য POS থেকেই যুক্ত করার অনুমতি — stock.php-এর নিয়মে:
+// মালিক যুক্ত করলে সাথে সাথে বিক্রয়যোগ্য, "পণ্য যুক্ত করুন" অনুমতিপ্রাপ্তদের পণ্য মালিকের অনুমোদন সাপেক্ষে
+$canQuickAddProduct = is_owner() || has_permission(current_user(), 'add_product');
+$quickAddNeedsApproval = !is_owner();
+$quickAddCategories = $canQuickAddProduct ? $pdo->query("SELECT id, name FROM categories ORDER BY name")->fetchAll() : [];
+
 $pageTitle = t('pos_title');
 $activeNav = 'sales';
 $bodyClass = 'page-pos';
@@ -320,6 +326,15 @@ require_once __DIR__ . '/../includes/header.php';
                 <input type="text" id="scanInput" class="pos-scan-input" placeholder="<?= e(t('scan_placeholder')) ?>" autocomplete="off" lang="en" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
                 <span class="scanner-status" id="scannerStatus" title="<?= e(t('scanner_ready_hint', 'বারকোড স্ক্যানার প্রস্তুত — যেকোনো সময় স্ক্যান করুন, আইটেম সরাসরি কার্টে যুক্ত হবে')) ?>"><span class="dot"></span><span class="txt"><?= e(t('scanner_ready', 'স্ক্যানার প্রস্তুত')) ?></span></span>
             </div>
+            <!-- স্ক্যান/খোঁজে কিছু না পেলে: এখান থেকেই নতুন পণ্য হিসেবে যুক্ত করার সুযোগ -->
+            <div class="scan-miss-bar" id="scanMissBar" hidden>
+                <i class="bi bi-exclamation-octagon-fill"></i>
+                <span class="smb-text"></span>
+                <?php if ($canQuickAddProduct): ?>
+                <button type="button" class="btn btn-sm btn-primary" id="scanMissAddBtn"><i class="bi bi-plus-lg"></i> <?= e(t('qp_add_from_scan', 'নতুন পণ্য হিসেবে যুক্ত করুন')) ?></button>
+                <?php endif; ?>
+                <button type="button" class="smb-close" id="scanMissClose" aria-label="close"><i class="bi bi-x-lg"></i></button>
+            </div>
             <div class="pos-filter-row">
                 <div class="seg-tabs" id="priceTabs">
                     <a href="#" class="active" data-price="retail"><?= e(t('retail_price')) ?></a>
@@ -330,6 +345,9 @@ require_once __DIR__ . '/../includes/header.php';
                     <a href="#" data-filter="product"><?= e(t('filter_product')) ?></a>
                     <a href="#" data-filter="service"><?= e(t('filter_service')) ?></a>
                 </div>
+                <?php if ($canQuickAddProduct): ?>
+                <button type="button" class="btn btn-sm btn-outline pos-new-product-btn" id="quickAddBtn"><i class="bi bi-plus-circle"></i> <?= e(t('qp_button', 'নতুন পণ্য')) ?></button>
+                <?php endif; ?>
             </div>
             <div id="itemGrid" class="pos-item-grid"></div>
             <div class="pos-shortcuts">
@@ -425,6 +443,73 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<?php if ($canQuickAddProduct): ?>
+<!-- নতুন পণ্য যুক্ত করার মোডাল — বিক্রয় না ছেড়েই পণ্য তৈরি করে কার্টে যোগ -->
+<div class="modal fade" id="quickProductModal" tabindex="-1" aria-hidden="true" aria-labelledby="quickProductTitle">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="quickProductForm" autocomplete="off" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quickProductTitle"><i class="bi bi-box-seam"></i> <?= e(t('qp_title', 'নতুন পণ্য যুক্ত করুন')) ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?= e(t('cancel', 'বাতিল')) ?>"></button>
+                </div>
+                <div class="modal-body">
+                    <?php if ($quickAddNeedsApproval): ?>
+                    <div class="alert alert-warning" style="font-size:13px;"><i class="bi bi-hourglass-split"></i> <?= e(t('qp_pending_note', 'আপনার যুক্ত করা পণ্য মালিকের অনুমোদনের পর বিক্রয়ে দেখাবে।')) ?></div>
+                    <?php endif; ?>
+                    <div id="qpError" class="alert alert-danger" style="font-size:13px;" hidden></div>
+                    <div id="qpDuplicate" class="qp-duplicate" hidden></div>
+                    <div class="form-group">
+                        <label for="qpName"><?= e(t('qp_name', 'পণ্যের নাম')) ?> <span style="color:var(--danger);">*</span></label>
+                        <input type="text" name="name" id="qpName" class="form-control" maxlength="255" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="<?= is_owner() ? 'col-6' : 'col-12' ?> form-group">
+                            <label for="qpSalePrice"><?= e(t('qp_sale_price', 'বিক্রয় মূল্য (৳)')) ?> <span style="color:var(--danger);">*</span></label>
+                            <input type="number" step="0.01" min="0" name="sale_price" id="qpSalePrice" class="form-control" required>
+                        </div>
+                        <?php if (is_owner()): ?>
+                        <div class="col-6 form-group">
+                            <label for="qpCostPrice"><?= e(t('qp_cost_price', 'ক্রয় মূল্য (৳)')) ?></label>
+                            <input type="number" step="0.01" min="0" name="cost_price" id="qpCostPrice" class="form-control" placeholder="0.00">
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="form-group">
+                        <label for="qpBarcode"><?= e(t('qp_barcode', 'বারকোড')) ?></label>
+                        <input type="text" name="barcode" id="qpBarcode" class="form-control" maxlength="100" lang="en" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="<?= e(t('qp_barcode_ph', 'স্ক্যান করুন বা লিখুন (ঐচ্ছিক)')) ?>">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4 form-group">
+                            <label for="qpStock"><?= e(t('qp_stock', 'স্টকে আছে')) ?></label>
+                            <input type="number" min="0" step="1" name="stock_qty" id="qpStock" class="form-control" value="1">
+                            <div class="form-hint"><?= e(t('qp_stock_hint', 'এই বিক্রয়সহ')) ?></div>
+                        </div>
+                        <div class="col-4 form-group">
+                            <label for="qpUnit"><?= e(t('unit', 'একক')) ?></label>
+                            <input type="text" name="unit" id="qpUnit" class="form-control" maxlength="50" value="<?= e(t('unit_piece', 'পিস')) ?>">
+                        </div>
+                        <div class="col-4 form-group">
+                            <label for="qpCategory"><?= e(t('category', 'ক্যাটাগরি')) ?></label>
+                            <select name="category_id" id="qpCategory" class="form-control">
+                                <option value="">—</option>
+                                <?php foreach ($quickAddCategories as $qc): ?>
+                                    <option value="<?= (int)$qc['id'] ?>"><?= e($qc['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><?= e(t('cancel', 'বাতিল')) ?></button>
+                    <button type="submit" class="btn btn-primary" id="qpSubmit"><i class="bi bi-check2-circle"></i> <span><?= e($quickAddNeedsApproval ? t('qp_save_pending', 'অনুমোদনের জন্য পাঠান') : t('qp_save', 'সংরক্ষণ করে কার্টে যোগ করুন')) ?></span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <div id="mobileCartBar">
     <span><i class="bi bi-cart-check-fill"></i> <span class="mcb-count">0</span> <?= e(t('cart')) ?></span>
     <span class="mcb-total num">৳0.00</span>
@@ -454,9 +539,18 @@ const I18N = {
     processing: <?= json_encode(t('processing', 'প্রসেস হচ্ছে...'), JSON_UNESCAPED_UNICODE) ?>,
     couponChecking: <?= json_encode(t('coupon_checking', 'যাচাই করা হচ্ছে...'), JSON_UNESCAPED_UNICODE) ?>,
     couponRemove: <?= json_encode(t('remove', 'সরান'), JSON_UNESCAPED_UNICODE) ?>,
-    couponFailed: <?= json_encode(t('coupon_check_failed', 'কুপন যাচাই করা যায়নি — আবার চেষ্টা করুন।'), JSON_UNESCAPED_UNICODE) ?>
+    couponFailed: <?= json_encode(t('coupon_check_failed', 'কুপন যাচাই করা যায়নি — আবার চেষ্টা করুন।'), JSON_UNESCAPED_UNICODE) ?>,
+    qpNameRequired: <?= json_encode(t('qp_name_required', 'পণ্যের নাম দিন।'), JSON_UNESCAPED_UNICODE) ?>,
+    qpPriceRequired: <?= json_encode(t('qp_price_required', 'বিক্রয় মূল্য দিন (০-এর বেশি)।'), JSON_UNESCAPED_UNICODE) ?>,
+    qpFailed: <?= json_encode(t('qp_failed', 'পণ্যটি সংরক্ষণ করা যায়নি — আবার চেষ্টা করুন।'), JSON_UNESCAPED_UNICODE) ?>,
+    qpUseExisting: <?= json_encode(t('qp_use_existing', 'এটিই কার্টে যোগ করুন'), JSON_UNESCAPED_UNICODE) ?>,
+    qpUseExistingLink: <?= json_encode(t('qp_use_existing_link', 'এটিই যোগ করুন (বারকোডটিও এতে সেভ হবে)'), JSON_UNESCAPED_UNICODE) ?>,
+    qpCreateAnyway: <?= json_encode(t('qp_create_anyway', 'তবুও নতুন পণ্য বানান'), JSON_UNESCAPED_UNICODE) ?>,
+    qpAddNamed: <?= json_encode(t('qp_add_named', '"%s" নতুন পণ্য হিসেবে যুক্ত করুন'), JSON_UNESCAPED_UNICODE) ?>
 };
 const LOOKUP_URL = 'pos_lookup.php';
+const QUICK_PRODUCT_URL = 'pos_quick_product.php';
+const CAN_QUICK_ADD = <?= $canQuickAddProduct ? 'true' : 'false' ?>;
 const CART_KEY = 'arieskonex_pos_cart_v1';
 const CAN_OVERRIDE_BELOW_COST = <?= $canOverrideBelowCost ? 'true' : 'false' ?>;
 const PRODUCTS = <?= json_encode($products, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
@@ -504,6 +598,16 @@ function indexService(s) {
 PRODUCTS.forEach(indexProduct);
 SERVICES.forEach(indexService);
 
+// সার্ভার থেকে আসা পণ্যকে POS-এর তালিকার মতো সঠিক টাইপে রূপান্তর
+function toProduct(it) {
+    return { id: Number(it.id), item_code: String(it.item_code || ''), name: String(it.name), unit: String(it.unit || ''), sale_price: num(it.sale_price), wholesale_price: num(it.wholesale_price), cost_price: num(it.cost_price), barcode: String(it.barcode || ''), stock_qty: num(it.stock_qty) };
+}
+function rememberProduct(p) {
+    const i = PRODUCTS.findIndex(x => x.id === p.id);
+    if (i === -1) PRODUCTS.push(p); else PRODUCTS[i] = p;
+    indexProduct(p);
+}
+
 function productPrice(p) {
     return priceMode === 'wholesale' && num(p.wholesale_price) > 0 ? num(p.wholesale_price) : num(p.sale_price);
 }
@@ -549,6 +653,7 @@ function addToCart(type, item, opts) {
     }
     renderCart(line);
     if (opts.fromScan) {
+        hideScanMiss();
         beep(true);
         flashScanBar(true);
         if (line.stock !== null && line.qty > line.stock) {
@@ -729,8 +834,10 @@ $('clearCartBtn').addEventListener('click', function () {
    --------------------------------------------------------------------- */
 function currentFilter() { const a = document.querySelector('#catTabs a.active'); return a ? a.dataset.filter : 'all'; }
 let lastGridMatches = [];
+let lastGridQuery = '';
 function renderGrid(filter, query) {
     const grid = $('itemGrid');
+    lastGridQuery = String(query || '').trim();
     const q = normCode(query);
     const matches = [];
     if (filter !== 'service') {
@@ -748,7 +855,12 @@ function renderGrid(filter, query) {
     }
     lastGridMatches = matches;
     if (!matches.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;padding:30px;"><i class="bi bi-search"></i>' + esc(I18N.noItems) + '</div>';
+        let html = '<div class="empty-state" style="grid-column:1/-1;padding:30px;"><i class="bi bi-search"></i>' + esc(I18N.noItems);
+        if (CAN_QUICK_ADD && lastGridQuery) {
+            html += '<div style="margin-top:14px;"><button type="button" class="btn btn-primary btn-sm" data-quick-add="1"><i class="bi bi-plus-lg"></i> '
+                + esc(I18N.qpAddNamed.replace('%s', lastGridQuery)) + '</button></div>';
+        }
+        grid.innerHTML = html + '</div>';
         return;
     }
     grid.innerHTML = matches.map((m, i) => {
@@ -768,6 +880,7 @@ function renderGrid(filter, query) {
     }).join('');
 }
 $('itemGrid').addEventListener('click', function (e) {
+    if (e.target.closest('[data-quick-add]')) { openQuickAdd(lastGridQuery); return; }
     const btn = e.target.closest('.pos-item-btn');
     if (!btn) return;
     const m = lastGridMatches[Number(btn.dataset.i)];
@@ -813,18 +926,16 @@ function handleScan(rawCode, opts) {
                     indexService(s);
                     for (let n = 0; n < times; n++) addToCart('service', s, { fromScan: n === times - 1 });
                 } else {
-                    const it = data.item;
-                    const p = { id: Number(it.id), item_code: String(it.item_code || ''), name: String(it.name), unit: String(it.unit || ''), sale_price: num(it.sale_price), wholesale_price: num(it.wholesale_price), cost_price: num(it.cost_price), barcode: String(it.barcode || ''), stock_qty: num(it.stock_qty) };
-                    if (!PRODUCTS.some(x => x.id === p.id)) PRODUCTS.push(p);
-                    indexProduct(p);
+                    const p = toProduct(data.item);
+                    rememberProduct(p);
                     for (let n = 0; n < times; n++) addToCart('product', p, { fromScan: n === times - 1 });
                 }
             } else {
                 beep(false); flashScanBar(false);
-                toast(I18N.notFound + ': ' + code, 'danger');
+                showScanMiss(code);
             }
         })
-        .catch(() => { beep(false); flashScanBar(false); toast(I18N.notFound + ': ' + code, 'danger'); })
+        .catch(() => { beep(false); flashScanBar(false); showScanMiss(code); })
         .finally(() => { clearTimeout(timer); pendingLookups.delete(key); setScannerStatus('ready'); });
 }
 
@@ -849,6 +960,18 @@ document.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === 'Tab') {
         const avgGap = burst.chars.length > 1 ? (burst.last - burst.start) / (burst.chars.length - 1) : Infinity;
         const isScan = burst.chars.length >= SCAN_MIN_LEN && (now - burst.last) < 120 && avgGap < SCAN_MAX_GAP;
+        if (isScan && quickModalOpen()) {
+            // নতুন পণ্যের ফর্ম খোলা থাকলে স্ক্যান করা কোড ফর্মের বারকোড ঘরে বসে (কার্টে নয়),
+            // অন্য ঘরে ঢুকে যাওয়া অক্ষর মুছে আগের লেখা ফেরত আসে, আর Enter-এ ফর্ম জমা হয় না
+            e.preventDefault();
+            e.stopPropagation();
+            const tgt = burst.target, bc = $('qpBarcode');
+            if (tgt && tgt !== bc && burst.before !== null && 'value' in tgt) tgt.value = burst.before;
+            bc.value = toEnglishDigits(burst.chars);
+            resetBurst();
+            ($('qpName').value.trim() ? $('qpSalePrice') : $('qpName')).focus();
+            return;
+        }
         if (isScan) {
             e.preventDefault();
             e.stopPropagation();
@@ -918,11 +1041,12 @@ function isTypingTarget(el) {
     return !!(el.matches && el.matches('input:not([type=checkbox]):not([type=radio]), select, textarea'));
 }
 function focusScan(force) {
+    if (quickModalOpen()) return;
     if (TOUCH_ONLY && !force) return;
     if (document.activeElement !== scanInput) scanInput.focus({ preventScroll: true });
 }
 document.addEventListener('click', function (e) {
-    if (isTypingTarget(e.target) || e.target.closest('label, .search-results-box, .dropdown-menu')) return;
+    if (isTypingTarget(e.target) || e.target.closest('label, .search-results-box, .dropdown-menu, .modal')) return;
     if (window.getSelection && String(window.getSelection())) return;
     setTimeout(() => { if (!isTypingTarget(document.activeElement)) focusScan(); }, 30);
 });
@@ -932,6 +1056,7 @@ window.addEventListener('pageshow', function (e) {
     focusScan();
 });
 document.addEventListener('keydown', function (e) {
+    if (quickModalOpen()) return;
     if (e.key === 'F2') { e.preventDefault(); focusScan(true); scanInput.select(); }
     else if (e.key === 'F9' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) {
         e.preventDefault();
@@ -1068,6 +1193,139 @@ document.addEventListener('click', function (e) {
         $('customerResults').style.display = 'none';
     }
 });
+
+/* ---------------------------------------------------------------------
+   স্ক্যান/খোঁজে পণ্য না পেলে — এখান থেকেই নতুন পণ্য যুক্ত করা
+   --------------------------------------------------------------------- */
+let lastMissCode = '';
+function showScanMiss(code) {
+    lastMissCode = String(code || '').trim();
+    const bar = $('scanMissBar');
+    bar.querySelector('.smb-text').textContent = I18N.notFound + ': ' + lastMissCode;
+    bar.hidden = false;
+}
+function hideScanMiss() { $('scanMissBar').hidden = true; }
+$('scanMissClose').addEventListener('click', hideScanMiss);
+
+// স্ক্যানারের কোডের মতো দেখালে (ফাঁকা নেই, অঙ্ক আছে) বারকোড ঘরে, নইলে নামের ঘরে বসে
+function looksLikeCode(v) { return /^[0-9A-Za-z\-_.\/+]{3,}$/.test(v) && /\d/.test(v); }
+function quickModalOpen() { const m = $('quickProductModal'); return !!(m && m.classList.contains('show')); }
+let openQuickAdd = function () {};
+
+if (CAN_QUICK_ADD) {
+    const modalEl = $('quickProductModal');
+    const form = $('quickProductForm');
+    const errBox = $('qpError');
+    const dupBox = $('qpDuplicate');
+    const submitBtn = $('qpSubmit');
+    const submitHtml = submitBtn.innerHTML;
+    const csrf = () => { const i = document.querySelector('#checkoutForm input[name="csrf_token"]'); return i ? i.value : ''; };
+    let forceCreate = false;
+    let dupProduct = null;
+
+    const modalApi = () => (window.bootstrap && bootstrap.Modal) ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+    function showModal() {
+        const m = modalApi();
+        if (m) m.show(); else { modalEl.style.display = 'block'; modalEl.classList.add('show'); }
+    }
+    function hideModal() {
+        const m = modalApi();
+        if (m) m.hide(); else { modalEl.style.display = 'none'; modalEl.classList.remove('show'); focusScan(); }
+    }
+    modalEl.addEventListener('hidden.bs.modal', () => focusScan());
+    modalEl.addEventListener('shown.bs.modal', () => (($('qpName').value.trim() ? $('qpSalePrice') : $('qpName'))).focus());
+
+    function showError(msg) { errBox.textContent = msg; errBox.hidden = false; }
+    function setBusy(busy) {
+        submitBtn.disabled = busy;
+        submitBtn.innerHTML = busy ? '<span class="spinner-border spinner-border-sm"></span> ' + esc(I18N.processing) : submitHtml;
+    }
+    function resetDuplicate() { forceCreate = false; dupProduct = null; dupBox.hidden = true; dupBox.innerHTML = ''; }
+
+    openQuickAdd = function (prefill) {
+        form.reset();
+        errBox.hidden = true;
+        resetDuplicate();
+        const v = String(prefill || '').trim();
+        if (v) { if (looksLikeCode(v)) $('qpBarcode').value = toEnglishDigits(v); else $('qpName').value = v; }
+        showModal();
+        if (!window.bootstrap) (($('qpName').value.trim() ? $('qpSalePrice') : $('qpName'))).focus();
+    };
+
+    function send(fd) {
+        fd.append('csrf_token', csrf());
+        setBusy(true);
+        errBox.hidden = true;
+        return fetch(QUICK_PRODUCT_URL, { method: 'POST', body: fd, credentials: 'same-origin' })
+            .then(r => r.json().catch(() => ({ ok: false, message: I18N.qpFailed })))
+            .then(handleResponse)
+            .catch(() => showError(I18N.qpFailed))
+            .finally(() => setBusy(false));
+    }
+
+    function handleResponse(data) {
+        if (data && data.ok && data.product) {
+            hideModal();
+            hideScanMiss();
+            if (data.pending) { toast(data.message, 'warning'); return; }
+            const p = toProduct(data.product);
+            rememberProduct(p);
+            addToCart('product', p, { fromScan: true });
+            if (data.message && data.existing) toast(data.message, 'success');
+            renderGrid(currentFilter(), scanInput.value);
+            return;
+        }
+        if (data && data.duplicate) {
+            dupProduct = data.duplicate;
+            dupBox.innerHTML = '<div class="qpd-title"><i class="bi bi-info-circle-fill"></i> ' + esc(data.message) + '</div>'
+                + '<div class="qpd-actions">'
+                + '<button type="button" class="btn btn-sm btn-primary" data-qpd="use" data-link="' + (data.can_link_barcode ? '1' : '') + '">' + esc(data.can_link_barcode ? I18N.qpUseExistingLink : I18N.qpUseExisting) + '</button>'
+                + '<button type="button" class="btn btn-sm btn-light" data-qpd="force">' + esc(I18N.qpCreateAnyway) + '</button>'
+                + '</div>';
+            dupBox.hidden = false;
+            return;
+        }
+        showError((data && data.message) || I18N.qpFailed);
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!$('qpName').value.trim()) { showError(I18N.qpNameRequired); $('qpName').focus(); return; }
+        if (!(num($('qpSalePrice').value) > 0)) { showError(I18N.qpPriceRequired); $('qpSalePrice').focus(); return; }
+        const fd = new FormData(form);
+        fd.set('barcode', toEnglishDigits($('qpBarcode').value.trim()));
+        if (forceCreate) fd.append('force', '1');
+        send(fd);
+    });
+
+    dupBox.addEventListener('click', function (e) {
+        const b = e.target.closest('[data-qpd]');
+        if (!b || !dupProduct) return;
+        if (b.dataset.qpd === 'force') {
+            forceCreate = true;
+            form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }));
+        } else if (b.dataset.link) {
+            // বারকোডহীন পুরোনো পণ্যে স্ক্যান করা বারকোডটি সেভ করে সেটিই কার্টে যোগ
+            const fd = new FormData();
+            fd.append('action', 'link_barcode');
+            fd.append('product_id', dupProduct.id);
+            fd.append('barcode', toEnglishDigits($('qpBarcode').value.trim()));
+            send(fd);
+        } else {
+            handleResponse({ ok: true, product: dupProduct });
+        }
+    });
+    // নাম বদলালে আগের "একই নামের পণ্য আছে" সতর্কতা আর প্রযোজ্য নয়
+    $('qpName').addEventListener('input', resetDuplicate);
+    hardenScanInput($('qpBarcode'));
+    // হাতে বারকোড লিখে Enter চাপলে ফর্ম জমা না হয়ে পরের ঘরে যায়
+    $('qpBarcode').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); ($('qpName').value.trim() ? $('qpSalePrice') : $('qpName')).focus(); }
+    });
+
+    $('quickAddBtn').addEventListener('click', () => openQuickAdd(scanInput.value));
+    $('scanMissAddBtn').addEventListener('click', () => openQuickAdd(lastMissCode));
+}
 
 /* ---------------------------------------------------------------------
    ট্যাব
