@@ -104,7 +104,7 @@ export function RegisterForm() {
       setDone(true);
       signedIn(result);
       toast.show(t('auth.registerDone'));
-      router.replace(next);
+      router.replace(next === '/' ? '/onboarding' : `/onboarding?next=${encodeURIComponent(next)}`);
     });
   }
 

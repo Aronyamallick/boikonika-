@@ -16,6 +16,17 @@ function apply(theme: Theme) {
   document.documentElement.classList.toggle('dark', dark);
 }
 
+/** Saves and applies a theme choice (also used by the profile settings page). */
+export function applyTheme(theme: Theme): void {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // storage unavailable (private mode): still apply for this page
+  }
+  apply(theme);
+  window.dispatchEvent(new CustomEvent('bk-theme-change', { detail: theme }));
+}
+
 export function ThemeToggle() {
   const t = useTranslations('common');
   const [theme, setTheme] = useState<Theme>('system');
@@ -26,7 +37,12 @@ export function ThemeToggle() {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => (localStorage.getItem(THEME_STORAGE_KEY) ?? 'system') === 'system' && apply('system');
     media.addEventListener('change', onChange);
-    return () => media.removeEventListener('change', onChange);
+    const onExternal = (e: Event) => setTheme((e as CustomEvent<Theme>).detail);
+    window.addEventListener('bk-theme-change', onExternal);
+    return () => {
+      media.removeEventListener('change', onChange);
+      window.removeEventListener('bk-theme-change', onExternal);
+    };
   }, []);
 
   const next = ORDER[(ORDER.indexOf(theme) + 1) % ORDER.length]!;

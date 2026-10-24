@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { INTEREST_KEYS } from '../constants/interests';
+import { INTEREST_KEYS, ONBOARDING_MIN_INTERESTS } from '../constants/interests';
 import { KYC_DOCUMENT_TYPES, KYC_PURPOSES, VISIBILITIES } from '../constants/statuses';
 import { ROLES } from '../constants/roles';
 import { LOCALES } from '../i18n/locales';
@@ -38,8 +38,6 @@ export const updateProfileSchema = z.object({
   personalizationEnabled: z.boolean().optional(),
 });
 export type UpdateProfileInput = z.input<typeof updateProfileSchema>;
-
-export const ONBOARDING_MIN_INTERESTS = 3;
 
 export const interestsSchema = z.object({
   interests: z

@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, LibraryBig, LogOut, Package, Shield, User } from 'lucide-react';
+import { BadgeCheck, LayoutDashboard, LibraryBig, LogOut, Package, Settings, Shield, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';
@@ -51,8 +51,10 @@ export function UserMenu() {
     { href: `/u/${user.username}`, label: t('nav.profile'), Icon: User },
     { href: '/library', label: t('nav.library'), Icon: LibraryBig },
     { href: '/orders', label: t('nav.orders'), Icon: Package },
+    { href: '/account/profile', label: t('profileSettings.title'), Icon: Settings },
     { href: '/account/security', label: t('account.security'), Icon: Shield },
-    ...(can('analytics.view') || can('users.view') ? [{ href: '/admin', label: t('nav.adminDashboard'), Icon: LayoutDashboard }] : []),
+    { href: '/account/verification', label: t('verification.title'), Icon: BadgeCheck },
+    ...(can('kyc.view') || can('roles.view') || can('users.view') ? [{ href: '/admin', label: t('nav.adminDashboard'), Icon: LayoutDashboard }] : []),
   ];
 
   return (

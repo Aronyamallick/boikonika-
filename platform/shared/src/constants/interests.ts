@@ -25,6 +25,9 @@ export const INTEREST_KEYS = [
 ] as const;
 export type InterestKey = (typeof INTEREST_KEYS)[number];
 
+/** Onboarding asks for at least this many interests. */
+export const ONBOARDING_MIN_INTERESTS = 3;
+
 export const ACADEMIC_LEVELS = ['primary', 'secondary', 'ssc', 'hsc', 'admission', 'undergraduate', 'postgraduate', 'professional', 'general'] as const;
 export type AcademicLevel = (typeof ACADEMIC_LEVELS)[number];
 

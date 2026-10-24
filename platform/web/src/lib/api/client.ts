@@ -146,3 +146,15 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 export async function api<T>(path: string, options?: RequestOptions): Promise<T> {
   return (await apiRequest<T>(path, options)).data;
 }
+
+/** Authenticated download of a non-JSON response (e.g. the data export); returns the file and its name. */
+export async function apiDownload(path: string): Promise<{ blob: Blob; filename: string }> {
+  if (hasSessionHint() && (!accessToken || accessExpiresAt - Date.now() < 30_000)) await refreshSession();
+  const res = await fetch(`${API_BASE}${path}`, {
+    credentials: 'include',
+    headers: { 'Accept-Language': locale(), 'X-Requested-With': 'boikonika', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
+  });
+  if (!res.ok) throw new ApiError('', res.status, res.status === 401 ? 'UNAUTHORIZED' : 'INTERNAL');
+  const filename = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') ?? '')?.[1] ?? 'download';
+  return { blob: await res.blob(), filename };
+}
