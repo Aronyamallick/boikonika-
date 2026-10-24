@@ -88,6 +88,7 @@ export const authors = pgTable(
     uniqueIndex('authors_slug_unique').on(t.slug),
     uniqueIndex('authors_user_unique').on(t.userId).where(sql`${t.userId} is not null`),
     index('authors_name_trgm_idx').using('gin', t.name.op('gin_trgm_ops')),
+    index('authors_name_alt_trgm_idx').using('gin', t.nameAlt.op('gin_trgm_ops')),
     index('authors_search_idx').using('gin', t.searchVector),
   ],
 );
@@ -177,6 +178,9 @@ export const books = pgTable(
     uniqueIndex('books_slug_unique').on(t.slug),
     index('books_search_idx').using('gin', t.searchVector),
     index('books_title_trgm_idx').using('gin', t.title.op('gin_trgm_ops')),
+    // Typo-tolerant matching on author names (both scripts), publishers and ISBNs.
+    index('books_search_text_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
+    index('books_listing_idx').on(t.status, t.offerCount, t.publishedAt),
     index('books_category_idx').on(t.primaryCategoryId),
     index('books_published_idx').on(t.publishedAt),
     index('books_sales_idx').on(t.salesCount),

@@ -136,6 +136,8 @@ export const products = pgTable(
     index('products_price_idx').on(t.price),
     index('products_search_idx').using('gin', t.searchVector),
     index('products_title_trgm_idx').using('gin', t.title.op('gin_trgm_ops')),
+    index('products_search_text_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
+    index('products_book_offers_idx').on(t.bookId, t.status, t.price).where(sql`${t.deletedAt} is null`),
     // A seller lists a given edition in a given condition only once (they adjust stock instead).
     uniqueIndex('products_seller_book_condition_unique')
       .on(t.sellerId, t.bookFormatId, t.condition)

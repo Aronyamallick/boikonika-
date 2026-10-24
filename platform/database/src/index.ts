@@ -4,3 +4,4 @@ export type { AddressSnapshot } from './schema/orders';
 export type { HomepageSectionConfig } from './schema/cms';
 export { buildSearchText } from './search';
 export { refreshAuthorBookCounts, refreshBookOffers, refreshProductStock, refreshStoreProductCounts, UNTRACKED_STOCK } from './aggregates';
+export { seedReference } from './seed/index';

@@ -1,6 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
-import { userRoles, users, type Database } from '@boikonika/database';
+import { seedReference, userRoles, users, type Database } from '@boikonika/database';
 import type { Role } from '@boikonika/shared';
 import { sql } from 'drizzle-orm';
 import type Redis from 'ioredis';
@@ -29,7 +29,10 @@ export async function createTestApp(): Promise<TestContext> {
 
 /** Removes users (cascading to sessions, codes, roles…), message history and Redis state between suites. */
 export async function resetState(ctx: TestContext): Promise<void> {
-  await ctx.db.execute(sql`truncate users, otp_codes, outbound_messages, login_events, audit_logs, notifications restart identity cascade`);
+  await ctx.db.execute(sql`truncate users, otp_codes, outbound_messages, login_events, audit_logs, notifications, books, authors, publishers, search_queries restart identity cascade`);
+  // TRUNCATE … CASCADE also empties reference tables that point at users (settings, homepage
+  // sections, challenges…), so the idempotent reference seed is applied again.
+  await seedReference(ctx.db);
   await ctx.redis.flushdb();
   CapturedMessages.clear();
 }
@@ -85,4 +88,33 @@ export async function grantRole(ctx: TestContext, userId: string, role: Role): P
 
 export async function setStatus(ctx: TestContext, userId: string, status: 'active' | 'suspended' | 'banned', suspendedUntil?: Date): Promise<void> {
   await ctx.db.update(users).set({ status, suspendedUntil: suspendedUntil ?? null }).where(sql`${users.id} = ${userId}`);
+}
+
+/** A user who went through the real verification flow and was approved for `role`. */
+export async function approvedSeller(
+  ctx: TestContext,
+  admin: RegisteredUser,
+  role: 'book_seller' | 'general_seller' | 'publisher' | 'author',
+  businessName = 'টেস্ট বুক হাউস',
+): Promise<RegisteredUser> {
+  const { photoWithExif } = await import('./images');
+  const user = await registerUser(ctx, { name: 'Seller Person' });
+  const purpose = role === 'book_seller' || role === 'general_seller' ? 'seller' : role;
+  const documents = role === 'publisher' ? [{ type: 'nid', side: 'front', number: '1990123456789' }, { type: 'trade_license', side: 'single', number: 'TRAD-12345' }] : [{ type: 'nid', side: 'front', number: '1990123456789' }];
+  let req = ctx.http
+    .post('/api/v1/kyc/verifications')
+    .set('Authorization', `Bearer ${user.accessToken}`)
+    .field('data', JSON.stringify({ purpose, requestedRole: role, legalName: 'Seller Person', businessName, documents, declarations: { accurate: true, authorised: true } }));
+  for (let i = 0; i < documents.length; i++) req = req.attach('documents', await photoWithExif(), { filename: `doc${i}.jpg` });
+  const submitted = await req;
+  if (submitted.status !== 201) throw new Error(`KYC submit failed: ${JSON.stringify(submitted.body)}`);
+  await ctx.http.post(`/api/v1/admin/kyc/${submitted.body.data.id}/approve`).set('Authorization', `Bearer ${admin.accessToken}`).send({}).expect(200);
+  await ctx.redis.del(`rbac:perm:${user.id}`);
+  return user;
+}
+
+export async function categoryId(ctx: TestContext, path: string): Promise<string> {
+  const rows = await ctx.db.execute<{ id: string }>(sql`select id from categories where path = ${path}`);
+  if (!rows.rows[0]) throw new Error(`No category ${path} — is the reference seed loaded?`);
+  return rows.rows[0].id;
 }

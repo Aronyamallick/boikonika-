@@ -19,8 +19,10 @@ import { StorageModule } from './infra/storage/storage.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DevController } from './modules/dev/dev.controller';
+import { CatalogModule } from './modules/catalog/catalog.module';
 import { HealthModule } from './modules/health/health.module';
 import { KycModule } from './modules/kyc/kyc.module';
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -59,6 +61,8 @@ const isProduction = process.env.NODE_ENV === 'production';
     AuthModule,
     ProfilesModule,
     KycModule,
+    CatalogModule,
+    MarketplaceModule,
     HealthModule,
   ],
   controllers: isProduction ? [] : [DevController],

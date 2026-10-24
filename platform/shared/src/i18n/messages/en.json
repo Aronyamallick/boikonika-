@@ -400,7 +400,12 @@
     "declaration": "Please confirm this declaration.",
     "reasonRequired": "Please give a reason (at least 5 characters).",
     "fileMissing": "Please add the required documents.",
-    "nid": "Enter a valid NID number (10, 13 or 17 digits)."
+    "nid": "Enter a valid NID number (10, 13 or 17 digits).",
+    "sku": "Use 3–64 letters, numbers, dots, dashes or underscores.",
+    "bookRequired": "Choose an existing book or enter the book details.",
+    "compareAtPrice": "The original price must be at least the selling price.",
+    "physicalOnly": "Only printed books can be listed for sale here.",
+    "nonZero": "Enter a number other than zero."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -792,6 +797,33 @@
       "rejectedBody": "Reason: {reason}. You can submit a new request with the correct documents.",
       "resubmissionTitle": "Please resubmit your documents",
       "resubmissionBody": "We need a little more: {reason}. Open your verification page to submit again."
+    },
+    "marketplace": {
+      "notSeller": "You need an approved seller account to do this.",
+      "sellerSuspended": "Your seller account is suspended. Contact support.",
+      "bookRoleRequired": "Book listings need a verified book seller, publisher or author account.",
+      "generalRoleRequired": "Product listings need a verified seller account for general products.",
+      "alreadyListed": "You already list this edition in this condition. Update its stock instead.",
+      "isbnUnknown": "No book with this ISBN yet. Add the book details.",
+      "listingPublished": "Listing published.",
+      "listingPending": "Listing submitted for review.",
+      "listingUpdated": "Listing updated.",
+      "listingDeleted": "Listing removed.",
+      "stockUpdated": "Stock updated.",
+      "stockBelowReserved": "Stock cannot go below the quantity reserved for open orders.",
+      "imagesLimit": "A listing can have up to 8 images.",
+      "storeUpdated": "Store details saved.",
+      "categoryInvalid": "Choose a category for this type of product.",
+      "approved": "Listing approved.",
+      "rejected": "Listing rejected.",
+      "suspended": "Listing hidden.",
+      "restored": "Listing restored.",
+      "listingApprovedTitle": "Your listing is live",
+      "listingApprovedBody": "“{title}” is now visible to buyers.",
+      "listingRejectedTitle": "Your listing was not approved",
+      "listingRejectedBody": "“{title}”: {reason}",
+      "listingSuspendedTitle": "Your listing was hidden",
+      "listingSuspendedBody": "“{title}”: {reason}"
     }
   }
 }

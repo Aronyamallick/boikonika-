@@ -128,6 +128,7 @@ export const NOTIFICATION_TYPES = [
   'security',
   'kyc',
   'payout',
+  'listing',
   'announcement',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -149,6 +150,7 @@ export const DEFAULT_NOTIFICATION_CHANNELS: Record<NotificationType, Notificatio
   security: ['in_app', 'push', 'email', 'sms'],
   kyc: ['in_app', 'push', 'email'],
   payout: ['in_app', 'email'],
+  listing: ['in_app', 'email'],
   announcement: ['in_app'],
 };
 

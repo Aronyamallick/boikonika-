@@ -36,6 +36,20 @@
       "when": 1792850749793,
       "tag": "0004_kyc_requested_role",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792852094905,
+      "tag": "0005_search_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792852444143,
+      "tag": "0006_notification_listing",
+      "breakpoints": true
     }
   ]
 }

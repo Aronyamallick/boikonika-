@@ -1,0 +1,136 @@
+import { Controller, Delete, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { bookListQuerySchema, productListQuerySchema } from '@boikonika/shared';
+import { z } from 'zod';
+import { CurrentUser, type AuthenticatedUser } from '../../common/decorators/auth.decorators';
+import { Public } from '../../common/decorators/public.decorator';
+import { paginated } from '../../common/http/response';
+import { ZodQuery } from '../../common/validation/zod';
+import { CatalogService } from './catalog.service';
+import { HomeService } from './home.service';
+import { SearchService } from './search.service';
+
+const searchQuery = z.object({ q: z.string().max(200).default('') });
+const authorQuery = z.object({ q: z.string().trim().max(120).optional(), page: z.coerce.number().int().min(1).max(200).default(1), pageSize: z.coerce.number().int().min(1).max(60).default(24) });
+
+@ApiTags('catalogue')
+@Controller()
+export class CatalogController {
+  constructor(
+    private readonly catalog: CatalogService,
+    private readonly search: SearchService,
+    private readonly home: HomeService,
+  ) {}
+
+  @Public()
+  @Get('home')
+  @ApiOperation({ summary: 'Homepage sections configured in the CMS, with their books, authors and stores' })
+  homepage() {
+    return this.home.sections();
+  }
+
+  @Public()
+  @Get('books')
+  @ApiOperation({ summary: 'Browse and filter books (category, genre, author, publisher, language, condition, price, rating, picks)' })
+  async books(@ZodQuery(bookListQuerySchema) q: z.output<typeof bookListQuerySchema>) {
+    const { items, meta } = await this.catalog.listBooks(q);
+    return paginated(items, meta);
+  }
+
+  @Public()
+  @Get('books/:slug')
+  @ApiOperation({ summary: 'Book page: editions, every seller’s offer, contributors, ratings and related books' })
+  book(@Param('slug') slug: string) {
+    return this.catalog.bookDetail(slug);
+  }
+
+  @Public()
+  @Get('products')
+  @ApiOperation({ summary: 'Browse general products (stationery, bags, electronics…)' })
+  async products(@ZodQuery(productListQuerySchema) q: z.output<typeof productListQuerySchema>) {
+    const { items, meta } = await this.catalog.listProducts(q);
+    return paginated(items, meta);
+  }
+
+  @Public()
+  @Get('products/:slug')
+  @ApiOperation({ summary: 'Product page with variants and stock (book listings redirect to their book page)' })
+  product(@Param('slug') slug: string) {
+    return this.catalog.productDetail(slug);
+  }
+
+  @Public()
+  @Get('categories')
+  @ApiOperation({ summary: 'Category tree (optionally only book or general product categories)' })
+  categories(@Query('for') appliesTo?: string) {
+    return this.catalog.categoryTree(appliesTo === 'book' || appliesTo === 'general' ? appliesTo : undefined);
+  }
+
+  @Public()
+  @Get('categories/{*path}')
+  @ApiOperation({ summary: 'One category with its children and breadcrumbs (path like books/academic/hsc)' })
+  category(@Param('path') path: string | string[]) {
+    return this.catalog.category(Array.isArray(path) ? path.join('/') : path);
+  }
+
+  @Public()
+  @Get('genres')
+  genres() {
+    return this.catalog.genreList();
+  }
+
+  @Public()
+  @Get('authors')
+  @ApiOperation({ summary: 'Authors (search by name in Bangla or English)' })
+  authors(@ZodQuery(authorQuery) q: z.output<typeof authorQuery>) {
+    return this.catalog.authorList(q.q, q.page, q.pageSize);
+  }
+
+  @Public()
+  @Get('authors/:slug')
+  @ApiOperation({ summary: 'Author page with books' })
+  author(@Param('slug') slug: string, @CurrentUser() viewer?: AuthenticatedUser) {
+    return this.catalog.author(slug, viewer?.id);
+  }
+
+  @Post('authors/:slug/follow')
+  @HttpCode(200)
+  @ApiBearerAuth('access-token')
+  followAuthor(@CurrentUser() user: AuthenticatedUser, @Param('slug') slug: string) {
+    return this.catalog.followAuthor(user.id, slug, true);
+  }
+
+  @Delete('authors/:slug/follow')
+  @ApiBearerAuth('access-token')
+  unfollowAuthor(@CurrentUser() user: AuthenticatedUser, @Param('slug') slug: string) {
+    return this.catalog.followAuthor(user.id, slug, false);
+  }
+
+  @Public()
+  @Get('publishers/:slug')
+  @ApiOperation({ summary: 'Publisher page with books' })
+  publisher(@Param('slug') slug: string) {
+    return this.catalog.publisher(slug);
+  }
+
+  @Public()
+  @Get('stores/:slug')
+  @ApiOperation({ summary: 'Seller store page with books and products' })
+  store(@Param('slug') slug: string) {
+    return this.catalog.store(slug);
+  }
+
+  @Public()
+  @Get('search')
+  @ApiOperation({ summary: 'Search books, authors and products (Bangla/English, typos, ISBN)' })
+  searchAll(@ZodQuery(searchQuery) q: { q: string }) {
+    return this.search.search(q.q);
+  }
+
+  @Public()
+  @Get('search/suggest')
+  @ApiOperation({ summary: 'Autocomplete suggestions (popular searches when the query is empty)' })
+  suggest(@ZodQuery(searchQuery) q: { q: string }) {
+    return this.search.suggest(q.q);
+  }
+}
