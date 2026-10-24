@@ -3,14 +3,9 @@ import { ThrottlerException } from '@nestjs/throttler';
 import type { ApiErrorDetail, ApiFailure, ErrorCode } from '@boikonika/shared';
 import type { Response } from 'express';
 import { AppException } from '../errors/app-exception';
+import { pgErrorOf, type PgError } from '../errors/pg';
+import { t } from '../i18n';
 import type { RequestWithContext } from './request-id.middleware';
-
-interface PgError {
-  code?: string;
-  constraint?: string;
-  detail?: string;
-  column?: string;
-}
 
 const CODE_BY_STATUS: Record<number, ErrorCode> = {
   400: 'BAD_REQUEST',
@@ -24,13 +19,16 @@ const CODE_BY_STATUS: Record<number, ErrorCode> = {
   503: 'SERVICE_UNAVAILABLE',
 };
 
+/** Message keys (shared i18n) for errors raised outside our own services. */
 const FRIENDLY: Partial<Record<ErrorCode, string>> = {
-  UNAUTHORIZED: 'Please log in to continue',
-  FORBIDDEN: "You don't have permission to do that",
-  NOT_FOUND: 'Not found',
-  RATE_LIMITED: 'Too many requests. Please wait a moment and try again',
-  INTERNAL: 'Something went wrong on our side. Please try again',
-  SERVICE_UNAVAILABLE: 'The service is temporarily unavailable',
+  UNAUTHORIZED: 'errors.unauthorized',
+  FORBIDDEN: 'errors.forbidden',
+  NOT_FOUND: 'errors.notFound',
+  CONFLICT: 'errors.conflict',
+  VALIDATION_FAILED: 'errors.validation',
+  RATE_LIMITED: 'errors.rateLimited',
+  INTERNAL: 'errors.server',
+  SERVICE_UNAVAILABLE: 'errors.generic',
 };
 
 /**
@@ -49,7 +47,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (res.headersSent) return;
 
     const { status, code, message, details } = this.describe(exception, req);
-    const body: ApiFailure = { success: false, data: null, message, errors: details, code, requestId: req.requestId };
+    const params = exception instanceof AppException ? exception.params : undefined;
+    // Messages and field errors are i18n keys where possible; translate them for the caller.
+    const errors = details.map((d) => ({ ...d, message: t(d.message, params) }));
+    const body: ApiFailure = { success: false, data: null, message: t(message, params), errors, code, requestId: req.requestId };
     if (status === 429 && !res.getHeader('Retry-After')) res.setHeader('Retry-After', '60');
     res.status(status).json(body);
   }
@@ -61,6 +62,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof ThrottlerException) {
       return { status: 429, code: 'RATE_LIMITED', message: FRIENDLY.RATE_LIMITED!, details: [] };
     }
+    const parserType = (exception as { type?: string; cause?: { type?: string } })?.type ?? (exception as { cause?: { type?: string } })?.cause?.type;
+    if (parserType === 'entity.parse.failed') return { status: 400, code: 'BAD_REQUEST', message: 'errors.badJson', details: [] };
+    if (parserType === 'entity.too.large') return { status: 413, code: 'PAYLOAD_TOO_LARGE', message: 'errors.tooLarge', details: [] };
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const code = CODE_BY_STATUS[status] ?? (status >= 500 ? 'INTERNAL' : 'BAD_REQUEST');
@@ -71,17 +75,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
         this.logger.error(`[${req.requestId}] ${exception.message}`, exception.stack);
         message = FRIENDLY.INTERNAL!;
       }
+      // Framework messages ("Cannot GET /x", guard denials) are English-only; prefer our translated text.
+      if (status === 401 || status === 403 || status === 404) message = FRIENDLY[code]!;
       // Express' body parser reports malformed JSON / oversize bodies as HttpExceptions too.
-      return { status, code, message: message || FRIENDLY[code] || 'Request failed', details: [] };
+      return { status, code, message: message || FRIENDLY[code] || 'errors.generic', details: [] };
     }
-    const pg = exception as PgError;
-    if (pg && typeof pg.code === 'string' && /^[0-9A-Z]{5}$/.test(pg.code)) {
+    const pg = pgErrorOf(exception);
+    if (pg) {
       const mapped = this.mapPostgres(pg);
       if (mapped) return mapped;
     }
     const err = exception as Error;
+    if ((err as { type?: string })?.type === 'entity.parse.failed') {
+      return { status: 400, code: 'BAD_REQUEST', message: 'errors.badJson', details: [] };
+    }
     if ((err as { type?: string })?.type === 'entity.too.large') {
-      return { status: 413, code: 'PAYLOAD_TOO_LARGE', message: 'Request body is too large', details: [] };
+      return { status: 413, code: 'PAYLOAD_TOO_LARGE', message: 'errors.tooLarge', details: [] };
     }
     this.logger.error(`[${req.requestId}] Unhandled ${err?.name ?? 'error'}: ${err?.message ?? String(exception)}`, err?.stack);
     return { status: HttpStatus.INTERNAL_SERVER_ERROR, code: 'INTERNAL', message: FRIENDLY.INTERNAL!, details: [] };
@@ -92,19 +101,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const field = pg.constraint?.replace(/_(key|unique|uq|idx|fkey|check|chk)$/, '').split('_').slice(1).join('_') || undefined;
     switch (pg.code) {
       case '23505':
-        return { status: 409, code: 'CONFLICT' as const, message: 'This already exists', details: [{ field, code: 'unique', message: 'Already in use' }] };
+        return { status: 409, code: 'CONFLICT' as const, message: 'errors.conflict', details: [{ field, code: 'unique', message: 'errors.conflict' }] };
       case '23503':
-        return { status: 409, code: 'CONFLICT' as const, message: 'A related record is missing or still in use', details: [{ field, code: 'reference', message: 'Related record problem' }] };
+        return { status: 409, code: 'CONFLICT' as const, message: 'errors.conflict', details: [{ field, code: 'reference', message: 'errors.conflict' }] };
       case '23514':
       case '23502':
-        return { status: 400, code: 'VALIDATION_FAILED' as const, message: 'Some values are not allowed', details: [{ field: pg.column ?? field, code: 'constraint', message: 'Not allowed' }] };
+        return { status: 400, code: 'VALIDATION_FAILED' as const, message: 'errors.validation', details: [{ field: pg.column ?? field, code: 'constraint', message: 'errors.validation' }] };
       case '22P02':
       case '22003':
       case '22007':
-        return { status: 400, code: 'BAD_REQUEST' as const, message: 'Invalid value in request', details: [] };
+        return { status: 400, code: 'BAD_REQUEST' as const, message: 'errors.validation', details: [] };
       case '40001':
       case '40P01':
-        return { status: 409, code: 'CONFLICT' as const, message: 'Please retry — the record changed while we were saving it', details: [] };
+        return { status: 409, code: 'CONFLICT' as const, message: 'errors.retry', details: [] };
       default:
         return null;
     }

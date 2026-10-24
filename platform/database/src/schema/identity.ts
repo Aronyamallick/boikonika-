@@ -150,6 +150,8 @@ export const sessions = pgTable(
     ip: inet('ip'),
     deviceFingerprint: varchar('device_fingerprint', { length: 64 }),
     twoFactorVerified: boolean('two_factor_verified').notNull().default(false),
+    /** "Keep me signed in": long-lived cookie and 30-day sliding expiry; otherwise 12 hours. */
+    persistent: boolean('persistent').notNull().default(true),
     lastUsedAt: timestamp('last_used_at', { withTimezone: true }).notNull().defaultNow(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),

@@ -22,10 +22,13 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
 };
 
 /**
- * The only exception type services should throw for expected failures. `message` is
- * user-facing (keep it friendly); never put secrets or internal details in it.
+ * The only exception type services should throw for expected failures. `message` is an i18n key
+ * (e.g. "api.auth.otpInvalid") or a user-facing sentence; never put secrets or internals in it.
  */
 export class AppException extends HttpException {
+  /** Values for `{placeholders}` when `message` is an i18n key. */
+  params: Record<string, string | number> = {};
+
   constructor(
     readonly code: ErrorCode,
     message: string,
@@ -35,11 +38,17 @@ export class AppException extends HttpException {
     super({ code, message, details }, status);
   }
 
-  static notFound(what = 'Resource'): AppException {
-    return new AppException('NOT_FOUND', `${what} not found`);
+  withParams(params: Record<string, string | number>): this {
+    this.params = params;
+    return this;
   }
 
-  static forbidden(message = "You don't have permission to do that"): AppException {
+  /** `what` is only for readability at the call site; the message is the translated "not found". */
+  static notFound(_what = 'Resource'): AppException {
+    return new AppException('NOT_FOUND', 'errors.notFound');
+  }
+
+  static forbidden(message = 'errors.forbidden'): AppException {
     return new AppException('FORBIDDEN', message);
   }
 
@@ -51,7 +60,7 @@ export class AppException extends HttpException {
     return new AppException('BAD_REQUEST', message, field ? [{ field, code: 'invalid', message }] : []);
   }
 
-  static validation(details: ApiErrorDetail[], message = 'Please fix the highlighted fields'): AppException {
+  static validation(details: ApiErrorDetail[], message = 'errors.validation'): AppException {
     return new AppException('VALIDATION_FAILED', message, details);
   }
 }

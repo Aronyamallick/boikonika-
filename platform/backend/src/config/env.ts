@@ -83,6 +83,10 @@ export const envSchema = z
 
     RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().default(60),
     RATE_LIMIT_MAX: z.coerce.number().int().default(120),
+    /** Per-IP requests per minute to sign-in, registration and code endpoints. */
+    AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(10),
+    /** Daily SMS cap across the platform (cost protection against SMS pumping). */
+    SMS_DAILY_LIMIT: z.coerce.number().int().min(1).default(5000),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') return;

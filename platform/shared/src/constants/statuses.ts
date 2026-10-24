@@ -134,3 +134,23 @@ export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 export const COPYRIGHT_CLAIM_STATUSES = ['submitted', 'under_review', 'content_removed', 'rejected', 'counter_noticed', 'restored'] as const;
 export type CopyrightClaimStatus = (typeof COPYRIGHT_CLAIM_STATUSES)[number];
+
+/** Default delivery channels per notification type (used when the user has not changed a setting). */
+export const DEFAULT_NOTIFICATION_CHANNELS: Record<NotificationType, NotificationChannel[]> = {
+  order: ['in_app', 'push', 'email', 'sms'],
+  delivery: ['in_app', 'push', 'sms'],
+  follower: ['in_app'],
+  comment: ['in_app', 'push'],
+  review: ['in_app'],
+  book_release: ['in_app', 'push', 'email'],
+  author_update: ['in_app'],
+  book_club: ['in_app', 'push'],
+  reading_challenge: ['in_app', 'push'],
+  security: ['in_app', 'push', 'email', 'sms'],
+  kyc: ['in_app', 'push', 'email'],
+  payout: ['in_app', 'email'],
+  announcement: ['in_app'],
+};
+
+/** Types users cannot switch off (account security). */
+export const MANDATORY_NOTIFICATION_TYPES: readonly NotificationType[] = ['security'];

@@ -1,19 +1,68 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ConfigModule } from './config/config.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import type Redis from 'ioredis';
+import { AUTH_THROTTLED } from './common/decorators/throttle.decorators';
+import { AuthGuard } from './common/guards/auth.guard';
+import { PermissionsGuard } from './common/guards/permissions.guard';
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
 import { EnvelopeInterceptor } from './common/http/envelope.interceptor';
 import { RequestIdMiddleware } from './common/http/request-id.middleware';
+import { APP_CONFIG, ConfigModule, type AppConfig } from './config/config.module';
+import { CryptoModule } from './infra/crypto/crypto.module';
 import { DatabaseModule } from './infra/database/database.module';
-import { RedisModule } from './infra/redis/redis.module';
+import { MessagingModule } from './infra/messaging/messaging.module';
+import { REDIS, RedisModule } from './infra/redis/redis.module';
+import { RedisThrottlerStorage } from './infra/redis/throttler.storage';
+import { StorageModule } from './infra/storage/storage.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { DevController } from './modules/dev/dev.controller';
 import { HealthModule } from './modules/health/health.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { RbacModule } from './modules/rbac/rbac.module';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, RedisModule, ScheduleModule.forRoot(), HealthModule],
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    RedisModule,
+    CryptoModule,
+    StorageModule,
+    MessagingModule,
+    ScheduleModule.forRoot(),
+    ThrottlerModule.forRootAsync({
+      inject: [APP_CONFIG, REDIS],
+      useFactory: (config: AppConfig, redis: Redis) => ({
+        storage: new RedisThrottlerStorage(redis),
+        throttlers: [
+          { name: 'default', ttl: config.RATE_LIMIT_TTL_SECONDS * 1000, limit: config.RATE_LIMIT_MAX },
+          {
+            name: 'auth',
+            ttl: 60_000,
+            limit: config.AUTH_RATE_LIMIT_MAX,
+            skipIf: (context) => !Reflect.getMetadata(AUTH_THROTTLED, context.getHandler()),
+          },
+        ],
+      }),
+    }),
+    AuditModule,
+    NotificationsModule,
+    RbacModule,
+    AuthModule,
+    HealthModule,
+  ],
+  controllers: isProduction ? [] : [DevController],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: EnvelopeInterceptor },
+    // Order matters: rate limit → authenticate → authorize.
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
 })
 export class AppModule implements NestModule {

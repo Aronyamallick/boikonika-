@@ -361,7 +361,11 @@
     "username": "Use 3–30 letters, numbers, dots or underscores.",
     "url": "Enter a valid URL.",
     "fileTooLarge": "File is too large (max {max}).",
-    "fileType": "This file type is not allowed."
+    "fileType": "This file type is not allowed.",
+    "nameLength": "Enter a name between 2 and 120 characters.",
+    "acceptTerms": "Please accept the Terms and Privacy Policy.",
+    "recoveryCode": "Enter a recovery code like ABCD-1234.",
+    "invalidId": "Invalid reference."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -372,7 +376,10 @@
     "rateLimited": "Too many attempts. Please wait a moment and try again.",
     "validation": "Please fix the highlighted fields.",
     "conflict": "This already exists.",
-    "server": "Our server had a problem. We have been notified."
+    "server": "Our server had a problem. We have been notified.",
+    "retry": "The record changed while we were saving it. Please try again.",
+    "tooLarge": "The request is too large.",
+    "badJson": "The request could not be read."
   },
   "status": {
     "order": {
@@ -437,5 +444,71 @@
     "company": "Company",
     "support": "Support",
     "rights": "© {year} Boikonika. All rights reserved."
+  },
+  "api": {
+    "auth": {
+      "invalidCredentials": "Incorrect email, mobile number, username or password.",
+      "accountLocked": "Too many failed attempts. Try again in {minutes} minutes or reset your password.",
+      "accountSuspended": "Your account is suspended until {until}. Contact support if you think this is a mistake.",
+      "accountBanned": "Your account has been closed for breaking our rules. Contact support to appeal.",
+      "otpSent": "We sent a 6-digit code to {target}.",
+      "otpInvalid": "That code is incorrect.",
+      "otpExpired": "That code has expired. Request a new one.",
+      "otpTooManyAttempts": "Too many incorrect codes. Request a new one.",
+      "otpCooldown": "Please wait {seconds} seconds before requesting another code.",
+      "otpLimit": "Too many codes requested. Try again later.",
+      "contactTaken": "An account with this email or mobile number already exists. Log in instead.",
+      "usernameTaken": "This username is taken.",
+      "twoFactorInvalid": "That code is incorrect.",
+      "twoFactorChallengeExpired": "Your sign-in took too long. Please log in again.",
+      "twoFactorAlreadyEnabled": "Two-step verification is already on.",
+      "twoFactorNotEnabled": "Two-step verification is not on.",
+      "twoFactorSetupMissing": "Start the setup again to get a new QR code.",
+      "sessionExpired": "Your session has expired. Please log in again.",
+      "sessionNotFound": "That device is no longer signed in.",
+      "refreshInProgress": "Your session is being refreshed. Please retry.",
+      "passwordChanged": "Your password has been changed.",
+      "passwordReset": "Your password has been reset. You can log in now.",
+      "resetCodeSent": "If an account uses {target}, we sent it a code.",
+      "wrongPassword": "Your current password is incorrect.",
+      "passwordRequired": "Enter your current password.",
+      "samePassword": "Choose a password you have not used for this account.",
+      "googleNotConfigured": "Google sign-in is not available right now.",
+      "googleInvalid": "Google sign-in failed. Please try again.",
+      "googleEmailUnverified": "Your Google email address is not verified.",
+      "loggedOut": "You have been logged out.",
+      "loggedOutAll": "You have been logged out of all devices.",
+      "contactVerified": "Verified.",
+      "contactAdded": "Contact details updated.",
+      "csrf": "This request was blocked for your security. Reload the page and try again."
+    },
+    "rbac": {
+      "ownRoles": "You cannot change your own roles.",
+      "superAdminOnly": "Only a super admin can do this.",
+      "lastSuperAdmin": "At least one super admin must remain.",
+      "unknownPermission": "Unknown permission: {permission}.",
+      "roleGranted": "Role granted.",
+      "roleRevoked": "Role removed.",
+      "permissionsUpdated": "Permissions updated.",
+      "kycRequired": "This role needs an approved identity verification first."
+    },
+    "messages": {
+      "otpSms": "{code} is your Boikonika code. It expires in {minutes} minutes. Never share it with anyone.",
+      "otpEmailSubject": "Your Boikonika code: {code}",
+      "otpEmailTitle": "Your verification code",
+      "otpEmailIntro": "Use this code to continue:",
+      "otpEmailExpiry": "It expires in {minutes} minutes. If you did not ask for it, you can ignore this message — someone may have typed your address by mistake.",
+      "accountExistsSms": "Someone tried to create a Boikonika account with this number, but you already have one. Log in or reset your password at {url}.",
+      "accountExistsEmailSubject": "You already have a Boikonika account",
+      "accountExistsEmailBody": "Someone (hopefully you) tried to create a new Boikonika account with this email address, but an account already exists.\n\nLog in or reset your password at {url}. If this was not you, no action is needed.",
+      "newSignInTitle": "New sign-in to your account",
+      "newSignInBody": "Your account was signed in from {device} ({ip}) on {time}. If this was you, no action is needed. If not, change your password and sign out of other devices.",
+      "passwordChangedTitle": "Your password was changed",
+      "passwordChangedBody": "The password for your Boikonika account was changed on {time}. If you did not do this, reset your password now and contact support.",
+      "twoFactorEnabledTitle": "Two-step verification is on",
+      "twoFactorEnabledBody": "Your account now asks for a code from your authenticator app when you sign in. Keep your recovery codes in a safe place.",
+      "twoFactorDisabledTitle": "Two-step verification was turned off",
+      "twoFactorDisabledBody": "Two-step verification was turned off for your account on {time}. If you did not do this, reset your password now."
+    }
   }
 }
