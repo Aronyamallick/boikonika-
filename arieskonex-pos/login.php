@@ -69,6 +69,9 @@ $shopName = $settings['shop_name'] ?? 'Mallik Book House & Computer';
             <div class="shop-name"><?= e($shopName) ?><small>Powered by Arieskonex Technologies</small></div>
         </div>
 
+        <?php if (!empty($_GET['existing']) && !$error): ?>
+            <div class="alert alert-info"><?= e(t('existing_install_found', 'এই ডাটাবেজে আগের সব তথ্য পাওয়া গেছে এবং তা অক্ষত আছে — আগের ইউজারনেম ও পাসওয়ার্ড দিয়ে লগইন করুন।')) ?></div>
+        <?php endif; ?>
         <?php if ($error): ?>
             <div class="alert alert-danger"><?= e($error) ?></div>
         <?php endif; ?>

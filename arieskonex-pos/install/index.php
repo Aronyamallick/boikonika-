@@ -16,17 +16,13 @@ if (file_exists($configFile)) {
         $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4', DB_USER, DB_PASS, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
-        $stmt = $pdo->query("SHOW TABLES LIKE 'shop_settings'");
-        if ($stmt->fetch()) {
-            $check = $pdo->query("SELECT COUNT(*) c FROM shop_settings")->fetch();
-            if ($check['c'] > 0) {
-                header('Location: ../login.php');
-                exit;
-            }
-        }
-        // কনফিগ আছে, স্কিমা/শপ সেটআপ বাকি — ধাপ ২ এ পাঠান
-        if (isset($stmt) && $stmt->fetch()) {
-            header('Location: step2.php');
+        if ($pdo->query("SHOW TABLES LIKE 'shop_settings'")->fetch()) {
+            // দোকানের তথ্য থাকলে লগইনে, না থাকলে (ধাপ ১ শেষ, ধাপ ২ বাকি) সরাসরি ধাপ ২-এ।
+            // আগের কোড একই ফলাফল দুবার fetch() করত — দ্বিতীয়বার সবসময় খালি আসায় ধাপ ২-এর বদলে
+            // আবার ধাপ ১ দেখাত, আর ধাপ ১ আবার জমা দিলে ডিফল্ট ডাটা দ্বিতীয়বার ঢোকাতে গিয়ে
+            // "Duplicate entry 'cash' for key 'method_key'" এরর হতো।
+            $shopCount = (int)$pdo->query("SELECT COUNT(*) FROM shop_settings")->fetchColumn();
+            header('Location: ' . ($shopCount > 0 ? '../login.php' : 'step2.php'));
             exit;
         }
     } catch (Exception $e) {
@@ -54,47 +50,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '' || $user === '') {
         $error = 'ডাটাবেজ নাম ও ইউজারনেম আবশ্যক।';
     } else {
+        $testPdo = null;
         try {
             $testPdo = new PDO("mysql:host=$host;dbname=$name;charset=utf8mb4", $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             ]);
-
-            // schema.sql ইম্পোর্ট করুন
-            // (কমেন্ট লাইন আগে বাদ দিয়ে তারপর ';' দিয়ে ভাগ করা হচ্ছে — আগে কমেন্ট-হেডারের
-            //  ঠিক পরে থাকা CREATE TABLE স্টেটমেন্টগুলো ভুলবশত বাদ পড়ে যেত, ফলে categories,
-            //  products, companies-এর মতো গুরুত্বপূর্ণ টেবিল তৈরিই হতো না)
-            $sql = file_get_contents(__DIR__ . '/schema.sql');
-            $sqlLines = explode("\n", $sql);
-            $sqlLines = array_filter($sqlLines, function ($line) {
-                return strpos(trim($line), '--') !== 0;
-            });
-            $cleanSql = implode("\n", $sqlLines);
-            $statements = array_filter(array_map('trim', explode(';', $cleanSql)));
-            foreach ($statements as $st) {
-                if ($st === '') continue;
-                $testPdo->exec($st);
-            }
-
-            // config.php লিখুন
-            @mkdir(APP_ROOT . '/config', 0755, true);
-            $configContent = "<?php\n"
-                . "define('DB_HOST', " . var_export($host, true) . ");\n"
-                . "define('DB_NAME', " . var_export($name, true) . ");\n"
-                . "define('DB_USER', " . var_export($user, true) . ");\n"
-                . "define('DB_PASS', " . var_export($pass, true) . ");\n"
-                . "define('BASE_URL', " . var_export($baseUrl, true) . ");\n"
-                . "define('APP_NAME', 'Mallik Book House & Computer');\n"
-                . "define('APP_DEVELOPER', 'Arieskonex Technologies');\n"
-                . "define('APP_SECRET', " . var_export(bin2hex(random_bytes(32)), true) . ");\n";
-
-            if (!file_put_contents($configFile, $configContent)) {
-                $error = 'config.php ফাইল লেখা যায়নি। ফোল্ডার পারমিশন যাচাই করুন (config ফোল্ডারে 755/775 পারমিশন দিন)।';
-            } else {
-                header('Location: step2.php');
-                exit;
-            }
         } catch (PDOException $e) {
             $error = 'ডাটাবেজ সংযোগ ব্যর্থ হয়েছে: ' . $e->getMessage();
+        }
+
+        if ($testPdo) {
+            try {
+                // schema.sql ইম্পোর্ট করুন
+                // (কমেন্ট লাইন আগে বাদ দিয়ে তারপর ';' দিয়ে ভাগ করা হচ্ছে — আগে কমেন্ট-হেডারের
+                //  ঠিক পরে থাকা CREATE TABLE স্টেটমেন্টগুলো ভুলবশত বাদ পড়ে যেত, ফলে categories,
+                //  products, companies-এর মতো গুরুত্বপূর্ণ টেবিল তৈরিই হতো না)
+                $sql = file_get_contents(__DIR__ . '/schema.sql');
+                $sqlLines = explode("\n", $sql);
+                $sqlLines = array_filter($sqlLines, function ($line) {
+                    return strpos(trim($line), '--') !== 0;
+                });
+                $cleanSql = implode("\n", $sqlLines);
+                $statements = array_filter(array_map('trim', explode(';', $cleanSql)));
+                foreach ($statements as $st) {
+                    if ($st === '') continue;
+                    // ডিফল্ট ডাটা (পেমেন্ট মেথড, ক্যাটাগরি, সার্ভিস, শাখা) শুধু খালি টেবিলেই বসানো হয়।
+                    // ডাটাবেজে আগের ইনস্টল বা অসম্পূর্ণ চেষ্টার ডাটা থাকলে তা অক্ষত থাকে — ফলে ইনস্টলার
+                    // আবার চালালেও "Duplicate entry" এরর হয় না, আর কোনো ডাটা মুছে যায় না।
+                    if (preg_match('/^INSERT\s+INTO\s+`?(\w+)`?/i', $st, $m)) {
+                        try {
+                            if (!$testPdo->query('SELECT 1 FROM `' . $m[1] . '` LIMIT 1')->fetchColumn()) {
+                                $testPdo->exec($st);
+                            }
+                        } catch (PDOException $seedError) {
+                            // পুরোনো সংস্করণের টেবিলে কলাম না মিললে ডিফল্ট ডাটা বাদ যায় — প্রথম লগইনে
+                            // includes/bootstrap.php টেবিলগুলো স্বয়ংক্রিয়ভাবে হালনাগাদ করে নেয়
+                        }
+                        continue;
+                    }
+                    $testPdo->exec($st);
+                }
+                // এই ডাটাবেজে আগে থেকেই দোকান সেটআপ করা থাকলে (যেমন ফাইল নতুন করে আপলোড করা হয়েছে)
+                // ধাপ ২ লাগবে না — আগের ইউজারনেম/পাসওয়ার্ড দিয়েই লগইন করা যাবে
+                $existingShop = (int)$testPdo->query("SELECT COUNT(*) FROM shop_settings")->fetchColumn() > 0;
+
+                // config.php লিখুন
+                @mkdir(APP_ROOT . '/config', 0755, true);
+                $configContent = "<?php\n"
+                    . "define('DB_HOST', " . var_export($host, true) . ");\n"
+                    . "define('DB_NAME', " . var_export($name, true) . ");\n"
+                    . "define('DB_USER', " . var_export($user, true) . ");\n"
+                    . "define('DB_PASS', " . var_export($pass, true) . ");\n"
+                    . "define('BASE_URL', " . var_export($baseUrl, true) . ");\n"
+                    . "define('APP_NAME', 'Mallik Book House & Computer');\n"
+                    . "define('APP_DEVELOPER', 'Arieskonex Technologies');\n"
+                    . "define('APP_SECRET', " . var_export(bin2hex(random_bytes(32)), true) . ");\n";
+
+                if (!file_put_contents($configFile, $configContent)) {
+                    $error = 'config.php ফাইল লেখা যায়নি। ফোল্ডার পারমিশন যাচাই করুন (config ফোল্ডারে 755/775 পারমিশন দিন)।';
+                } else {
+                    header('Location: ' . ($existingShop ? '../login.php?existing=1' : 'step2.php'));
+                    exit;
+                }
+            } catch (PDOException $e) {
+                $error = 'ডাটাবেজের টেবিল তৈরি করা যায়নি: ' . $e->getMessage();
+            }
         }
     }
 }
