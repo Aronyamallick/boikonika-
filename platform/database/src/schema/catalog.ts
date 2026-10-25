@@ -93,6 +93,35 @@ export const authors = pgTable(
   ],
 );
 
+/**
+ * A verified author asking to manage an existing catalogue page (e.g. one created by sellers when
+ * listing their books). Staff compare the evidence before linking the page to the account.
+ */
+export const authorClaims = pgTable(
+  'author_claims',
+  {
+    id: id(),
+    authorId: uuid('author_id')
+      .notNull()
+      .references(() => authors.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: varchar('status', { length: 12 }).notNull().default('pending'), // pending | approved | rejected
+    message: text('message').notNull(),
+    evidenceUrl: varchar('evidence_url', { length: 500 }),
+    decisionReason: text('decision_reason'),
+    decidedBy: uuid('decided_by').references(() => users.id, { onDelete: 'set null' }),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    ...timestamps(),
+  },
+  (t) => [
+    index('author_claims_status_idx').on(t.status, t.createdAt),
+    uniqueIndex('author_claims_open_unique').on(t.authorId, t.userId).where(sql`${t.status} = 'pending'`),
+    check('author_claims_status_valid', sql`${t.status} in ('pending', 'approved', 'rejected')`),
+  ],
+);
+
 export const publishers = pgTable(
   'publishers',
   {

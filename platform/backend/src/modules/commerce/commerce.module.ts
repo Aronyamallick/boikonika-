@@ -34,6 +34,6 @@ import { SellerOrdersService } from './seller-orders.service';
     SslcommerzGateway,
     SandboxGateway,
   ],
-  exports: [OrdersService, CartService],
+  exports: [OrdersService, CartService, PayoutsService],
 })
 export class CommerceModule {}

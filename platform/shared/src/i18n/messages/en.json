@@ -419,7 +419,10 @@
     "routingNumber": "Routing numbers have 9 digits.",
     "percent": "A percentage is between 1 and 100.",
     "dateRange": "The end must be after the start.",
-    "httpsUrl": "Enter a valid https:// link."
+    "httpsUrl": "Enter a valid https:// link.",
+    "rating": "Choose 1 to 5 stars.",
+    "year": "Enter a valid year.",
+    "tooShort": "Please write a little more."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -1573,6 +1576,43 @@
       "statusDeliveredBody": "Enjoy your reading! You can review the books from your order page.",
       "statusSellerCancelledTitle": "Part of order {number} was cancelled",
       "statusSellerCancelledBody": "A seller could not fulfil part of your order. Any payment for it will be refunded."
+    },
+    "reviews": {
+      "published": "Thank you! Your review is live.",
+      "held": "Thank you! Your review will appear after a quick check.",
+      "updated": "Review updated.",
+      "deleted": "Review deleted.",
+      "alreadyReviewed": "You have already reviewed this. You can edit your review instead.",
+      "purchaseRequired": "You can review products you have bought and received.",
+      "bodyTooShort": "Please write at least {count} characters, or leave the text empty.",
+      "dailyLimit": "You have written many reviews today. Please continue tomorrow.",
+      "locked": "This review was moderated and can no longer be edited.",
+      "ownVote": "You cannot vote on your own review.",
+      "replied": "Reply posted.",
+      "newTitle": "New {rating}★ review",
+      "newBody": "Someone reviewed “{title}”.",
+      "replyTitle": "The seller replied to your review",
+      "replyBody": "Read the reply to your {rating}★ review."
+    },
+    "creators": {
+      "noAuthorProfile": "Your author profile is not set up yet.",
+      "noPublisherProfile": "Your publisher profile is not set up yet.",
+      "profileSaved": "Profile saved.",
+      "announceLimit": "You can post up to {count} updates a day.",
+      "notYourBook": "Choose one of your own books.",
+      "announced": "Update sent to your followers ({count}).",
+      "announcementTitle": "{author}: {title}",
+      "announcementBody": "A new update from an author you follow.",
+      "alreadyClaimed": "This author page is already managed by someone.",
+      "claimPending": "You already have a pending claim for this page.",
+      "claimSubmitted": "Claim submitted. Our team will review it.",
+      "claimNotPending": "This claim has already been decided.",
+      "claimApproved": "Claim approved.",
+      "claimRejected": "Claim declined.",
+      "claimApprovedTitle": "Your author page claim was approved",
+      "claimApprovedBody": "You now manage the page and its books.",
+      "claimRejectedTitle": "Your author page claim was declined",
+      "claimRejectedBody": "{reason}"
     }
   }
 }

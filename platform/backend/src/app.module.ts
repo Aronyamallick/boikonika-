@@ -23,6 +23,8 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { HealthModule } from './modules/health/health.module';
 import { KycModule } from './modules/kyc/kyc.module';
 import { CommerceModule } from './modules/commerce/commerce.module';
+import { CreatorsModule } from './modules/creators/creators.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -65,6 +67,8 @@ const isProduction = process.env.NODE_ENV === 'production';
     CatalogModule,
     MarketplaceModule,
     CommerceModule,
+    ReviewsModule,
+    CreatorsModule,
     HealthModule,
   ],
   controllers: isProduction ? [] : [DevController],

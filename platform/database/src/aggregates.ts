@@ -80,3 +80,32 @@ export async function refreshStoreProductCounts(db: DbOrTx, sellerIds: string[])
     )
     where s.seller_id = any(${uuidList(sellerIds)})`);
 }
+
+/** Recomputes star averages and counts from published reviews (books, products, seller stores). */
+export async function refreshRatings(db: DbOrTx, target: { bookIds?: string[]; productIds?: string[]; sellerIds?: string[] }): Promise<void> {
+  const { bookIds = [], productIds = [], sellerIds = [] } = target;
+  if (bookIds.length) {
+    await db.execute(sql`
+      update books b set rating_avg = coalesce(r.avg, 0), rating_count = coalesce(r.n, 0)
+      from (select b2.id, round(avg(rv.rating)::numeric, 2) as avg, count(rv.id)::int as n
+            from books b2 left join reviews rv on rv.book_id = b2.id and rv.status = 'published'
+            where b2.id = any(${uuidList(bookIds)}) group by b2.id) r
+      where b.id = r.id`);
+  }
+  if (productIds.length) {
+    await db.execute(sql`
+      update products p set rating_avg = coalesce(r.avg, 0), rating_count = coalesce(r.n, 0)
+      from (select p2.id, round(avg(rv.rating)::numeric, 2) as avg, count(rv.id)::int as n
+            from products p2 left join reviews rv on rv.product_id = p2.id and rv.book_id is null and rv.status = 'published'
+            where p2.id = any(${uuidList(productIds)}) group by p2.id) r
+      where p.id = r.id`);
+  }
+  if (sellerIds.length) {
+    await db.execute(sql`
+      update seller_stores s set rating_avg = coalesce(r.avg, 0), rating_count = coalesce(r.n, 0)
+      from (select se.id, round(avg(rv.rating)::numeric, 2) as avg, count(rv.id)::int as n
+            from sellers se left join reviews rv on rv.seller_id = se.id and rv.status = 'published' and rv.is_verified_purchase
+            where se.id = any(${uuidList(sellerIds)}) group by se.id) r
+      where s.seller_id = r.id`);
+  }
+}
