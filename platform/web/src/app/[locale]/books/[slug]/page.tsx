@@ -9,6 +9,7 @@ import { BookCard } from '@/components/catalog/book-card';
 import { Breadcrumbs } from '@/components/catalog/breadcrumbs';
 import { JsonLd } from '@/components/catalog/json-ld';
 import { PostFeed } from '@/components/community/post-feed';
+import { ShelfButton } from '@/components/reading/shelf-button';
 import { ReviewsList } from '@/components/reviews/reviews-list';
 import { Shelf } from '@/components/catalog/shelf';
 import { Badge } from '@/components/ui/badge';
@@ -175,6 +176,7 @@ export default async function BookPage({ params }: { params: Params }) {
           ) : book.isFree ? (
             <p className="mt-5 text-2xl font-bold text-success">{t('common.free')}</p>
           ) : null}
+          <ShelfButton bookId={book.id} className="mt-3 max-w-xs" />
 
           {book.genres.length ? (
             <ul className="mt-5 flex flex-wrap gap-2" aria-label={t('book.genres')}>

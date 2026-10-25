@@ -121,6 +121,9 @@ describe('Catalogue and marketplace (e2e)', () => {
     const detail = await ctx.http.get(`${API}/products/${encodeURIComponent(created.body.data.slug)}`).expect(200);
     expect(detail.body.data).toMatchObject({ type: 'general', price: '170.00', compareAtPrice: '200.00' });
     expect(detail.body.data.variants.map((v: { name: string; available: number }) => [v.name, v.available])).toEqual([['Blue', 20], ['Black', 0]]);
+    const photo = await ctx.http.post(`${API}/seller/products/${created.body.data.id}/images`).set(as(stationery)).attach('images', await pngImage(600, 600), { filename: 'pen.png' }).expect(200);
+    const listings = await ctx.http.get(`${API}/seller/products`).set(as(stationery)).expect(200);
+    expect(listings.body.data[0].imageUrl).toBe(photo.body.data.images[0].url);
 
     const mine = await ctx.http.get(`${API}/seller/products/${created.body.data.id}`).set(as(stationery)).expect(200);
     const black = mine.body.data.variants.find((v: { name: string }) => v.name === 'Black');
@@ -166,6 +169,8 @@ describe('Catalogue and marketplace (e2e)', () => {
     expect(withImages.body.data.images).toHaveLength(1);
     const card = (await ctx.http.get(`${API}/books`).expect(200)).body.data[0];
     expect(card.coverUrl).toBe(withImages.body.data.images[0].url);
+    const listings = await ctx.http.get(`${API}/seller/products`).set(as(seller)).expect(200);
+    expect(listings.body.data[0].imageUrl).toBe(withImages.body.data.images[0].url);
 
     const [store] = await ctx.db.select({ slug: sellerStores.slug }).from(sellerStores).innerJoin(sellers, eq(sellers.id, sellerStores.sellerId)).where(eq(sellers.userId, seller.id));
     const storePage = await ctx.http.get(`${API}/stores/${encodeURIComponent(store!.slug)}`).expect(200);

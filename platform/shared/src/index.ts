@@ -25,3 +25,4 @@ export * from './schemas/catalog';
 export * from './schemas/commerce';
 export * from './schemas/creators';
 export * from './schemas/community';
+export * from './schemas/reading';

@@ -475,7 +475,7 @@ export class CatalogService {
     const rows = await this.db
       .select({ slug: sellerStores.slug, name: sellerStores.name, tagline: sellerStores.tagline, logoKey: sellerStores.logoKey, district: sellerStores.district, ratingAvg: sellerStores.ratingAvg, productCount: sellerStores.productCount })
       .from(sellerStores)
-      .where(and(eq(sellerStores.isFeatured, true), sql`exists(select 1 from sellers se where se.id = ${sellerStores.sellerId} and se.status = 'active')`))
+      .where(and(eq(sellerStores.isFeatured, true), sql`exists(select 1 from sellers se where se.id = "seller_stores"."seller_id" and se.status = 'active')`))
       .orderBy(sql`${sellerStores.ratingAvg} desc`, asc(sellerStores.name))
       .limit(limit);
     return rows.map((s) => ({ ...s, logoUrl: this.storage.publicUrl(s.logoKey), ratingAvg: Number(s.ratingAvg), logoKey: undefined }));

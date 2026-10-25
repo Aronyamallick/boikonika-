@@ -10,7 +10,8 @@ export const XP_RULES = {
   comment: { xp: 1, dailyCap: 10 },
   post_liked: { xp: 1, dailyCap: 20 },
   review: { xp: 10, dailyCap: 30 },
-  reading_day: { xp: 2, dailyCap: 2 },
+  // One award per reading day (the day is the source id); sessions can be logged a week back.
+  reading_day: { xp: 2, dailyCap: 16 },
   book_completed: { xp: 25, dailyCap: 75 },
   quiz_passed: { xp: 15, dailyCap: 60 },
 } as const;
@@ -112,7 +113,8 @@ export class GamificationService {
     const pending = await tx
       .select({ id: badges.id, key: badges.key, criteria: badges.criteria, xpReward: badges.xpReward, name: badges.name })
       .from(badges)
-      .where(and(eq(badges.isActive, true), sql`not exists (select 1 from user_badges ub where ub.badge_id = ${badges.id} and ub.user_id = ${userId})`));
+      // Columns inside a raw subquery are written out with their table: Drizzle leaves them unqualified.
+      .where(and(eq(badges.isActive, true), sql`not exists (select 1 from user_badges ub where ub.badge_id = "badges"."id" and ub.user_id = ${userId})`));
     if (!pending.length) return [];
     const metrics = await this.metrics(tx, userId);
     const [owner] = await tx.select({ locale: users.locale }).from(users).where(eq(users.id, userId));
@@ -130,6 +132,31 @@ export class GamificationService {
         .catch(() => undefined);
     }
     return earned;
+  }
+
+  /** Every active badge with how far the user is towards it (earned ones carry the date). */
+  async badgeProgress(userId: string) {
+    const [all, earned, metrics] = await Promise.all([
+      this.db.select().from(badges).where(eq(badges.isActive, true)).orderBy(badges.xpReward),
+      this.db.select({ badgeId: userBadges.badgeId, awardedAt: userBadges.awardedAt }).from(userBadges).where(eq(userBadges.userId, userId)),
+      this.metrics(this.db, userId),
+    ]);
+    const awarded = new Map(earned.map((e) => [e.badgeId, e.awardedAt]));
+    return all.map((b) => {
+      const [metric, target] = Object.entries(b.criteria)[0] ?? ['', 0];
+      const at = awarded.get(b.id);
+      return {
+        key: b.key,
+        icon: b.icon,
+        name: b.name,
+        description: b.description,
+        xpReward: b.xpReward,
+        metric,
+        target: Number(target),
+        current: Math.min(Number(target), metrics[metric] ?? 0),
+        earnedAt: at ? at.toISOString() : null,
+      };
+    });
   }
 
   /** Level, XP, counters and badges for a profile or the library page. */

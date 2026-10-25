@@ -177,6 +177,10 @@ export class SellerOrdersService {
             await tx.execute(sql`
               insert into book_daily_stats (book_id, day, sales) values (${i.bookId}, date_trunc('day', now()), ${i.quantity})
               on conflict (book_id, day) do update set sales = book_daily_stats.sales + excluded.sales`);
+            // Delivered books land on the buyer's "Purchased" shelf (a shelf they already chose is kept).
+            await tx.execute(sql`
+              insert into user_library (user_id, book_id, shelf, source, order_item_id) values (${order.userId}, ${i.bookId}, 'purchased', 'purchase', ${i.id})
+              on conflict (user_id, book_id) do update set order_item_id = coalesce(user_library.order_item_id, excluded.order_item_id), source = 'purchase', updated_at = now()`);
           }
         }
       }

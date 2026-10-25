@@ -203,8 +203,10 @@ export class SellerProductsService {
           viewCount: products.viewCount,
           rejectionReason: products.rejectionReason,
           updatedAt: products.updatedAt,
-          imageKey: sql<string | null>`(select i.storage_key from product_images i where i.product_id = ${products.id} order by i.position limit 1)`,
-          coverKey: sql<string | null>`(select b.cover_key from books b where b.id = ${products.bookId})`,
+          // Written with the table name: Drizzle leaves columns unqualified in a single-table select,
+          // and a bare "id" inside the subquery would mean the image's own id.
+          imageKey: sql<string | null>`(select i.storage_key from product_images i where i.product_id = "products"."id" order by i.position limit 1)`,
+          coverKey: sql<string | null>`(select b.cover_key from books b where b.id = "products"."book_id")`,
         })
         .from(products)
         .where(where)
