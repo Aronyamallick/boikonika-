@@ -9,7 +9,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from './auth-provider';
 
 /** Permissions that unlock at least one page of the staff area. */
-const STAFF_PERMISSIONS = ['kyc.view', 'roles.view', 'users.view', 'products.view', 'orders.view', 'orders.refund', 'payouts.view', 'coupons.manage', 'authors.manage'];
+const STAFF_PERMISSIONS = ['kyc.view', 'roles.view', 'users.view', 'products.view', 'orders.view', 'orders.refund', 'payouts.view', 'coupons.manage', 'authors.manage', 'student.manage'];
 
 /** Header account control: "Log in" for visitors, an accessible account menu for signed-in users. */
 export function UserMenu() {

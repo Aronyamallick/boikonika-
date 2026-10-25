@@ -27,3 +27,4 @@ export * from './schemas/creators';
 export * from './schemas/community';
 export * from './schemas/reading';
 export * from './schemas/clubs';
+export * from './schemas/student';

@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { createDb, createPool } from '../client';
 import { seedSuperAdmin } from './admin';
-import { seedContent } from './content';
+import { seedContent, seedQuizzes } from './content';
 import { seedDemo } from './demo';
 import { seedCategories, seedGamification, seedGenres, seedRbac, seedSettings, seedShipping } from './reference';
 
@@ -23,7 +23,8 @@ export async function seedReference(db: ReturnType<typeof createDb>, log: (messa
   await seedSettings(db);
   log('shipping methods and settings');
   await seedContent(db);
-  log('CMS pages, homepage sections and FAQs');
+  await seedQuizzes(db);
+  log('CMS pages, homepage sections, FAQs and starter quizzes');
 }
 
 async function main(): Promise<void> {
