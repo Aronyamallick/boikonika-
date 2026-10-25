@@ -21,7 +21,7 @@ export function RatingSummary({ rating }: { rating: Summary }) {
           const count = rating.breakdown[String(star)] ?? 0;
           return (
             <li key={star} className="flex items-center gap-3 text-sm">
-              <span className="w-14 shrink-0 text-fg-muted">{t('catalog.starsRow', { stars: localizeDigits(star, locale) })}</span>
+              <span className="w-14 shrink-0 text-fg-muted">{t('catalog.starsRow', { count: star })}</span>
               <span className="h-2 flex-1 overflow-hidden rounded-full bg-subtle" aria-hidden="true">
                 <span className="block h-full rounded-full bg-accent" style={{ width: `${(count / max) * 100}%` }} />
               </span>

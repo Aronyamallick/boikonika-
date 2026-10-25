@@ -285,10 +285,14 @@ describe('Cart, checkout, orders, payments, refunds and payouts (e2e)', () => {
     const order = (await ctx.http.get(`${API}/orders/${number}`).set(as(buyer)).expect(200)).body.data;
     const item = order.sellerOrders[0].items[0];
     expect(order.sellerOrders[0].returnableUntil).toBeTruthy();
+    // Book items link to the shared book page, where they are reviewed.
+    expect(item.path).toMatch(/^\/books\//);
     await ctx.http.post(`${API}/orders/${number}/returns`).set(as(buyer)).send({ sellerOrderId: so, reason: 'damaged', items: [{ orderItemId: item.id, quantity: 3 }] }).expect(400);
     const requested = await ctx.http.post(`${API}/orders/${number}/returns`).set(as(buyer)).send({ sellerOrderId: so, reason: 'damaged', details: 'Cover torn', items: [{ orderItemId: item.id, quantity: 1 }] }).expect(201);
     await ctx.http.post(`${API}/orders/${number}/returns`).set(as(buyer)).send({ sellerOrderId: so, reason: 'damaged', items: [{ orderItemId: item.id, quantity: 1 }] }).expect(409);
     const returnId = requested.body.data.id as string;
+    expect((await ctx.http.get(`${API}/seller/orders-summary`).set(as(seller)).expect(200)).body.data.returns).toBe(1);
+    expect((await ctx.http.get(`${API}/seller/orders?returns=requested`).set(as(seller)).expect(200)).body.data.map((r: { id: string }) => r.id)).toEqual([so]);
     await ctx.http.post(`${API}/seller/returns/${returnId}/received`).set(as(seller)).send({ restock: true }).expect(409);
     await ctx.http.post(`${API}/seller/returns/${returnId}/decision`).set(as(seller)).send({ approve: true }).expect(200);
     await ctx.http.post(`${API}/seller/returns/${returnId}/received`).set(as(seller)).send({ restock: true }).expect(200);

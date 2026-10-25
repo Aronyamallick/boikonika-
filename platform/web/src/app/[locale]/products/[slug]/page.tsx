@@ -7,7 +7,7 @@ import { Breadcrumbs } from '@/components/catalog/breadcrumbs';
 import { ImageGallery } from '@/components/catalog/image-gallery';
 import { JsonLd } from '@/components/catalog/json-ld';
 import { ProductCard } from '@/components/catalog/product-card';
-import { RatingSummary } from '@/components/catalog/rating-summary';
+import { ReviewsList } from '@/components/reviews/reviews-list';
 import { Shelf } from '@/components/catalog/shelf';
 import { VariantPicker } from '@/components/catalog/variant-picker';
 import { Link, redirect } from '@/i18n/navigation';
@@ -139,11 +139,11 @@ export default async function ProductPage({ params }: { params: Params }) {
           ) : null}
         </div>
       </div>
-      <section aria-labelledby="ratings" className="mt-12 max-w-2xl">
-        <h2 id="ratings" className="mb-4 text-xl font-bold text-fg">
+      <section aria-labelledby="ratings" className="mt-12 max-w-3xl">
+        <h2 id="ratings" className="mb-4 scroll-mt-24 text-xl font-bold text-fg">
           {t('book.reviews')}
         </h2>
-        <RatingSummary rating={product.rating} />
+        <ReviewsList kind="product" slug={product.slug} targetId={product.id} rating={product.rating} />
       </section>
       {product.related.length ? (
         <Shelf id="related" title={t('catalog.related')} contained={false} className="mt-6">

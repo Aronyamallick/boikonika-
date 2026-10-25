@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/ui/states';
 import { Link } from '@/i18n/navigation';
 import { api, apiRequest } from '@/lib/api/client';
-import { ORDER_TONE } from '@/lib/commerce';
+import { ORDER_TONE, SELLER_ORDER_TABS } from '@/lib/commerce';
 import { cn } from '@/lib/cn';
 
 interface Row {
@@ -27,14 +27,14 @@ interface Row {
   createdAt: string;
 }
 
-const TABS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', ''] as const;
+const TABS = SELLER_ORDER_TABS;
 const PAGE_SIZE = 20;
 
-export function SellerOrdersList() {
+export function SellerOrdersList({ initialStatus = 'pending' }: { initialStatus?: (typeof TABS)[number] }) {
   const t = useTranslations();
   const locale = useLocale();
   const format = useFormatter();
-  const [status, setStatus] = useState<(typeof TABS)[number]>('pending');
+  const [status, setStatus] = useState<(typeof TABS)[number]>(initialStatus);
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [total, setTotal] = useState(0);
@@ -49,7 +49,7 @@ export function SellerOrdersList() {
   useEffect(() => {
     setRows(null);
     setFailed(false);
-    apiRequest<Row[]>('/seller/orders', { query: { status: status || undefined, page, pageSize: PAGE_SIZE } }).then(
+    apiRequest<Row[]>('/seller/orders', { query: status === 'returns' ? { returns: 'requested', page, pageSize: PAGE_SIZE } : { status: status || undefined, page, pageSize: PAGE_SIZE } }).then(
       (res) => (setRows(res.data), setTotal(res.meta?.total ?? 0)),
       () => setFailed(true),
     );
@@ -68,7 +68,7 @@ export function SellerOrdersList() {
             onClick={() => (setStatus(s), setPage(1))}
             className={cn('inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold', status === s ? 'bg-primary text-primary-fg' : 'bg-subtle text-fg-muted hover:text-fg')}
           >
-            {s ? t(`status.order.${s}`) : t('sellerOrders.all')}
+            {s === 'returns' ? t('sellerOrders.returnsTab') : s ? t(`status.order.${s}`) : t('sellerOrders.all')}
             {s && counts[s] ? <span className={cn('rounded-full px-1.5 text-xs', status === s ? 'bg-primary-fg/20' : 'bg-surface')}>{format.number(counts[s])}</span> : null}
           </button>
         ))}

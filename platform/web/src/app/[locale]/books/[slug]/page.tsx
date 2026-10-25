@@ -8,7 +8,7 @@ import { AddToCart } from '@/components/cart/add-to-cart';
 import { BookCard } from '@/components/catalog/book-card';
 import { Breadcrumbs } from '@/components/catalog/breadcrumbs';
 import { JsonLd } from '@/components/catalog/json-ld';
-import { RatingSummary } from '@/components/catalog/rating-summary';
+import { ReviewsList } from '@/components/reviews/reviews-list';
 import { Shelf } from '@/components/catalog/shelf';
 import { Badge } from '@/components/ui/badge';
 import { BookCover } from '@/components/ui/book-cover';
@@ -244,11 +244,11 @@ export default async function BookPage({ params }: { params: Params }) {
         </aside>
       </div>
 
-      <section aria-labelledby="ratings" className="mt-12 max-w-2xl">
+      <section aria-labelledby="ratings" className="mt-12 max-w-3xl">
         <h2 id="ratings" className="mb-4 scroll-mt-24 text-xl font-bold text-fg">
           {t('book.reviews')}
         </h2>
-        <RatingSummary rating={book.rating} />
+        <ReviewsList kind="book" slug={book.slug} targetId={book.id} rating={book.rating} />
       </section>
 
       {book.related.length ? (

@@ -170,10 +170,14 @@ export class ReviewsService {
     }
   }
 
-  async list(target: { bookSlug?: string; productSlug?: string }, q: z.output<typeof reviewListQuerySchema>, viewerId?: string) {
-    const where = target.bookSlug
+  private targetWhere(target: { bookSlug?: string; productSlug?: string }) {
+    return target.bookSlug
       ? sql`r.book_id = (select id from books where slug = ${target.bookSlug})`
       : sql`r.book_id is null and r.product_id = (select id from products where slug = ${target.productSlug})`;
+  }
+
+  async list(target: { bookSlug?: string; productSlug?: string }, q: z.output<typeof reviewListQuerySchema>, viewerId?: string) {
+    const where = this.targetWhere(target);
     const filters = [where, sql`(r.status = 'published' ${viewerId ? sql`or r.user_id = ${viewerId}` : sql``})`];
     if (q.rating) filters.push(sql`r.rating = ${q.rating}`);
     if (q.verified) filters.push(sql`r.is_verified_purchase`);

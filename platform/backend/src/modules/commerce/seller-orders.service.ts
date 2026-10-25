@@ -31,13 +31,14 @@ export class SellerOrdersService {
   /** COD orders are actionable at once; online orders once the payment has arrived. */
   private readonly visible = sql`(o.payment_method = 'cod' or o.payment_status in ('paid', 'partially_refunded', 'refunded'))`;
 
-  async list(userId: string, filter: { status?: string; q?: string; page: number; pageSize: number }) {
+  async list(userId: string, filter: { status?: string; returns?: 'requested'; q?: string; page: number; pageSize: number }) {
     const seller = await this.sellers.requireSeller(userId);
     const where = sql.join(
       [
         sql`so.seller_id = ${seller.id}`,
         this.visible,
         ...(filter.status ? [sql`so.status::text = ${filter.status}`] : []),
+        ...(filter.returns ? [sql`exists(select 1 from return_requests r where r.seller_order_id = so.id and r.status = 'requested')`] : []),
         ...(filter.q ? [sql`(so.number ilike ${`%${filter.q.replace(/[%_\\]/g, '')}%`} or o.shipping_address->>'recipientName' ilike ${`%${filter.q.replace(/[%_\\]/g, '')}%`})`] : []),
       ],
       sql` and `,
@@ -73,8 +74,11 @@ export class SellerOrdersService {
     const seller = await this.sellers.requireSeller(userId);
     const rows = await this.db.execute<{ status: string; n: number }>(sql`
       select so.status::text as status, count(*)::int as n from seller_orders so join orders o on o.id = so.order_id
-      where so.seller_id = ${seller.id} and ${this.visible} group by so.status`);
-    return Object.fromEntries(rows.rows.map((c) => [c.status, c.n]));
+      where so.seller_id = ${seller.id} and ${this.visible} group by so.status
+      union all
+      select 'returns', count(distinct r.seller_order_id)::int from return_requests r join seller_orders so on so.id = r.seller_order_id
+      where so.seller_id = ${seller.id} and r.status = 'requested'`);
+    return Object.fromEntries(rows.rows.filter((c) => c.n > 0).map((c) => [c.status, c.n]));
   }
 
   private async own(userId: string, sellerOrderId: string, tx: DbOrTx = this.db, lock = false) {

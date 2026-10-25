@@ -57,6 +57,8 @@ export interface SemanticColors {
   focusRing: string;
   overlay: string;
   skeleton: string;
+  /** Single-series chart marks (validated against the chart surface for each scheme). */
+  chart1: string;
 }
 
 export const colors: Record<ColorScheme, SemanticColors> = {
@@ -105,6 +107,7 @@ export const colors: Record<ColorScheme, SemanticColors> = {
     focusRing: '#2563EB',
     overlay: 'rgba(15, 23, 42, 0.55)',
     skeleton: '#E2E8F0',
+    chart1: '#2563EB',
   },
   // Dedicated dark palette (not an inversion): lifted surfaces, softened text,
   // brand hues lightened just enough to keep WCAG AA contrast on #0F172A.
@@ -154,6 +157,7 @@ export const colors: Record<ColorScheme, SemanticColors> = {
     focusRing: '#60A5FA',
     overlay: 'rgba(2, 6, 23, 0.7)',
     skeleton: '#26344F',
+    chart1: '#4A8DF7',
   },
 };
 

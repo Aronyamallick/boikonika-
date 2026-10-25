@@ -342,7 +342,7 @@ export class OrdersService implements OnModuleInit {
 
   /** Full order for its buyer (or staff): sub-orders, items, shipments with tracking, payments, refunds. */
   async detail(order: OrderRow) {
-    const [subOrders, items, tracking, paymentRows, refundRows, returnRows, history] = await Promise.all([
+    const [subOrders, items, tracking, paymentRows, refundRows, returnRows, history, slugRows] = await Promise.all([
       this.db.execute<Record<string, unknown>>(sql`
         select so.*, st.name as store_name, st.slug as store_slug, st.phone as store_phone
         from seller_orders so left join seller_stores st on st.seller_id = so.seller_id where so.order_id = ${order.id} order by so.number`),
@@ -361,7 +361,13 @@ export class OrdersService implements OnModuleInit {
           (select json_agg(json_build_object('orderItemId', ri.order_item_id, 'quantity', ri.quantity)) from return_items ri where ri.return_request_id = r.id) as items
         from return_requests r join seller_orders so on so.id = r.seller_order_id where so.order_id = ${order.id} order by r.created_at desc`),
       this.db.select().from(orderStatusHistory).where(and(eq(orderStatusHistory.orderId, order.id), isNotNull(orderStatusHistory.actorRole))).orderBy(asc(orderStatusHistory.createdAt)),
+      this.db.execute<{ id: string; book_slug: string | null; product_slug: string | null }>(sql`
+        select oi.id, b.slug as book_slug, p.slug as product_slug from order_items oi
+        left join books b on b.id = oi.book_id and b.deleted_at is null left join products p on p.id = oi.product_id and p.deleted_at is null
+        where oi.order_id = ${order.id}`),
     ]);
+    // Books are reviewed on the book page (shared by every seller), other products on their own page.
+    const reviewPath = new Map(slugRows.rows.map((r) => [r.id, r.book_slug ? `/books/${r.book_slug}` : r.product_slug ? `/products/${r.product_slug}` : null]));
     const returnWindowDays = await this.settings.number('orders.returnWindowDays', 7);
     const shipmentsBySo = new Map<string, { courier: string; trackingNumber: string | null; trackingUrl: string | null; status: string; events: Array<{ status: string; note: string | null; location: string | null; at: string }> }>();
     for (const { shipment, event } of tracking) {
@@ -406,7 +412,7 @@ export class OrdersService implements OnModuleInit {
           shipment: shipmentsBySo.get(so.id as string) ?? null,
           items: items
             .filter((i) => i.sellerOrderId === so.id)
-            .map((i) => ({ id: i.id, productId: i.productId, bookId: i.bookId, title: i.title, variantName: i.variantName, condition: i.condition, imageUrl: this.storage.publicUrl(i.imageKey), quantity: i.quantity, unitPrice: i.unitPrice, discountAmount: i.discountAmount, lineTotal: i.lineTotal, refundedQuantity: i.refundedQuantity })),
+            .map((i) => ({ id: i.id, productId: i.productId, bookId: i.bookId, title: i.title, variantName: i.variantName, condition: i.condition, imageUrl: this.storage.publicUrl(i.imageKey), quantity: i.quantity, unitPrice: i.unitPrice, discountAmount: i.discountAmount, lineTotal: i.lineTotal, refundedQuantity: i.refundedQuantity, path: reviewPath.get(i.id) ?? null })),
         };
       }),
       refunds: refundRows.rows.map((r) => ({ id: r.id, sellerOrderId: r.seller_order_id, amount: r.amount, status: r.status, reason: r.reason, createdAt: new Date(r.created_at as string).toISOString(), processedAt: r.processed_at ? new Date(r.processed_at as string).toISOString() : null })),

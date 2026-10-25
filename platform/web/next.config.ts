@@ -11,6 +11,8 @@ const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL || apiUrl;
 /** Uploaded media can also be served through this site's own /api/v1 rewrite. */
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 const isDev = process.env.NODE_ENV !== 'production';
+/** HTTPS-only directives; a production build served over plain http (local QA) must not send them. */
+const httpsOnly = !isDev && siteUrl.startsWith('https://');
 
 const toWs = (url: string) => url.replace(/^http/, 'ws');
 const csp = [
@@ -30,12 +32,12 @@ const csp = [
 ].join('; ');
 
 const securityHeaders = [
-  { key: 'Content-Security-Policy', value: isDev ? csp.replace('; upgrade-insecure-requests', '') : csp },
+  { key: 'Content-Security-Policy', value: httpsOnly ? csp : csp.replace('; upgrade-insecure-requests', '') },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(self)' },
-  ...(isDev ? [] : [{ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' }]),
+  ...(httpsOnly ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' }] : []),
 ];
 
 const nextConfig: NextConfig = {

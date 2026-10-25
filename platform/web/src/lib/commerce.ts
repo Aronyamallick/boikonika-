@@ -97,6 +97,8 @@ export interface OrderItem {
   discountAmount: string;
   lineTotal: string;
   refundedQuantity: number;
+  /** Book or product page (where the item is reviewed); null when the listing is gone. */
+  path: string | null;
 }
 
 export interface OrderDetail {
@@ -171,3 +173,6 @@ export function idempotencyKey(): string {
   crypto.getRandomValues(bytes);
   return `chk_${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
 }
+
+/** Seller order list tabs: statuses, plus `returns` (orders with a return request awaiting the seller). */
+export const SELLER_ORDER_TABS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'returns', 'cancelled', ''] as const;

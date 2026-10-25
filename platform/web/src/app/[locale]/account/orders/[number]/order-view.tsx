@@ -1,7 +1,7 @@
 'use client';
 
 import { formatMoney, RETURN_REASONS } from '@boikonika/shared';
-import { CheckCircle2, CircleDot, ExternalLink, PackageCheck, RotateCcw, Truck, XCircle } from 'lucide-react';
+import { CheckCircle2, CircleDot, ExternalLink, PackageCheck, RotateCcw, Star, Truck, XCircle } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AddressLines } from '@/components/commerce/address-form';
@@ -147,6 +147,12 @@ export function OrderView({ number, paymentOutcome, placed }: { number: string; 
                         {[item.condition ? t(`book.conditions.${item.condition}`) : null, `× ${format.number(item.quantity)}`].filter(Boolean).join(' · ')}
                         {item.refundedQuantity ? ` · ${t('orders.refunded')} ${format.number(item.refundedQuantity)}` : ''}
                       </p>
+                      {so.status === 'delivered' && item.path ? (
+                        <Link href={`${item.path}?review=1#ratings`} className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                          <Star className="h-3.5 w-3.5" aria-hidden="true" />
+                          {t('reviews.writeForItem')}
+                        </Link>
+                      ) : null}
                     </div>
                     <p className="shrink-0 text-sm font-semibold text-fg">{formatMoney(item.lineTotal, locale, { hideZeroDecimals: true })}</p>
                   </li>

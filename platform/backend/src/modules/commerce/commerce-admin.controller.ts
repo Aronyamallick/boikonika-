@@ -28,7 +28,7 @@ import { RefundsService } from './refunds.service';
 import { ReturnsService } from './returns.service';
 import { SellerOrdersService } from './seller-orders.service';
 
-const sellerOrderQuery = pageQuery.extend({ status: z.enum(ORDER_STATUSES).optional(), q: z.string().trim().max(60).optional() });
+const sellerOrderQuery = pageQuery.extend({ status: z.enum(ORDER_STATUSES).optional(), returns: z.literal('requested').optional(), q: z.string().trim().max(60).optional() });
 
 @ApiTags('seller')
 @ApiBearerAuth('access-token')

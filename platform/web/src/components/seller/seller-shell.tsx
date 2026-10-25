@@ -1,6 +1,6 @@
 'use client';
 
-import { BookPlus, ExternalLink, PackagePlus, Receipt, Settings2, Store, Tags, Wallet } from 'lucide-react';
+import { BookPlus, ExternalLink, LayoutDashboard, PackagePlus, Receipt, Settings2, Store, Tags, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
@@ -22,6 +22,7 @@ export function useSeller() {
 }
 
 const NAV = [
+  { href: '/seller', key: 'sellerDashboard.nav', Icon: LayoutDashboard, home: true },
   { href: '/seller/orders', key: 'sellerOrders.nav', Icon: Receipt },
   { href: '/seller/products', key: 'seller.navListings', Icon: Tags, exact: true },
   { href: '/seller/products/new-book', key: 'seller.navNewBook', Icon: BookPlus, books: true },
@@ -84,7 +85,7 @@ function Shell({ children }: { children: ReactNode }) {
           <p className="mb-2 px-3 text-xs font-bold uppercase tracking-wide text-fg-subtle">{t('seller.title')}</p>
           <ul className="flex gap-1 overflow-x-auto lg:flex-col">
             {items.map(({ href, key, Icon, ...rest }) => {
-              const active = 'exact' in rest ? pathname === href || /^\/seller\/products\/[0-9a-f-]{36}$/.test(pathname) : pathname.startsWith(href);
+              const active = 'home' in rest ? pathname === href : 'exact' in rest ? pathname === href || /^\/seller\/products\/[0-9a-f-]{36}$/.test(pathname) : pathname.startsWith(href);
               return (
                 <li key={href}>
                   <Link

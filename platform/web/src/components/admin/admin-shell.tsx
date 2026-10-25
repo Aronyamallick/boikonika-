@@ -1,6 +1,6 @@
 'use client';
 
-import { Banknote, Receipt, RotateCcw, ShieldCheck, Tags, TicketPercent, UsersRound } from 'lucide-react';
+import { Banknote, PenLine, Receipt, RotateCcw, ShieldCheck, Tags, TicketPercent, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { RequireAuth } from '@/components/auth/require-auth';
@@ -17,6 +17,7 @@ export const ADMIN_NAV = [
   { href: '/admin/coupons', key: 'adminCoupons.nav', permission: 'coupons.manage', Icon: TicketPercent },
   { href: '/admin/products', key: 'admin.navProducts', permission: 'products.view', Icon: Tags },
   { href: '/admin/kyc', key: 'admin.navVerification', permission: 'kyc.view', Icon: ShieldCheck },
+  { href: '/admin/author-claims', key: 'adminClaims.nav', permission: 'authors.manage', Icon: PenLine },
   { href: '/admin/roles', key: 'admin.navRoles', permission: 'roles.view', Icon: UsersRound },
 ] as const;
 

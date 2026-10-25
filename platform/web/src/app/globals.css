@@ -56,6 +56,7 @@
   --color-ring: var(--bk-focus-ring);
   --color-overlay: var(--bk-overlay);
   --color-skeleton: var(--bk-skeleton);
+  --color-chart-1: var(--bk-chart1);
 
   --font-sans: var(--bk-font-sans);
   --font-serif: var(--bk-font-serif);
