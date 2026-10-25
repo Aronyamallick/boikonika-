@@ -72,3 +72,23 @@ export function discountPercent(price: string, compareAt?: string | null): numbe
   if (c <= 0 || p >= c) return 0;
   return Math.round(((c - p) / c) * 100);
 }
+
+/**
+ * Splits `total` minor units across `weights` in proportion, so the parts always add up to the
+ * total exactly (largest-remainder method; ties go to the earlier weight).
+ */
+export function allocateMinor(total: number, weights: number[]): number[] {
+  if (!Number.isInteger(total) || total < 0) throw new Error('Total must be a non-negative integer');
+  const sum = weights.reduce((a, b) => a + Math.max(0, b), 0);
+  if (sum <= 0) return weights.map((_, i) => (i === 0 ? total : 0));
+  const exact = weights.map((w) => (total * Math.max(0, w)) / sum);
+  const parts = exact.map(Math.floor);
+  let rest = total - parts.reduce((a, b) => a + b, 0);
+  const order = exact.map((e, i) => ({ i, frac: e - Math.floor(e) })).sort((a, b) => b.frac - a.frac || a.i - b.i);
+  for (const { i } of order) {
+    if (rest <= 0) break;
+    parts[i]! += 1;
+    rest -= 1;
+  }
+  return parts;
+}

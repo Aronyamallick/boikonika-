@@ -28,6 +28,8 @@ export interface ApiErrorDetail {
   field?: string;
   code: string;
   message: string;
+  /** Extra machine-readable context, e.g. which cart line is out of stock. */
+  meta?: Record<string, string>;
 }
 
 export interface PageMeta {

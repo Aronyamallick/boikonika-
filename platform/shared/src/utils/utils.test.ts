@@ -1,4 +1,4 @@
-import { addMoney, discountPercent, formatMoney, fromMinor, multiplyMoney, percentOf, toMinor } from './money';
+import { addMoney, allocateMinor, discountPercent, formatMoney, fromMinor, multiplyMoney, percentOf, toMinor } from './money';
 import { formatBdPhone, normalizeBdPhone } from './phone';
 import { isValidIsbn10, isValidIsbn13, toIsbn13 } from './isbn';
 import { toBanglaDigits, toEnglishDigits } from './bangla';
@@ -24,6 +24,13 @@ describe('money', () => {
     expect(formatMoney('1234567.5', 'en')).toBe('৳12,34,567.50');
     expect(formatMoney('1250', 'bn')).toBe('৳১,২৫০.০০');
     expect(formatMoney('300', 'en', { hideZeroDecimals: true })).toBe('৳300');
+  });
+  it('allocates a total across weights without losing a poisha', () => {
+    expect(allocateMinor(1000, [1, 1, 1])).toEqual([334, 333, 333]);
+    expect(allocateMinor(5000, [30000, 10000])).toEqual([3750, 1250]);
+    expect(allocateMinor(7, [0, 0])).toEqual([7, 0]);
+    const parts = allocateMinor(9999, [123, 4567, 89, 1]);
+    expect(parts.reduce((a, b) => a + b, 0)).toBe(9999);
   });
   it('computes discount percentage', () => {
     expect(discountPercent('400.00', '500.00')).toBe(20);

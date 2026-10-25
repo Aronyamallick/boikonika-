@@ -167,6 +167,7 @@ export async function seedGamification(db: Database): Promise<void> {
 export const DEFAULT_SETTINGS: Array<{ key: string; value: unknown; description: string; isPublic?: boolean }> = [
   { key: 'commission.defaultPercent', value: 10, description: 'Platform commission on seller sales (percent)' },
   { key: 'orders.paymentWindowMinutes', value: 30, description: 'Unpaid online orders are cancelled after this many minutes' },
+  { key: 'orders.codMaxAmount', value: '20000.00', description: 'Largest order total that can be paid cash on delivery (BDT)', isPublic: true },
   { key: 'orders.returnWindowDays', value: 7, description: 'Days after delivery a customer may request a return', isPublic: true },
   { key: 'payouts.holdDays', value: 7, description: 'Days after delivery before a sub-order becomes payable' },
   { key: 'payouts.minimumAmount', value: '500.00', description: 'Minimum payout amount (BDT)' },
