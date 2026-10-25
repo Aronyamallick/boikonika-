@@ -4,13 +4,17 @@ import { bookListQuerySchema, productListQuerySchema } from '@boikonika/shared';
 import { z } from 'zod';
 import { CurrentUser, type AuthenticatedUser } from '../../common/decorators/auth.decorators';
 import { Public } from '../../common/decorators/public.decorator';
-import { paginated } from '../../common/http/response';
-import { ZodQuery } from '../../common/validation/zod';
+import { AppException } from '../../common/errors/app-exception';
+import { t } from '../../common/i18n';
+import { paginated, withMessage } from '../../common/http/response';
+import { ZodBody, ZodQuery } from '../../common/validation/zod';
 import { CatalogService } from './catalog.service';
 import { HomeService } from './home.service';
+import { RecommendationsService } from './recommendations.service';
 import { SearchService } from './search.service';
 
 const searchQuery = z.object({ q: z.string().max(200).default('') });
+const recommendationQuery = z.object({ limit: z.coerce.number().int().min(1).max(48).default(24) });
 const authorQuery = z.object({ q: z.string().trim().max(120).optional(), page: z.coerce.number().int().min(1).max(200).default(1), pageSize: z.coerce.number().int().min(1).max(60).default(24) });
 
 @ApiTags('catalogue')
@@ -19,6 +23,7 @@ export class CatalogController {
   constructor(
     private readonly catalog: CatalogService,
     private readonly search: SearchService,
+    private readonly recommendations: RecommendationsService,
     private readonly home: HomeService,
   ) {}
 
@@ -130,8 +135,47 @@ export class CatalogController {
   @Public()
   @Get('search')
   @ApiOperation({ summary: 'Search books, authors and products (Bangla/English, typos, ISBN)' })
-  searchAll(@ZodQuery(searchQuery) q: { q: string }) {
+  searchAll(@ZodQuery(searchQuery) q: { q: string }, @CurrentUser() viewer?: AuthenticatedUser) {
+    if (viewer) void this.recommendations.rememberSearch(viewer.id, q.q);
     return this.search.search(q.q);
+  }
+
+  @Public()
+  @Get('books/:slug/also-liked')
+  @ApiOperation({ summary: 'Books readers of this one also have (aggregated; only readers who share their reading)' })
+  async alsoLiked(@Param('slug') slug: string) {
+    const [book] = await this.catalog.bookIdBySlug(slug);
+    if (!book) throw AppException.notFound('Book');
+    return this.recommendations.alsoLiked(book.id);
+  }
+
+  @Get('me/recommendations')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Personal picks with a reason for each, plus "because you read …" (popular books when personalisation is off)' })
+  forYou(@CurrentUser() user: AuthenticatedUser, @ZodQuery(recommendationQuery) q: { limit: number }) {
+    return this.recommendations.forUser(user.id, q.limit);
+  }
+
+  @Get('me/search-history')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My recent searches (kept 90 days, only with personalisation on)' })
+  searchHistory(@CurrentUser() user: AuthenticatedUser) {
+    return this.recommendations.searchHistory(user.id);
+  }
+
+  @Post('me/search-history')
+  @HttpCode(204)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Remember a search I made (ignored when personalisation is off)' })
+  async rememberSearch(@CurrentUser() user: AuthenticatedUser, @ZodBody(searchQuery) body: { q: string }) {
+    await this.recommendations.rememberSearch(user.id, body.q);
+  }
+
+  @Delete('me/search-history')
+  @ApiBearerAuth('access-token')
+  async clearSearchHistory(@CurrentUser() user: AuthenticatedUser) {
+    await this.recommendations.clearSearchHistory(user.id);
+    return withMessage(null, t('api.catalog.searchHistoryCleared'));
   }
 
   @Public()

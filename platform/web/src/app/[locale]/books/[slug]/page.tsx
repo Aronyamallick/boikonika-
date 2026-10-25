@@ -21,7 +21,7 @@ import { Price } from '@/components/ui/price';
 import { Rating } from '@/components/ui/rating';
 import { Link } from '@/i18n/navigation';
 import { serverApi } from '@/lib/api/server';
-import { localized, type BookDetail, type BookOffer } from '@/lib/catalog';
+import { localized, type BookCardData, type BookDetail, type BookOffer } from '@/lib/catalog';
 import { absoluteUrl, alternates } from '@/lib/seo';
 
 type Params = Promise<{ locale: string; slug: string }>;
@@ -53,6 +53,8 @@ export default async function BookPage({ params }: { params: Params }) {
   const book = await load(locale, slug);
   if (!book) notFound();
   const t = await getTranslations();
+  // Aggregated across many readers, so it changes slowly; an hour's cache is plenty.
+  const alsoLiked = (await serverApi<BookCardData[]>(`/books/${encodeURIComponent(book.slug)}/also-liked`, { locale, revalidate: 3600 }).catch(() => null)) ?? [];
 
   const byRole = (role: string) => book.contributors.filter((c) => c.role === role);
   const authors = byRole('author');
@@ -299,6 +301,14 @@ export default async function BookPage({ params }: { params: Params }) {
         </div>
         <PostFeed endpoint={`/books/${encodeURIComponent(book.slug)}/posts`} query={{ limit: 5 }} label={t('community.aboutThisBook')} empty={t('community.noBookPosts')} />
       </section>
+
+      {alsoLiked.length ? (
+        <Shelf id="also-liked" title={t('recommendations.alsoLiked')} subtitle={t('recommendations.alsoLikedText')} contained={false} className="mt-6">
+          {alsoLiked.map((b) => (
+            <BookCard key={b.id} book={b} />
+          ))}
+        </Shelf>
+      ) : null}
 
       {book.related.length ? (
         <Shelf id="related" title={t('catalog.related')} contained={false} className="mt-6">

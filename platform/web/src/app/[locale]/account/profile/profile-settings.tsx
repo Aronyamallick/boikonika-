@@ -243,7 +243,16 @@ function PrivacyPanel({ profile, onSaved }: { profile: OwnProfile; onSaved: (p: 
 
 function PreferencesPanel({ profile, onSaved }: { profile: OwnProfile; onSaved: (p: OwnProfile) => void }) {
   const t = useTranslations();
+  const toast = useToast();
   const { busy, save } = usePatch(onSaved);
+  const clearSearches = async () => {
+    try {
+      const res = await apiRequest('/me/search-history', { method: 'DELETE' });
+      toast.show(res.message, 'success');
+    } catch {
+      toast.show(t('errors.generic'), 'danger');
+    }
+  };
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
@@ -285,7 +294,7 @@ function PreferencesPanel({ profile, onSaved }: { profile: OwnProfile; onSaved: 
           )}
         </Field>
       </div>
-      <div className="mt-4">
+      <div id="personalization" className="mt-4 scroll-mt-24 space-y-3">
         <Checkbox
           label={
             <span>
@@ -297,6 +306,12 @@ function PreferencesPanel({ profile, onSaved }: { profile: OwnProfile; onSaved: 
           disabled={busy}
           onChange={(e) => void save({ personalizationEnabled: e.target.checked })}
         />
+        <div className="rounded-lg bg-subtle p-3.5 text-sm text-fg-muted">
+          <p>{t('recommendations.signals')}</p>
+          <Button size="sm" variant="outline" className="mt-3" onClick={clearSearches}>
+            {t('recommendations.clearSearches')}
+          </Button>
+        </div>
       </div>
     </Panel>
   );

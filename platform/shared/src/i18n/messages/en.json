@@ -922,7 +922,9 @@
     "kindBook": "Book",
     "kindAuthor": "Author",
     "kindProduct": "Product",
-    "searchFor": "Search for “{query}”"
+    "searchFor": "Search for “{query}”",
+    "recent": "Your recent searches",
+    "clearRecent": "Clear"
   },
   "seller": {
     "title": "Seller centre",
@@ -2581,6 +2583,9 @@
       "saved": "Saved to your wishlist.",
       "removed": "Removed from your wishlist.",
       "full": "Your wishlist holds up to {count} items. Remove some to save more."
+    },
+    "catalog": {
+      "searchHistoryCleared": "Your search history is cleared."
     }
   },
   "digital": {
@@ -2748,5 +2753,24 @@
     "takedownTitle": "Take down the e-book of {title}?",
     "takedownText": "Nobody will be able to download it, sales and the free offer stop, and the uploader is told why. The file is kept privately in case a counter-notice is accepted.",
     "reason": "Reason (shown to the uploader)"
+  },
+  "recommendations": {
+    "forYou": "Picked for you",
+    "forYouText": "Based on your interests, your shelves and what you've searched for.",
+    "why": "Why these?",
+    "reason": {
+      "author": "Because you read {label}",
+      "readers": "Readers with your taste enjoyed it",
+      "genre": "You like {label}",
+      "category": "More {label}",
+      "search": "From your recent searches",
+      "popular": "Popular right now"
+    },
+    "becauseYouRead": "Because you read {title}",
+    "viewBook": "View the book",
+    "alsoLiked": "Readers also enjoyed",
+    "alsoLikedText": "Other books often found on the shelves of this book's readers.",
+    "signals": "Personal picks use only what you've told us: your interests, books on your shelves and wishlist, your orders and ratings, authors you follow and your recent searches (kept for 90 days). Turn personalisation off and we stop using them and forget your searches.",
+    "clearSearches": "Clear my search history"
   }
 }

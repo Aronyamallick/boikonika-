@@ -26,6 +26,7 @@ import { processUpload } from '../../infra/storage/uploads';
 import { AuditService } from '../audit/audit.service';
 import { PasswordService } from '../auth/password.service';
 import { SessionsService } from '../auth/sessions.service';
+import { RecommendationsService } from '../catalog/recommendations.service';
 import { RbacService } from '../rbac/rbac.service';
 import { AccountDataService } from './account-data.service';
 
@@ -44,6 +45,7 @@ export class ProfilesService implements OnModuleInit {
     private readonly sessions: SessionsService,
     private readonly rbac: RbacService,
     private readonly accountData: AccountDataService,
+    private readonly recommendations: RecommendationsService,
   ) {}
 
   onModuleInit(): void {
@@ -108,6 +110,8 @@ export class ProfilesService implements OnModuleInit {
       const profileChanges = Object.fromEntries(Object.entries(profileFields).filter(([, v]) => v !== undefined));
       if (Object.keys(profileChanges).length) await tx.update(userProfiles).set(profileChanges).where(eq(userProfiles.userId, userId));
     });
+    // Switching personalisation off also forgets the searches it would have used.
+    if (personalizationEnabled === false) await this.recommendations.clearSearchHistory(userId);
     return this.getOwn(userId);
   }
 
@@ -285,6 +289,7 @@ export class ProfilesService implements OnModuleInit {
     });
     await this.sessions.revokeAll(userId, 'account_deleted');
     await this.rbac.invalidateUser(userId);
+    await this.recommendations.clearSearchHistory(userId);
     for (const key of [profile?.avatarKey, profile?.coverKey]) if (key) await this.storage.delete('public', key);
   }
 

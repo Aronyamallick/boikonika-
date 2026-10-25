@@ -6,6 +6,7 @@ import { CategoryIcon } from '@/components/catalog/category-icon';
 import { JsonLd } from '@/components/catalog/json-ld';
 import { AuthorCard, StoreCard } from '@/components/catalog/people-cards';
 import { Shelf } from '@/components/catalog/shelf';
+import { ForYou } from '@/components/recommendations/for-you';
 import { SearchBox } from '@/components/layout/search-box';
 import { buttonClasses } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/section-header';
@@ -169,7 +170,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         }}
       />
       {hasHero ? null : <Hero title={t('landing.heroTitle')} subtitle={t('landing.heroSubtitle')} />}
-      <div className="space-y-2 py-4">{sections.map(render)}</div>
+      <div className="space-y-2 py-4">
+        {hasHero ? null : <ForYou />}
+        {sections.map((s, i) => (s.type === 'hero' ? [render(s, i), <ForYou key="for-you" />] : render(s, i)))}
+      </div>
       {sections.some((s) => s.type === 'why_choose_us') ? null : <WhyUs title={t('landing.whyTitle')} />}
 
       <section className="container-page grid gap-5 py-14 md:grid-cols-2">

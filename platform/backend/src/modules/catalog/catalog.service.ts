@@ -141,6 +141,10 @@ export class CatalogService {
     }
   }
 
+  bookIdBySlug(slug: string) {
+    return this.db.execute<{ id: string }>(sql`select id from books where slug = ${slug} and status = 'published' and deleted_at is null`).then((r) => r.rows);
+  }
+
   async bookDetail(slug: string) {
     const [book] = await this.db.execute<Row>(sql`
       select b.*, b.rating_avg::float as rating_avg_f from books b where b.slug = ${slug} and b.status = 'published' and b.deleted_at is null`).then((r) => r.rows);
