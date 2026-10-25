@@ -40,7 +40,7 @@ export class ReadingService {
   // ------------------------------------------------------------------ library
 
   async library(userId: string, q: z.output<typeof libraryQuerySchema>) {
-    const where = sql`l.user_id = ${userId} ${q.shelf ? sql`and l.shelf = ${q.shelf}` : sql``}`;
+    const where = sql`l.user_id = ${userId} ${q.shelf ? sql`and l.shelf = ${q.shelf}` : sql``} ${q.digital ? sql`and l.has_digital_access` : sql``}`;
     const [rows, counts] = await Promise.all([
       this.db.execute<Row>(sql`
         select l.shelf, l.source, l.has_digital_access, l.added_at, l.updated_at, b.id, b.slug, b.title, b.cover_key, b.rating_avg::float as rating,
@@ -51,9 +51,10 @@ export class ReadingService {
         left join reading_progress rp on rp.user_id = l.user_id and rp.book_id = l.book_id
         where ${where} and b.deleted_at is null
         order by l.updated_at desc limit ${q.pageSize} offset ${(q.page - 1) * q.pageSize}`),
-      this.db.execute<{ shelf: LibraryShelf; n: number }>(sql`select shelf, count(*)::int as n from user_library where user_id = ${userId} group by shelf`),
+      this.db.execute<{ shelf: LibraryShelf; n: number; digital: number }>(sql`select shelf, count(*)::int as n, count(*) filter (where has_digital_access)::int as digital from user_library where user_id = ${userId} group by shelf`),
     ]);
     const shelves = Object.fromEntries(counts.rows.map((c) => [c.shelf, c.n]));
+    const digitalCount = counts.rows.reduce((n, c) => n + c.digital, 0);
     return {
       items: rows.rows.map((r) => ({
         book: { id: r.id as string, slug: r.slug as string, title: r.title as string, coverUrl: this.storage.publicUrl(r.cover_key as string | null), authors: (r.authors as string[]) ?? [], rating: Number(r.rating ?? 0) },
@@ -65,20 +66,27 @@ export class ReadingService {
         updatedAt: new Date(r.updated_at as string).toISOString(),
       })),
       shelves,
+      digitalCount,
       page: q.page,
       pageSize: q.pageSize,
-      total: q.shelf ? (shelves[q.shelf] ?? 0) : Object.values(shelves).reduce((a, b) => a + b, 0),
+      total: q.digital
+        ? q.shelf
+          ? (counts.rows.find((c) => c.shelf === q.shelf)?.digital ?? 0)
+          : digitalCount
+        : q.shelf
+          ? (shelves[q.shelf] ?? 0)
+          : Object.values(shelves).reduce((a, b) => a + b, 0),
     };
   }
 
   /** Where this book sits in my library (for the book page's shelf button). */
   async shelfOf(userId: string, bookId: string) {
     const [row] = await this.db
-      .select({ shelf: userLibrary.shelf, percent: readingProgress.percent, currentPage: readingProgress.currentPage })
+      .select({ shelf: userLibrary.shelf, percent: readingProgress.percent, currentPage: readingProgress.currentPage, hasDigitalAccess: userLibrary.hasDigitalAccess })
       .from(userLibrary)
       .leftJoin(readingProgress, and(eq(readingProgress.userId, userLibrary.userId), eq(readingProgress.bookId, userLibrary.bookId)))
       .where(and(eq(userLibrary.userId, userId), eq(userLibrary.bookId, bookId)));
-    return row ? { shelf: row.shelf, percent: row.percent ?? 0, currentPage: row.currentPage ?? 0 } : null;
+    return row ? { shelf: row.shelf, percent: row.percent ?? 0, currentPage: row.currentPage ?? 0, hasDigitalAccess: row.hasDigitalAccess } : null;
   }
 
   async setShelf(userId: string, bookId: string, shelf: LibraryShelf) {
@@ -105,6 +113,26 @@ export class ReadingService {
     if (!row) throw AppException.notFound('Book');
     if (row.source === 'purchase') throw AppException.badRequest('api.reading.keepPurchased');
     await this.db.delete(userLibrary).where(and(eq(userLibrary.userId, userId), eq(userLibrary.bookId, bookId)));
+  }
+
+  /** What happened in my reading, newest first: books started and finished, e-books downloaded. */
+  async history(userId: string, page: number, pageSize: number) {
+    const [rows, total] = await Promise.all([
+      this.db.execute<Row>(sql`
+        select h.id, h.event, h.created_at, b.id as book_id, b.slug, b.title, b.cover_key
+        from reading_history h join books b on b.id = h.book_id
+        where h.user_id = ${userId} and b.deleted_at is null order by h.created_at desc limit ${pageSize} offset ${(page - 1) * pageSize}`),
+      this.db.execute<{ n: number }>(sql`select count(*)::int as n from reading_history where user_id = ${userId}`),
+    ]);
+    return {
+      items: rows.rows.map((r) => ({
+        id: r.id as string,
+        event: r.event as string,
+        at: new Date(r.created_at as string).toISOString(),
+        book: { id: r.book_id as string, slug: r.slug as string, title: r.title as string, coverUrl: this.storage.publicUrl(r.cover_key as string | null) },
+      })),
+      meta: { page, pageSize, total: total.rows[0]?.n ?? 0 },
+    };
   }
 
   // ------------------------------------------------------------------ progress & sessions

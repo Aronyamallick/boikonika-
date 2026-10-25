@@ -28,7 +28,7 @@ export interface Quote {
   address: Address | null;
   shippingMethod: { code: string; name: unknown; minDays: number; maxDays: number; supportsCod: boolean } | null;
   coupon: { code: string; applied: boolean; message?: string; params?: Record<string, string | number>; discount: string; couponId?: string; sellerId?: string | null } | null;
-  totals: { itemCount: number; itemsSubtotal: string; discountTotal: string; shippingTotal: string; grandTotal: string; shippingPending: boolean };
+  totals: { itemCount: number; itemsSubtotal: string; discountTotal: string; shippingTotal: string; grandTotal: string; shippingPending: boolean; digitalOnly: boolean; hasDigital: boolean };
   paymentMethods: Array<{ method: PaymentMethod; provider: string; available: boolean; reason?: string }>;
 }
 
@@ -70,7 +70,10 @@ export class PricingService {
     const groups = [...bySeller.values()].map((lines) => {
       const subtotal = lines.reduce((sum, l) => sum + toMinor(l.lineTotal), 0);
       const weight = lines.reduce((sum, l) => sum + (l.weightGrams ?? 0) * l.quantity, 0);
-      return { seller: lines[0]!.seller, lines, subtotal, weight, shipping: address && method ? this.shippingFee(method, address, subtotal, weight) : 0 };
+      // E-books are not shipped: a seller sending only e-books charges no delivery.
+      const physical = lines.filter((l) => !l.isDigital);
+      const physicalSubtotal = physical.reduce((sum, l) => sum + toMinor(l.lineTotal), 0);
+      return { seller: lines[0]!.seller, lines, subtotal, weight, shipping: physical.length && address && method ? this.shippingFee(method, address, physicalSubtotal, weight) : 0 };
     });
 
     // Coupon
@@ -110,8 +113,12 @@ export class PricingService {
     const grandTotal = itemsSubtotal - discountTotal + shippingTotal;
 
     const codMax = toMinor(String(await this.settings.get<string | number>('orders.codMaxAmount', '20000.00')));
+    const hasDigital = buyable.some((l) => l.isDigital);
+    const digitalOnly = buyable.length > 0 && buyable.every((l) => l.isDigital);
     const paymentMethods = this.payments.availableMethods().map((m) => {
       if (m.method !== 'cod') return { ...m, available: true };
+      // E-books are delivered the moment they are paid for, so there is no doorstep to pay at.
+      if (hasDigital) return { ...m, available: false, reason: 'api.digital.noCod' };
       if (method && !method.supportsCod) return { ...m, available: false, reason: 'api.commerce.codNotForMethod' };
       if (grandTotal > codMax) return { ...m, available: false, reason: 'api.commerce.codLimit' };
       return { ...m, available: true };
@@ -129,7 +136,9 @@ export class PricingService {
         discountTotal: fromMinor(discountTotal),
         shippingTotal: fromMinor(shippingTotal),
         grandTotal: fromMinor(grandTotal),
-        shippingPending: !address || !method,
+        shippingPending: !digitalOnly && (!address || !method),
+        digitalOnly,
+        hasDigital,
       },
       paymentMethods,
     };

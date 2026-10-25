@@ -18,6 +18,8 @@ export interface CartItem {
   available: number;
   state: 'ok' | 'unavailable' | 'insufficient';
   lineTotal: string;
+  /** An e-book: one copy, no delivery, downloadable from My Library once paid. */
+  isDigital: boolean;
   seller: { id: string; name: string; slug: string };
 }
 
@@ -67,7 +69,7 @@ export interface Quote {
   }>;
   problems: Array<{ variantId: string; title: string; state: string; available: number }>;
   coupon: { code: string; applied: boolean; discount: string; message?: string } | null;
-  totals: { itemCount: number; itemsSubtotal: string; discountTotal: string; shippingTotal: string; grandTotal: string; shippingPending: boolean };
+  totals: { itemCount: number; itemsSubtotal: string; discountTotal: string; shippingTotal: string; grandTotal: string; shippingPending: boolean; digitalOnly: boolean; hasDigital: boolean };
   paymentMethods: Array<{ method: string; provider: string; available: boolean; reason?: string }>;
 }
 
@@ -91,6 +93,7 @@ export interface OrderItem {
   title: string;
   variantName: string | null;
   condition: string | null;
+  isDigital: boolean;
   imageUrl: string | null;
   quantity: number;
   unitPrice: string;

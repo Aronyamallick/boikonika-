@@ -297,6 +297,12 @@ export class SellerProductsService {
     let status = product.status;
     if (input.status) {
       if (product.status === 'rejected' || product.status === 'suspended') throw AppException.forbidden();
+      // An e-book listing only goes live while its file is on offer (managed from the digital studio).
+      if (product.isDigital && input.status === 'active') {
+        const [file] = await this.db.execute(sql`select 1 from digital_assets x where x.book_format_id = ${product.bookFormatId} and x.status = 'active' limit 1`).then((r) => r.rows);
+        if (!file) throw new AppException('CONFLICT', 'api.digital.uploadFirst');
+        await this.db.update(books).set({ isFree: false }).where(eq(books.id, product.bookId!));
+      }
       const review = await this.settings.get<boolean>('marketplace.requireListingReview', false);
       status = input.status === 'active' && review && product.status !== 'active' ? 'pending_review' : input.status;
     }
@@ -367,11 +373,12 @@ export class SellerProductsService {
   async adjustStock(userId: string, input: StockAdjust) {
     const seller = await this.sellers.requireSeller(userId);
     const [variant] = await this.db
-      .select({ productId: productVariants.productId, bookId: products.bookId })
+      .select({ productId: productVariants.productId, bookId: products.bookId, isDigital: products.isDigital })
       .from(productVariants)
       .innerJoin(products, eq(products.id, productVariants.productId))
       .where(and(eq(productVariants.id, input.variantId), eq(products.sellerId, seller.id), isNull(products.deletedAt)));
     if (!variant) throw AppException.notFound('Variant');
+    if (variant.isDigital) throw AppException.badRequest('api.digital.noStock');
     return this.db.transaction(async (tx) => {
       const [row] = await tx
         .update(inventory)

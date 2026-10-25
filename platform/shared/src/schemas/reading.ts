@@ -4,7 +4,16 @@ import { LIBRARY_SHELVES } from '../constants/statuses';
 const int = (min: number, max: number, error = 'validation.integer') => z.coerce.number().int({ error }).min(min, { error }).max(max, { error });
 
 export const libraryShelfSchema = z.object({ shelf: z.enum(LIBRARY_SHELVES, { error: 'validation.invalidChoice' }) });
-export const libraryQuerySchema = z.object({ shelf: z.enum(LIBRARY_SHELVES).optional(), page: int(1, 500).default(1), pageSize: int(1, 60).default(24) });
+export const libraryQuerySchema = z.object({
+  shelf: z.enum(LIBRARY_SHELVES).optional(),
+  /** Only books whose e-book I can download. */
+  digital: z
+    .enum(['1', 'true', '0', 'false'])
+    .transform((v) => v === '1' || v === 'true')
+    .optional(),
+  page: int(1, 500).default(1),
+  pageSize: int(1, 60).default(24),
+});
 
 /** Where I am in a book (corrects the position; reading time is logged with sessions). */
 export const progressSchema = z

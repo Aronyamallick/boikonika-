@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCheck, Building2, LayoutDashboard, LibraryBig, LogOut, MapPin, Package, PenLine, Settings, Shield, Store, User } from 'lucide-react';
+import { BadgeCheck, Building2, LayoutDashboard, LibraryBig, LogOut, MapPin, Package, PenLine, Settings, Shield, Store, Tablet, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';
@@ -9,7 +9,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from './auth-provider';
 
 /** Permissions that unlock at least one page of the staff area. */
-const STAFF_PERMISSIONS = ['kyc.view', 'roles.view', 'users.view', 'products.view', 'orders.view', 'orders.refund', 'payouts.view', 'coupons.manage', 'authors.manage', 'student.manage'];
+const STAFF_PERMISSIONS = ['kyc.view', 'roles.view', 'users.view', 'products.view', 'orders.view', 'orders.refund', 'payouts.view', 'coupons.manage', 'authors.manage', 'student.manage', 'copyright.manage'];
 
 /** Header account control: "Log in" for visitors, an accessible account menu for signed-in users. */
 export function UserMenu() {
@@ -58,6 +58,7 @@ export function UserMenu() {
     ...(hasRole('book_seller', 'general_seller', 'publisher', 'author') ? [{ href: '/seller', label: t('nav.sellerDashboard'), Icon: Store }] : []),
     ...(hasRole('author') ? [{ href: '/author', label: t('authorDashboard.title'), Icon: PenLine }] : []),
     ...(hasRole('publisher') ? [{ href: '/publisher', label: t('publisherDashboard.title'), Icon: Building2 }] : []),
+    ...(hasRole('author') || hasRole('publisher') ? [{ href: '/studio/digital', label: t('studio.title'), Icon: Tablet }] : []),
     { href: '/account/profile', label: t('profileSettings.title'), Icon: Settings },
     { href: '/account/security', label: t('account.security'), Icon: Shield },
     { href: '/account/verification', label: t('verification.title'), Icon: BadgeCheck },

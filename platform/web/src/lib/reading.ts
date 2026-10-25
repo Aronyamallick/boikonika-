@@ -14,6 +14,8 @@ export interface LibraryItem {
 export interface LibraryPage {
   items: LibraryItem[];
   shelves: Partial<Record<LibraryShelf, number>>;
+  /** Books whose e-book I can download. */
+  digitalCount: number;
   page: number;
   pageSize: number;
   total: number;

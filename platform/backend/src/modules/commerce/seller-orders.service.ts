@@ -8,6 +8,7 @@ import { DB } from '../../infra/database/database.module';
 import { StorageService } from '../../infra/storage/storage.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SellersService } from '../marketplace/sellers.service';
+import { recordDelivery } from './delivery';
 import { fulfilStock } from './inventory';
 import { deriveOrderStatus, sellerOrderTotal } from './order-status';
 import { OrdersService } from './orders.service';
@@ -168,22 +169,7 @@ export class SellerOrdersService {
         await tx.insert(shipmentTracking).values({ shipmentId: shipment!.id, status: shipmentStatus, note: input.note ?? null, actorId: userId, source: 'manual' });
       }
 
-      if (input.status === 'delivered') {
-        // Sales counters reflect delivered copies only.
-        for (const i of items) {
-          if (i.productId) await tx.execute(sql`update products set sales_count = sales_count + ${i.quantity} where id = ${i.productId}`);
-          if (i.bookId) {
-            await tx.execute(sql`update books set sales_count = sales_count + ${i.quantity} where id = ${i.bookId}`);
-            await tx.execute(sql`
-              insert into book_daily_stats (book_id, day, sales) values (${i.bookId}, date_trunc('day', now()), ${i.quantity})
-              on conflict (book_id, day) do update set sales = book_daily_stats.sales + excluded.sales`);
-            // Delivered books land on the buyer's "Purchased" shelf (a shelf they already chose is kept).
-            await tx.execute(sql`
-              insert into user_library (user_id, book_id, shelf, source, order_item_id) values (${order.userId}, ${i.bookId}, 'purchased', 'purchase', ${i.id})
-              on conflict (user_id, book_id) do update set order_item_id = coalesce(user_library.order_item_id, excluded.order_item_id), source = 'purchase', updated_at = now()`);
-          }
-        }
-      }
+      if (input.status === 'delivered') await recordDelivery(tx, order.userId, items);
 
       const all = await tx.select({ id: sellerOrders.id, status: sellerOrders.status }).from(sellerOrders).where(eq(sellerOrders.orderId, order.id));
       const orderStatus = deriveOrderStatus(all.map((s) => s.status));

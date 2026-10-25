@@ -1,7 +1,7 @@
 'use client';
 
 import { formatMoney } from '@boikonika/shared';
-import { AlertTriangle, ShieldCheck, ShoppingBag, Store, Trash2 } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, ShoppingBag, Store, Tablet, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { QuantityStepper } from '@/components/cart/quantity-stepper';
 import { useCart } from '@/components/cart/cart-provider';
 import { Alert } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { BookCover } from '@/components/ui/book-cover';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Price } from '@/components/ui/price';
@@ -161,7 +162,17 @@ function Line({ item, saved }: { item: CartItem; saved?: boolean }) {
             <Link href={href} className="line-clamp-2 font-semibold text-fg hover:text-primary hover:underline">
               {item.title}
             </Link>
-            <p className="mt-0.5 text-xs text-fg-muted">{[item.condition ? t(`book.conditions.${item.condition}`) : null, item.type === 'general' && item.variantName !== 'Default' ? item.variantName : null].filter(Boolean).join(' · ')}</p>
+            {item.isDigital ? (
+              <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
+                <Badge tone="secondary">
+                  <Tablet className="h-3 w-3" aria-hidden="true" />
+                  {t('digital.ebook')}
+                </Badge>
+                {t('digital.instantDelivery')}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-xs text-fg-muted">{[item.condition ? t(`book.conditions.${item.condition}`) : null, item.type === 'general' && item.variantName !== 'Default' ? item.variantName : null].filter(Boolean).join(' · ')}</p>
+            )}
           </div>
           <Price amount={item.unitPrice} compareAt={item.compareAtPrice} locale={locale} size="sm" className="shrink-0" />
         </div>
@@ -172,7 +183,7 @@ function Line({ item, saved }: { item: CartItem; saved?: boolean }) {
           </p>
         ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {!saved && item.state !== 'unavailable' ? (
+          {!saved && item.state !== 'unavailable' && !item.isDigital ? (
             <QuantityStepper value={item.quantity} max={Math.max(item.available, 1)} disabled={busy} label={t('cart.quantityOf', { title: item.title })} onChange={(quantity) => run(() => update(item.variantId, { quantity }))} />
           ) : null}
           {saved ? (

@@ -49,6 +49,7 @@ export class ReturnsService {
       for (const [index, wanted] of input.items.entries()) {
         const item = items.find((i) => i.id === wanted.orderItemId);
         if (!item) throw AppException.validation([{ field: `items.${index}.orderItemId`, code: 'invalid', message: 'validation.invalidId' }]);
+        if (item.isDigital) throw AppException.validation([{ field: `items.${index}.orderItemId`, code: 'digital', message: 'api.digital.notReturnable' }]);
         const returned = previous.rows.find((p) => p.order_item_id === item.id)?.quantity ?? 0;
         if (wanted.quantity > item.quantity - Math.max(returned, item.refundedQuantity)) {
           throw AppException.validation([{ field: `items.${index}.quantity`, code: 'too_many', message: 'api.commerce.returnTooMany' }]);

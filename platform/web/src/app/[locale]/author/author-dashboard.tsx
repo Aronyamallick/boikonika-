@@ -1,7 +1,7 @@
 'use client';
 
 import { localizeDigits } from '@boikonika/shared';
-import { BadgeCheck, ExternalLink, Eye, Megaphone, PenLine, Search, ShoppingBag, Star, UserRound, Users } from 'lucide-react';
+import { BadgeCheck, ExternalLink, Eye, Megaphone, PenLine, Search, ShoppingBag, Star, Tablet, UserRound, Users } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { CreatorBooksTable, ImageUploader, ViewsSalesCharts, type CreatorBook, type DailyPoint } from '@/components/dashboard/creator-parts';
@@ -104,6 +104,10 @@ function ProfileHeader({ profile }: { profile: AuthorDashboardData['profile'] })
         </h1>
         {profile.nameAlt ? <p className="text-sm text-fg-muted">{profile.nameAlt}</p> : null}
       </div>
+      <Link href="/studio/digital" className={buttonClasses({ variant: 'outline', size: 'sm' })}>
+        <Tablet className="h-4 w-4" aria-hidden="true" />
+        {t('studio.title')}
+      </Link>
       <Link href={`/authors/${profile.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
         {t('creatorDashboard.viewPage')}
         <ExternalLink className="h-4 w-4" aria-hidden="true" />

@@ -1,7 +1,7 @@
 'use client';
 
 import { formatMoney } from '@boikonika/shared';
-import { Banknote, CreditCard, FlaskConical, Plus, ShieldCheck, Smartphone, Truck } from 'lucide-react';
+import { Banknote, CreditCard, FlaskConical, Plus, ShieldCheck, Smartphone, Tablet, Truck } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useCart } from '@/components/cart/cart-provider';
@@ -148,6 +148,7 @@ export function CheckoutView() {
                 {t('checkout.addAddress')}
               </Button>
             </div>
+            {quote?.totals.digitalOnly ? <p className="-mt-2 mb-3 text-sm text-fg-muted">{t('digital.billingAddress')}</p> : null}
             {addresses === null ? (
               <Skeleton className="h-24 w-full" />
             ) : addresses.length === 0 ? (
@@ -172,7 +173,13 @@ export function CheckoutView() {
             <h2 id="step-shipping" className="mb-4 text-lg font-bold text-fg">
               2. {t('checkout.shippingStep')}
             </h2>
-            <div role="radiogroup" aria-labelledby="step-shipping" className="grid gap-3 sm:grid-cols-2">
+            {quote?.totals.hasDigital ? (
+              <p className="mb-4 flex items-start gap-2 rounded-lg bg-secondary-soft px-3.5 py-2.5 text-sm text-secondary-soft-fg">
+                <Tablet className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                {quote.totals.digitalOnly ? t('digital.noShippingNeeded') : t('digital.ebooksNotShipped')}
+              </p>
+            ) : null}
+            <div role="radiogroup" aria-labelledby="step-shipping" className={cn('grid gap-3 sm:grid-cols-2', quote?.totals.digitalOnly && 'hidden')}>
               {shipping.map((m) => (
                 <label key={m.code} className={cn('flex cursor-pointer gap-3 rounded-lg border p-3.5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/40', m.code === shippingMethod ? 'border-primary bg-primary-soft/50' : 'border-line hover:border-line-strong')}>
                   <input type="radio" name="shipping" value={m.code} checked={m.code === shippingMethod} onChange={() => setShippingMethod(m.code)} className="mt-1 h-4 w-4 accent-[var(--bk-primary)]" />

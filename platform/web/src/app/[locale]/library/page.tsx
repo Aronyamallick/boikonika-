@@ -9,14 +9,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: t('title'), robots: { index: false, follow: false } };
 }
 
-export default async function LibraryPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ tab?: string }> }) {
+export default async function LibraryPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ tab?: string; digital?: string }> }) {
   const { locale } = await params;
-  const { tab } = await searchParams;
+  const { tab, digital } = await searchParams;
   setRequestLocale(locale);
   return (
     <RequireAuth>
       <div className="container-page py-6 lg:py-8">
-        <LibraryView initialTab={tab} />
+        <LibraryView initialTab={tab} initialFilter={digital === '1' ? 'ebooks' : ''} />
       </div>
     </RequireAuth>
   );

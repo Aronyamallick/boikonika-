@@ -54,7 +54,7 @@ describe('Library, reading tracker and challenges (e2e)', () => {
 
     // Moving the position starts the book; pages come from the format.
     const half = await ctx.http.put(`${API}/me/reading/${bookId}/progress`).set(as(reader)).send({ currentPage: 60 }).expect(200);
-    expect(half.body.data).toEqual({ shelf: 'currently_reading', percent: 50, currentPage: 60 });
+    expect(half.body.data).toEqual({ shelf: 'currently_reading', percent: 50, currentPage: 60, hasDigitalAccess: false });
     await ctx.http.put(`${API}/me/reading/${bookId}/progress`).set(as(reader)).send({ currentPage: 500 }).expect(400);
     const done = await ctx.http.put(`${API}/me/reading/${bookId}/progress`).set(as(reader)).send({ currentPage: 120 }).expect(200);
     expect(done.body.data).toMatchObject({ shelf: 'completed', percent: 100 });
@@ -114,7 +114,7 @@ describe('Library, reading tracker and challenges (e2e)', () => {
     expect(res.body.data.recentSessions[0].book).toBeNull();
 
     const shelf = await ctx.http.get(`${API}/me/library/${bookId}`).set(as(reader)).expect(200);
-    expect(shelf.body.data).toEqual({ shelf: 'currently_reading', percent: 18, currentPage: 55 });
+    expect(shelf.body.data).toEqual({ shelf: 'currently_reading', percent: 18, currentPage: 55, hasDigitalAccess: false });
 
     const toDelete = res.body.data.recentSessions[0].id;
     await ctx.http.delete(`${API}/me/reading/sessions/${toDelete}`).set(as(reader)).expect(200);
@@ -161,5 +161,38 @@ describe('Library, reading tracker and challenges (e2e)', () => {
     await ctx.http.delete(`${API}/challenges/7-day-reading/join`).set(as(reader)).expect(200);
     const anon = await ctx.http.get(`${API}/challenges/7-day-reading`).expect(200);
     expect(anon.body.data.mine).toBeNull();
+  });
+
+  it('keeps a wishlist of books and products, and a reading history', async () => {
+    const reader = await registerUser(ctx);
+    const { bookId } = await listBook('শ্রীকান্ত', 200);
+    const general = await approvedSeller(ctx, admin, 'general_seller', 'Pen Shop');
+    const pen = await ctx.http
+      .post(`${API}/seller/products`)
+      .set(as(general))
+      .send({ title: 'জেল পেন (১০টি)', categoryId: await categoryId(ctx, 'products/stationery'), variants: [{ name: 'Blue', price: '120', stock: 30 }] })
+      .expect(201);
+    await ctx.http.put(`${API}/me/wishlist/books/${bookId}`).expect(401);
+    await ctx.http.put(`${API}/me/wishlist/books/${bookId}`).set(as(reader)).expect(200);
+    await ctx.http.put(`${API}/me/wishlist/books/${bookId}`).set(as(reader)).expect(200);
+    await ctx.http.put(`${API}/me/wishlist/products/${pen.body.data.id}`).set(as(reader)).expect(200);
+    await ctx.http.put(`${API}/me/wishlist/books/00000000-0000-4000-8000-000000000000`).set(as(reader)).expect(404);
+    await ctx.http.put(`${API}/me/wishlist/shelves/${bookId}`).set(as(reader)).expect(400);
+    const list = await ctx.http.get(`${API}/me/wishlist`).set(as(reader)).expect(200);
+    expect(list.body.data.books).toEqual([expect.objectContaining({ id: bookId, title: 'শ্রীকান্ত' })]);
+    expect(list.body.data.products).toEqual([expect.objectContaining({ title: 'জেল পেন (১০টি)', available: true })]);
+    const has = await ctx.http.get(`${API}/me/wishlist/contains?books=${bookId},not-an-id`).set(as(reader)).expect(200);
+    expect(has.body.data).toEqual({ books: [bookId], products: [] });
+    // Saving twice counts once; removing undoes it.
+    expect((await ctx.db.execute<{ wishlist_count: number }>(sql`select wishlist_count from books where id = ${bookId}`)).rows[0]!.wishlist_count).toBe(1);
+    await ctx.http.delete(`${API}/me/wishlist/books/${bookId}`).set(as(reader)).expect(200);
+    expect((await ctx.db.execute<{ wishlist_count: number }>(sql`select wishlist_count from books where id = ${bookId}`)).rows[0]!.wishlist_count).toBe(0);
+    expect((await ctx.http.get(`${API}/me/wishlist`).set(as(reader)).expect(200)).body.data.books).toEqual([]);
+
+    await ctx.http.put(`${API}/me/library/${bookId}`).set(as(reader)).send({ shelf: 'currently_reading' }).expect(200);
+    await ctx.http.put(`${API}/me/reading/${bookId}/progress`).set(as(reader)).send({ currentPage: 200 }).expect(200);
+    const history = await ctx.http.get(`${API}/me/reading/history`).set(as(reader)).expect(200);
+    expect(history.body.data.map((h: { event: string }) => h.event)).toEqual(['finished', 'started']);
+    expect(history.body.meta).toMatchObject({ total: 2 });
   });
 });

@@ -355,7 +355,11 @@ export const bookPreviews = pgTable(
   (t) => [index('book_previews_book_idx').on(t.bookId, t.position), check('book_previews_percent_range', sql`${t.previewPercent} between 1 and 50`)],
 );
 
-/** Private digital files (e-books). Access only via short-lived signed URLs after an entitlement check. */
+/**
+ * Private digital files (e-books). Access only via short-lived signed URLs after an entitlement check.
+ * `status`: active (on offer) · withdrawn (no longer sold, earlier buyers keep access) · replaced (a newer
+ * file took over) · removed (taken down, e.g. after a copyright complaint — nobody can download it).
+ */
 export const digitalAssets = pgTable(
   'digital_assets',
   {
@@ -368,11 +372,19 @@ export const digitalAssets = pgTable(
     mimeType: varchar('mime_type', { length: 100 }).notNull(),
     sizeBytes: integer('size_bytes').notNull(),
     sha256: char('sha256', { length: 64 }).notNull(),
+    pageCount: integer('page_count'),
+    status: varchar('status', { length: 12 }).notNull().default('active'),
+    removedReason: text('removed_reason'),
     uploadedBy: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
     rightsDeclaredAt: timestamp('rights_declared_at', { withTimezone: true }).notNull(),
     createdAt: createdAt(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('digital_assets_format_idx').on(t.bookFormatId)],
+  (t) => [
+    index('digital_assets_format_idx').on(t.bookFormatId, t.status),
+    index('digital_assets_sha_idx').on(t.sha256),
+    check('digital_assets_status_valid', sql`${t.status} in ('active', 'withdrawn', 'replaced', 'removed')`),
+  ],
 );
 
 /**

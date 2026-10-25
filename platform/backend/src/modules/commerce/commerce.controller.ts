@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, HttpCode, Param, ParseEnumPipe, ParseUUIDPipe, Patch, Post, Put, Query, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   addCartItemSchema,
@@ -29,6 +29,7 @@ import { BkashGateway } from './payments/bkash.gateway';
 import { PaymentsService } from './payments/payments.service';
 import { PricingService } from './pricing.service';
 import { ReturnsService } from './returns.service';
+import { WishlistService } from './wishlist.service';
 
 const ownerOf = (user: AuthenticatedUser | undefined, token: string | undefined): CartOwner => ({ userId: user?.id, guestToken: user ? undefined : token && /^[A-Za-z0-9_-]{32,64}$/.test(token) ? token : undefined });
 
@@ -292,5 +293,39 @@ export class PaymentsController {
     if (payment.status !== 'pending') throw new AppException('CONFLICT', 'api.commerce.paymentNotPending');
     const settled = await this.payments.settle(payment.id, this.payments.sandbox.outcome(this.payments.stored(payment), body.outcome), 'sandbox');
     return { status: settled.status, orderNumber: payment.orderNumber };
+  }
+}
+
+const wishlistContainsQuery = z.object({
+  books: z.string().max(2000).optional().transform((v) => (v ? v.split(',').filter((id) => z.uuid().safeParse(id).success).slice(0, 100) : [])),
+  products: z.string().max(2000).optional().transform((v) => (v ? v.split(',').filter((id) => z.uuid().safeParse(id).success).slice(0, 100) : [])),
+});
+
+@ApiTags('wishlist')
+@ApiBearerAuth('access-token')
+@Controller('me/wishlist')
+export class WishlistController {
+  constructor(private readonly wishlist: WishlistService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'My saved books and products' })
+  list(@CurrentUser() user: AuthenticatedUser) {
+    return this.wishlist.list(user.id);
+  }
+
+  @Get('contains')
+  @ApiOperation({ summary: 'Which of these books/products (comma-separated ids) I have saved' })
+  contains(@CurrentUser() user: AuthenticatedUser, @ZodQuery(wishlistContainsQuery) q: z.output<typeof wishlistContainsQuery>) {
+    return this.wishlist.contains(user.id, q.books, q.products);
+  }
+
+  @Put(':kind/:id')
+  async add(@CurrentUser() user: AuthenticatedUser, @Param('kind', new ParseEnumPipe(['books', 'products'])) kind: 'books' | 'products', @Param('id', new ParseUUIDPipe()) id: string) {
+    return withMessage(await this.wishlist.add(user.id, { kind: kind === 'books' ? 'book' : 'product', id }), t('api.wishlist.saved'));
+  }
+
+  @Delete(':kind/:id')
+  async remove(@CurrentUser() user: AuthenticatedUser, @Param('kind', new ParseEnumPipe(['books', 'products'])) kind: 'books' | 'products', @Param('id', new ParseUUIDPipe()) id: string) {
+    return withMessage(await this.wishlist.remove(user.id, { kind: kind === 'books' ? 'book' : 'product', id }), t('api.wishlist.removed'));
   }
 }

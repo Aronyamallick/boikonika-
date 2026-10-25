@@ -6,6 +6,7 @@ import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ColumnChart } from '@/components/dashboard/column-chart';
 import { RangePresets } from '@/components/dashboard/stat-tile';
+import { DownloadButton } from '@/components/digital/download-button';
 import { BadgeIcon } from '@/components/reading/badge-icon';
 import { LogReadingDialog, type SessionDraft } from '@/components/reading/log-reading-dialog';
 import { GoalMeter } from '@/components/reading/meter';
@@ -25,15 +26,17 @@ import { api, apiRequest } from '@/lib/api/client';
 import { cn } from '@/lib/cn';
 import { useFormErrors, type FieldErrors } from '@/lib/forms/errors';
 import { localized, type BadgeProgress, type LibraryItem, type LibraryPage, type ReadingGoals, type ReadingStats } from '@/lib/reading';
+import { DownloadsPanel, HistoryPanel, WishlistPanel } from './library-extras';
 
-const TABS = ['shelves', 'stats', 'achievements'] as const;
+const TABS = ['shelves', 'wishlist', 'downloads', 'history', 'stats', 'achievements'] as const;
+type ShelfFilter = LibraryShelf | '' | 'ebooks';
 const RANGES = [7, 30, 90] as const;
 const utcDay = (day: string) => {
   const [y, m, d] = day.split('-').map(Number);
   return new Date(Date.UTC(y!, m! - 1, d!));
 };
 
-export function LibraryView({ initialTab }: { initialTab?: string }) {
+export function LibraryView({ initialTab, initialFilter }: { initialTab?: string; initialFilter?: ShelfFilter }) {
   const t = useTranslations();
   const format = useFormatter();
   const [stats, setStats] = useState<ReadingStats | null>(null);
@@ -103,7 +106,10 @@ export function LibraryView({ initialTab }: { initialTab?: string }) {
       <Tabs
         defaultIndex={Math.max(0, TABS.indexOf((initialTab ?? 'shelves') as (typeof TABS)[number]))}
         tabs={[
-          { label: t('library.tabShelves'), content: <Shelves version={version} onChanged={refresh} onLog={(bookId) => openLog({ minutes: 20, source: 'manual', bookId })} /> },
+          { label: t('library.tabShelves'), content: <Shelves version={version} initialFilter={initialFilter} onChanged={refresh} onLog={(bookId) => openLog({ minutes: 20, source: 'manual', bookId })} /> },
+          { label: t('library.tabWishlist'), content: <WishlistPanel /> },
+          { label: t('library.tabDownloads'), content: <DownloadsPanel version={version} /> },
+          { label: t('library.tabHistory'), content: <HistoryPanel version={version} /> },
           {
             label: t('library.tabStats'),
             content: stats ? (
@@ -127,17 +133,18 @@ export function LibraryView({ initialTab }: { initialTab?: string }) {
   );
 }
 
-function Shelves({ version, onChanged, onLog }: { version: number; onChanged: () => void; onLog: (bookId: string) => void }) {
+function Shelves({ version, initialFilter = '', onChanged, onLog }: { version: number; initialFilter?: ShelfFilter; onChanged: () => void; onLog: (bookId: string) => void }) {
   const t = useTranslations();
   const format = useFormatter();
   const toast = useToast();
   const { fromApi } = useFormErrors();
-  const [shelf, setShelf] = useState<LibraryShelf | ''>('');
+  const [shelf, setShelf] = useState<ShelfFilter>(initialFilter);
   const [data, setData] = useState<LibraryPage | null>(null);
   const [editing, setEditing] = useState<LibraryItem | null>(null);
 
   useEffect(() => {
-    api<LibraryPage>('/me/library', { query: { shelf: shelf || undefined, pageSize: 60 } }).then(setData, () => setData({ items: [], shelves: {}, page: 1, pageSize: 60, total: 0 }));
+    const query = shelf === 'ebooks' ? { digital: 1, pageSize: 60 } : { shelf: shelf || undefined, pageSize: 60 };
+    api<LibraryPage>('/me/library', { query }).then(setData, () => setData({ items: [], shelves: {}, digitalCount: 0, page: 1, pageSize: 60, total: 0 }));
   }, [shelf, version]);
 
   const move = async (item: LibraryItem, next: LibraryShelf) => {
@@ -163,7 +170,7 @@ function Shelves({ version, onChanged, onLog }: { version: number; onChanged: ()
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('library.shelf')}>
-        {(['', 'currently_reading', 'want_to_read', 'completed', 'purchased', 'owned'] as const).map((s) => (
+        {(['', 'currently_reading', 'want_to_read', 'completed', 'purchased', 'owned', 'ebooks'] as const).map((s) => (
           <button
             key={s || 'all'}
             type="button"
@@ -171,8 +178,8 @@ function Shelves({ version, onChanged, onLog }: { version: number; onChanged: ()
             onClick={() => setShelf(s)}
             className={cn('inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold', shelf === s ? 'bg-primary text-primary-fg' : 'bg-subtle text-fg-muted hover:text-fg')}
           >
-            {s ? t(`library.shelves.${s}`) : t('common.all')}
-            <span className={cn('rounded-full px-1.5 text-xs', shelf === s ? 'bg-primary-fg/20' : 'bg-surface')}>{format.number(s ? (data?.shelves[s] ?? 0) : total)}</span>
+            {s === 'ebooks' ? t('library.ebooks') : s ? t(`library.shelves.${s}`) : t('common.all')}
+            <span className={cn('rounded-full px-1.5 text-xs', shelf === s ? 'bg-primary-fg/20' : 'bg-surface')}>{format.number(s === 'ebooks' ? (data?.digitalCount ?? 0) : s ? (data?.shelves[s] ?? 0) : total)}</span>
           </button>
         ))}
       </div>
@@ -181,8 +188,8 @@ function Shelves({ version, onChanged, onLog }: { version: number; onChanged: ()
       ) : data.items.length === 0 ? (
         <EmptyState
           icon={<BookOpen className="h-6 w-6" />}
-          title={shelf ? t('library.emptyShelf') : t('library.empty')}
-          text={t('library.emptyText')}
+          title={shelf === 'ebooks' ? t('library.noEbooks') : shelf ? t('library.emptyShelf') : t('library.empty')}
+          text={shelf === 'ebooks' ? t('library.noEbooksText') : t('library.emptyText')}
           action={
             <Link href="/books" className="font-semibold text-primary hover:underline">
               {t('library.browse')}
@@ -204,6 +211,7 @@ function Shelves({ version, onChanged, onLog }: { version: number; onChanged: ()
                 <p className="mt-1 flex flex-wrap gap-1.5">
                   <Badge tone={item.shelf === 'completed' ? 'success' : item.shelf === 'currently_reading' ? 'primary' : 'neutral'}>{t(`library.shelves.${item.shelf}`)}</Badge>
                   {item.source === 'purchase' && item.shelf !== 'purchased' ? <Badge tone="neutral">{t('library.bought')}</Badge> : null}
+                  {item.hasDigitalAccess ? <Badge tone="secondary">{t('digital.ebook')}</Badge> : null}
                 </p>
                 {item.shelf === 'currently_reading' || (item.progress.percent > 0 && item.shelf !== 'completed') ? (
                   <div className="mt-2">
@@ -218,6 +226,7 @@ function Shelves({ version, onChanged, onLog }: { version: number; onChanged: ()
                   </div>
                 ) : null}
                 <div className="mt-2 flex flex-wrap items-center gap-1">
+                  {item.hasDigitalAccess ? <DownloadButton bookId={item.book.id} title={item.book.title} size="sm" variant="secondary" onDone={onChanged} /> : null}
                   {item.shelf !== 'completed' ? (
                     <>
                       <Button size="sm" variant="outline" onClick={() => setEditing(item)}>

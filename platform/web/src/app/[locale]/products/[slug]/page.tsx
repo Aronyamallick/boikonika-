@@ -10,6 +10,7 @@ import { ProductCard } from '@/components/catalog/product-card';
 import { ReviewsList } from '@/components/reviews/reviews-list';
 import { Shelf } from '@/components/catalog/shelf';
 import { VariantPicker } from '@/components/catalog/variant-picker';
+import { WishlistButton } from '@/components/wishlist/wishlist-button';
 import { Link, redirect } from '@/i18n/navigation';
 import { serverApi } from '@/lib/api/server';
 import { localized, type ProductDetail } from '@/lib/catalog';
@@ -89,6 +90,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           <div className="mt-5">
             <VariantPicker variants={product.variants} />
           </div>
+          <WishlistButton kind="products" id={product.id} title={product.title} className="mt-3" />
           {product.store ? (
             <div className="mt-6 rounded-xl border border-line bg-surface p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">{t('catalog.soldByStore')}</p>

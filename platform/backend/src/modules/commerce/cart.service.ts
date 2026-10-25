@@ -36,6 +36,8 @@ export interface CartLine {
   state: 'ok' | 'unavailable' | 'insufficient';
   lineTotal: string;
   weightGrams: number | null;
+  /** An e-book: one copy per buyer, no shipping, delivered to the library once paid. */
+  isDigital: boolean;
   seller: { id: string; name: string; slug: string; district: string | null; commissionPercent: string | null };
 }
 
@@ -75,7 +77,7 @@ export class CartService {
     const rows = await tx.execute<Row>(sql`
       select ci.variant_id, ci.quantity, ci.saved_for_later,
         v.product_id, v.name as variant_name, v.price, v.compare_at_price, v.sku, v.is_active, v.weight_grams as variant_weight,
-        p.slug, p.type, p.title, p.book_id, p.condition, p.status, p.deleted_at, p.weight_grams as product_weight,
+        p.slug, p.type, p.title, p.book_id, p.condition, p.status, p.deleted_at, p.weight_grams as product_weight, p.is_digital,
         b.slug as book_slug, b.cover_key,
         (select pi.storage_key from product_images pi where pi.product_id = p.id order by pi.position limit 1) as image_key,
         se.id as seller_id, se.status as seller_status, se.commission_percent, st.name as store_name, st.slug as store_slug, st.district,
@@ -114,7 +116,8 @@ export class CartService {
         available,
         state: !listed || available === 0 ? 'unavailable' : available < quantity ? 'insufficient' : 'ok',
         lineTotal: multiplyMoney(r.price as string, quantity),
-        weightGrams: (r.variant_weight as number | null) ?? (r.product_weight as number | null),
+        weightGrams: r.is_digital ? 0 : ((r.variant_weight as number | null) ?? (r.product_weight as number | null)),
+        isDigital: r.is_digital === true,
         seller: { id: r.seller_id as string, name: (r.store_name as string | null) ?? '', slug: (r.store_slug as string | null) ?? '', district: r.district as string | null, commissionPercent: r.commission_percent as string | null },
       };
     });
@@ -147,7 +150,7 @@ export class CartService {
     return this.db.transaction(async (tx) => {
       const cart = (await this.resolve(owner, true, tx))!;
       const [variant] = await tx.execute<Row>(sql`
-        select v.id, i.quantity_on_hand, i.quantity_reserved, i.track_inventory, p.seller_id
+        select v.id, i.quantity_on_hand, i.quantity_reserved, i.track_inventory, p.seller_id, p.is_digital, p.book_id
         from product_variants v join products p on p.id = v.product_id join sellers se on se.id = p.seller_id left join inventory i on i.variant_id = v.id
         where v.id = ${variantId} and v.is_active and p.status = 'active' and p.deleted_at is null and se.status = 'active'`).then((r) => r.rows);
       if (!variant) throw new AppException('NOT_FOUND', 'api.commerce.itemUnavailable');
@@ -155,9 +158,14 @@ export class CartService {
         const [own] = await tx.execute(sql`select 1 from sellers where id = ${variant.seller_id as string} and user_id = ${owner.userId}`).then((r) => r.rows);
         if (own) throw new AppException('BAD_REQUEST', 'api.commerce.ownListing');
       }
+      if (variant.is_digital && owner.userId && variant.book_id) {
+        const [owned] = await tx.execute(sql`select 1 from user_library where user_id = ${owner.userId} and book_id = ${variant.book_id as string} and has_digital_access`).then((r) => r.rows);
+        if (owned) throw new AppException('CONFLICT', 'api.digital.alreadyOwned');
+      }
       const available = variant.track_inventory === false ? UNTRACKED_STOCK : Math.max(0, Number(variant.quantity_on_hand ?? 0) - Number(variant.quantity_reserved ?? 0));
       const [existing] = await tx.select().from(cartItems).where(and(eq(cartItems.cartId, cart.id), eq(cartItems.variantId, variantId)));
-      const wanted = Math.min(MAX_CART_QUANTITY, (existing && !existing.savedForLater ? existing.quantity : 0) + quantity);
+      // One copy of an e-book is all anyone needs.
+      const wanted = variant.is_digital ? 1 : Math.min(MAX_CART_QUANTITY, (existing && !existing.savedForLater ? existing.quantity : 0) + quantity);
       if (available <= 0) throw new AppException('OUT_OF_STOCK', 'api.commerce.outOfStock');
       if (wanted > available) throw new AppException('OUT_OF_STOCK', 'api.commerce.onlyAvailable').withParams({ count: available });
       if (!existing) {
@@ -178,6 +186,7 @@ export class CartService {
     if (input.quantity !== undefined) {
       const [line] = (await this.lines(cart.id)).filter((l) => l.variantId === variantId);
       if (!line) throw AppException.notFound('Cart item');
+      if (line.isDigital && input.quantity > 1) throw AppException.validation([{ field: 'quantity', code: 'one_copy', message: 'api.digital.oneCopy' }]);
       if (input.quantity > line.available && input.quantity > line.quantity) throw new AppException('OUT_OF_STOCK', 'api.commerce.onlyAvailable').withParams({ count: line.available });
     }
     const updated = await this.db
@@ -209,7 +218,10 @@ export class CartService {
       await tx.execute(sql`
         insert into cart_items (cart_id, variant_id, quantity, saved_for_later)
         select ${cart.id}, g.variant_id, g.quantity, g.saved_for_later from cart_items g where g.cart_id = ${guest.id}
-        on conflict (cart_id, variant_id) do update set quantity = least(cart_items.quantity + excluded.quantity, ${MAX_CART_QUANTITY}), saved_for_later = false, updated_at = now()`);
+        on conflict (cart_id, variant_id) do update set
+          quantity = case when exists(select 1 from product_variants v join products p on p.id = v.product_id where v.id = excluded.variant_id and p.is_digital) then 1
+                          else least(cart_items.quantity + excluded.quantity, ${MAX_CART_QUANTITY}) end,
+          saved_for_later = false, updated_at = now()`);
       if (guest.couponCode && !cart.couponCode) await tx.update(carts).set({ couponCode: guest.couponCode }).where(eq(carts.id, cart.id));
       await tx.delete(carts).where(eq(carts.id, guest.id));
     });

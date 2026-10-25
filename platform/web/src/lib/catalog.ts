@@ -97,6 +97,8 @@ export interface BookOffer {
   conditionNote: string | null;
   price: string;
   compareAtPrice: string | null;
+  /** The e-book edition (sold by its rights holder). */
+  isDigital: boolean;
   stock: number;
   store: { name: string; slug: string; district: string | null; ratingAvg: number; ratingCount: number };
 }
@@ -117,13 +119,15 @@ export interface BookDetail {
   isFree: boolean;
   coverUrl: string | null;
   images: Array<{ url: string; alt: string | null; kind: string }>;
-  tableOfContents: unknown;
+  tableOfContents: Array<{ title: string; page?: number }> | null;
   contributors: Array<{ id: string; slug: string; name: string; nameAlt: string | null; role: string; verified: boolean; photoUrl: string | null }>;
   categories: Array<{ slug: string; path: string; name: LocalizedText; primary: boolean }>;
   genres: Array<{ key: string; name: LocalizedText }>;
   formats: Array<{ id: string; format: string; isbn13: string | null; isbn10: string | null; edition: string | null; publicationYear: number | null; pages: number | null; publisher: { name: string; slug: string } | null }>;
   offers: BookOffer[];
   previews: Array<{ id: string; kind: string; title: string | null }>;
+  /** The e-book on offer: its file details and whether it's free. */
+  digital: { format: 'pdf' | 'epub'; sizeBytes: number; pageCount: number | null; free: boolean } | null;
   rating: RatingSummary;
   picks: { editors: boolean; students: boolean; teachers: boolean };
   related: BookCardData[];

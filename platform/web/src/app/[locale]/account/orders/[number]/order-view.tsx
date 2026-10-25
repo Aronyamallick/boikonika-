@@ -5,6 +5,7 @@ import { CheckCircle2, CircleDot, ExternalLink, PackageCheck, RotateCcw, Star, T
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AddressLines } from '@/components/commerce/address-form';
+import { DownloadButton } from '@/components/digital/download-button';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { BookCover } from '@/components/ui/book-cover';
@@ -144,9 +145,19 @@ export function OrderView({ number, paymentOutcome, placed }: { number: string; 
                     <div className="min-w-0 flex-1 text-sm">
                       <p className="line-clamp-2 font-medium text-fg">{item.title}</p>
                       <p className="text-xs text-fg-muted">
-                        {[item.condition ? t(`book.conditions.${item.condition}`) : null, `× ${format.number(item.quantity)}`].filter(Boolean).join(' · ')}
+                        {item.isDigital ? (
+                          <Badge tone="secondary" className="mr-1.5">
+                            {t('digital.ebook')}
+                          </Badge>
+                        ) : null}
+                        {[!item.isDigital && item.condition ? t(`book.conditions.${item.condition}`) : null, `× ${format.number(item.quantity)}`].filter(Boolean).join(' · ')}
                         {item.refundedQuantity ? ` · ${t('orders.refunded')} ${format.number(item.refundedQuantity)}` : ''}
                       </p>
+                      {item.isDigital && item.bookId && order.status !== 'cancelled' && ['paid', 'partially_refunded'].includes(order.paymentStatus) ? (
+                        <div className="my-2">
+                          <DownloadButton bookId={item.bookId} title={item.title} size="sm" variant="outline" />
+                        </div>
+                      ) : null}
                       {so.status === 'delivered' && item.path ? (
                         <Link href={`${item.path}?review=1#ratings`} className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
                           <Star className="h-3.5 w-3.5" aria-hidden="true" />
@@ -238,7 +249,7 @@ export function OrderView({ number, paymentOutcome, placed }: { number: string; 
           </section>
           <section aria-labelledby="address" className="rounded-xl border border-line bg-surface p-4 shadow-sm">
             <h2 id="address" className="mb-2 font-bold text-fg">
-              {t('orders.deliveryAddress')}
+              {order.sellerOrders.every((so) => so.items.every((i) => i.isDigital)) ? t('digital.billingAddressTitle') : t('orders.deliveryAddress')}
             </h2>
             <AddressLines address={order.shippingAddress} locale={locale} />
             {order.note ? <p className="mt-3 text-sm text-fg-muted">{t('orders.note')}: {order.note}</p> : null}
@@ -372,7 +383,7 @@ function ReturnDialog({ number, parcel, onClose, onDone }: { number: string; par
     >
       <div className="space-y-4">
         <ul className="space-y-2">
-          {parcel.items.map((i) => {
+          {parcel.items.filter((i) => !i.isDigital).map((i) => {
             const max = i.quantity - i.refundedQuantity;
             return (
               <li key={i.id} className="flex items-center justify-between gap-3 text-sm">

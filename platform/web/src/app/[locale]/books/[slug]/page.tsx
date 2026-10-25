@@ -1,5 +1,5 @@
 import { formatMoney, localizeDigits, placeName, toMinor } from '@boikonika/shared';
-import { BadgeCheck, MapPin, Star, Store } from 'lucide-react';
+import { BadgeCheck, BookOpenText, MapPin, Star, Store } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -12,8 +12,11 @@ import { PostFeed } from '@/components/community/post-feed';
 import { ShelfButton } from '@/components/reading/shelf-button';
 import { ReviewsList } from '@/components/reviews/reviews-list';
 import { Shelf } from '@/components/catalog/shelf';
+import { EbookPanel } from '@/components/digital/ebook-panel';
+import { WishlistButton } from '@/components/wishlist/wishlist-button';
 import { Badge } from '@/components/ui/badge';
 import { BookCover } from '@/components/ui/book-cover';
+import { buttonClasses } from '@/components/ui/button';
 import { Price } from '@/components/ui/price';
 import { Rating } from '@/components/ui/rating';
 import { Link } from '@/i18n/navigation';
@@ -55,9 +58,12 @@ export default async function BookPage({ params }: { params: Params }) {
   const authors = byRole('author');
   const others = ['translator', 'editor', 'illustrator'].map((role) => ({ role, people: byRole(role) })).filter((g) => g.people.length);
   const primary = book.categories.find((c) => c.primary) ?? book.categories[0];
-  const format = book.formats[0];
-  const best = book.offers.find((o) => o.stock > 0);
-  const inStockOffers = book.offers.filter((o) => o.stock > 0);
+  const format = book.formats.find((f) => f.format !== 'digital') ?? book.formats[0];
+  const printOffers = book.offers.filter((o) => !o.isDigital);
+  const ebookOffer = book.offers.find((o) => o.isDigital) ?? null;
+  const best = printOffers.find((o) => o.stock > 0);
+  const inStockOffers = printOffers.filter((o) => o.stock > 0);
+  const canLookInside = book.previews.length > 0 || !!book.tableOfContents?.length;
   const prices = inStockOffers.map((o) => toMinor(o.price));
   const pick = book.picks.editors ? 'catalog.editorsPick' : book.picks.students ? 'catalog.studentPick' : book.picks.teachers ? 'catalog.teacherPick' : null;
 
@@ -115,6 +121,12 @@ export default async function BookPage({ params }: { params: Params }) {
       <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,18rem)_1fr] lg:grid-cols-[20rem_1fr_20rem]">
         <div className="mx-auto w-48 sm:w-56 md:sticky md:top-24 md:mx-0 md:w-full md:self-start">
           <BookCover src={book.coverUrl} title={book.title} author={authors.map((a) => a.name).join(', ')} priority sizes="(max-width: 768px) 14rem, 20rem" />
+          {canLookInside ? (
+            <Link href={`/books/${book.slug}/preview`} className={buttonClasses({ variant: 'outline', className: 'mt-3 w-full' })}>
+              <BookOpenText className="h-4 w-4" aria-hidden="true" />
+              {t('digital.lookInside')}
+            </Link>
+          ) : null}
         </div>
 
         <div className="min-w-0">
@@ -176,7 +188,10 @@ export default async function BookPage({ params }: { params: Params }) {
           ) : book.isFree ? (
             <p className="mt-5 text-2xl font-bold text-success">{t('common.free')}</p>
           ) : null}
-          <ShelfButton bookId={book.id} className="mt-3 max-w-xs" />
+          <div className="mt-3 flex max-w-md flex-wrap gap-2">
+            <ShelfButton bookId={book.id} className="min-w-48 flex-1" />
+            <WishlistButton kind="books" id={book.id} title={book.title} />
+          </div>
 
           {book.genres.length ? (
             <ul className="mt-5 flex flex-wrap gap-2" aria-label={t('book.genres')}>
@@ -196,6 +211,22 @@ export default async function BookPage({ params }: { params: Params }) {
                 {t('book.description')}
               </h2>
               <div className="mt-3 max-w-prose whitespace-pre-line leading-relaxed text-fg">{book.description}</div>
+            </section>
+          ) : null}
+
+          {book.tableOfContents?.length ? (
+            <section aria-labelledby="contents" className="mt-8">
+              <h2 id="contents" className="text-xl font-bold text-fg">
+                {t('digital.contents')}
+              </h2>
+              <ol className="mt-3 max-w-prose divide-y divide-line rounded-xl border border-line bg-surface text-sm">
+                {book.tableOfContents.map((c, i) => (
+                  <li key={i} className="flex justify-between gap-4 px-4 py-2.5">
+                    <span className="text-fg">{c.title}</span>
+                    {c.page ? <span className="shrink-0 text-fg-muted">{localizeDigits(c.page, locale)}</span> : null}
+                  </li>
+                ))}
+              </ol>
             </section>
           ) : null}
 
@@ -227,22 +258,25 @@ export default async function BookPage({ params }: { params: Params }) {
         </div>
 
         <aside aria-labelledby="offers" className="md:col-span-2 lg:col-span-1">
-          <div className="rounded-xl border border-line bg-surface p-5 shadow-sm lg:sticky lg:top-24">
-            <h2 id="offers" className="text-lg font-bold text-fg">
-              {t('catalog.offersTitle')}
-            </h2>
-            {book.offers.length ? (
-              <ul className="mt-3 divide-y divide-line">
-                {book.offers.map((o) => (
-                  <OfferRow key={o.productId} offer={o} locale={locale} />
-                ))}
-              </ul>
-            ) : (
-              <div className="mt-3 text-sm">
-                <p className="font-semibold text-fg">{t('catalog.noOffers')}</p>
-                <p className="mt-1 text-fg-muted">{t('catalog.noOffersText')}</p>
-              </div>
-            )}
+          <div className="space-y-4 lg:sticky lg:top-24">
+            {book.digital ? <EbookPanel bookId={book.id} title={book.title} digital={book.digital} offer={ebookOffer} /> : null}
+            <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
+              <h2 id="offers" className="text-lg font-bold text-fg">
+                {book.digital ? t('digital.printOffers') : t('catalog.offersTitle')}
+              </h2>
+              {printOffers.length ? (
+                <ul className="mt-3 divide-y divide-line">
+                  {printOffers.map((o) => (
+                    <OfferRow key={o.productId} offer={o} locale={locale} />
+                  ))}
+                </ul>
+              ) : (
+                <div className="mt-3 text-sm">
+                  <p className="font-semibold text-fg">{book.digital ? t('digital.noPrintOffers') : t('catalog.noOffers')}</p>
+                  <p className="mt-1 text-fg-muted">{t('catalog.noOffersText')}</p>
+                </div>
+              )}
+            </div>
           </div>
         </aside>
       </div>

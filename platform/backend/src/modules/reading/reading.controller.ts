@@ -5,7 +5,8 @@ import type { z } from 'zod';
 import { CurrentUser, type AuthenticatedUser } from '../../common/decorators/auth.decorators';
 import { Public } from '../../common/decorators/public.decorator';
 import { t } from '../../common/i18n';
-import { withMessage } from '../../common/http/response';
+import { paginated, withMessage } from '../../common/http/response';
+import { pageQuery } from '../../common/util/pagination';
 import { ZodBody, ZodQuery } from '../../common/validation/zod';
 import { GamificationService } from '../gamification/gamification.service';
 import { ChallengesService } from './challenges.service';
@@ -40,6 +41,13 @@ export class ReadingController {
   async remove(@CurrentUser() user: AuthenticatedUser, @Param('bookId', new ParseUUIDPipe()) bookId: string) {
     await this.reading.remove(user.id, bookId);
     return withMessage(null, t('api.reading.removed'));
+  }
+
+  @Get('reading/history')
+  @ApiOperation({ summary: 'My reading history: books started and finished, e-books downloaded' })
+  async history(@CurrentUser() user: AuthenticatedUser, @ZodQuery(pageQuery) q: z.output<typeof pageQuery>) {
+    const { items, meta } = await this.reading.history(user.id, q.page, q.pageSize);
+    return paginated(items, meta);
   }
 
   @Put('reading/:bookId/progress')

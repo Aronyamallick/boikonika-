@@ -4,6 +4,7 @@ export type AddressLabel = (typeof ADDRESS_LABELS)[number];
 
 export const MAX_CART_QUANTITY = 99;
 export const MAX_CART_LINES = 50;
+export const MAX_WISHLIST_ITEMS = 200;
 
 export const RETURN_REASONS = ['damaged', 'wrong_item', 'not_as_described', 'missing_parts', 'changed_mind', 'other'] as const;
 export type ReturnReason = (typeof RETURN_REASONS)[number];

@@ -146,7 +146,7 @@ export class CatalogService {
       select b.*, b.rating_avg::float as rating_avg_f from books b where b.slug = ${slug} and b.status = 'published' and b.deleted_at is null`).then((r) => r.rows);
     if (!book) throw AppException.notFound('Book');
     const id = book.id as string;
-    const [people, cats, genreRows, formats, offers, images, previews, ratings, related] = await Promise.all([
+    const [people, cats, genreRows, formats, offers, images, previews, ratings, related, ebook] = await Promise.all([
       this.db.execute<Row>(sql`
         select a.id, a.slug, a.name, a.name_alt, a.photo_key, a.is_verified, ba.role from book_authors ba join authors a on a.id = ba.author_id
         where ba.book_id = ${id} order by ba.role = 'author' desc, ba.position`),
@@ -158,7 +158,7 @@ export class CatalogService {
         select f.id, f.format, f.isbn13, f.isbn10, f.edition, f.publication_year, f.pages, f.cover_key, pu.name as publisher_name, pu.slug as publisher_slug
         from book_formats f left join publishers pu on pu.id = f.publisher_id where f.book_id = ${id} order by f.publication_year desc nulls last`),
       this.db.execute<Row>(sql`
-        select p.id, p.slug, p.condition, p.condition_note, p.price, p.compare_at_price, p.total_stock, p.book_format_id, p.rating_avg::float as rating_avg,
+        select p.id, p.slug, p.condition, p.condition_note, p.price, p.compare_at_price, p.total_stock, p.book_format_id, p.is_digital, p.rating_avg::float as rating_avg,
           s.name as store_name, s.slug as store_slug, s.district, s.rating_avg::float as store_rating, s.rating_count as store_rating_count,
           (select v.id from product_variants v where v.product_id = p.id and v.is_active order by v.is_default desc, v.position limit 1) as variant_id
         from products p join seller_stores s on s.seller_id = p.seller_id join sellers se on se.id = p.seller_id
@@ -175,7 +175,12 @@ export class CatalogService {
         sql`b.sales_count desc, b.rating_avg desc`,
         12,
       ),
+      // The e-book file on offer, if any (its sale listing is among the offers).
+      this.db.execute<Row>(sql`
+        select x.mime_type, x.size_bytes, x.page_count from digital_assets x join book_formats f on f.id = x.book_format_id
+        where f.book_id = ${id} and f.format = 'digital' and x.status = 'active' order by x.created_at desc limit 1`),
     ]);
+    const file = ebook.rows[0];
     void this.trackView(id);
     const breakdown = Object.fromEntries([5, 4, 3, 2, 1].map((star) => [star, ratings.rows.find((r) => Number(r.rating) === star)?.count ?? 0]));
     return {
@@ -217,10 +222,14 @@ export class CatalogService {
         conditionNote: o.condition_note,
         price: o.price,
         compareAtPrice: o.compare_at_price,
+        isDigital: o.is_digital === true,
         stock: Number(o.total_stock),
         store: { name: o.store_name, slug: o.store_slug, district: o.district, ratingAvg: Number(o.store_rating ?? 0), ratingCount: Number(o.store_rating_count ?? 0) },
       })),
       previews: previews.rows.map((p) => ({ id: p.id, kind: p.kind, title: p.title })),
+      digital: file
+        ? { format: file.mime_type === 'application/pdf' ? 'pdf' : 'epub', sizeBytes: Number(file.size_bytes), pageCount: file.page_count === null ? null : Number(file.page_count), free: !!book.is_free }
+        : null,
       rating: { average: Number(book.rating_avg_f ?? 0), count: Number(book.rating_count ?? 0), breakdown },
       picks: { editors: !!book.editors_pick, students: !!book.student_pick, teachers: !!book.teacher_pick },
       related,

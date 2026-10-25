@@ -31,6 +31,7 @@ import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SettingsService } from '../settings/settings.service';
 import { CartService } from './cart.service';
+import { recordDelivery, revokeDigitalAccess } from './delivery';
 import { releaseStock, reserveStock } from './inventory';
 import { newOrderNumber } from './order-number';
 import { deriveOrderStatus, sellerOrderTotal } from './order-status';
@@ -108,6 +109,14 @@ export class OrdersService implements OnModuleInit {
         if (input.couponCode && !quote.coupon?.applied) {
           throw new AppException('VALIDATION_FAILED', quote.coupon?.message ?? 'api.commerce.couponInvalid', [{ field: 'couponCode', code: 'invalid', message: quote.coupon?.message ?? 'api.commerce.couponInvalid' }]).withParams(quote.coupon?.params ?? {});
         }
+        const ebooks = quote.groups.flatMap((g) => g.lines).filter((l) => l.isDigital && l.bookId);
+        if (ebooks.length) {
+          const owned = await tx.execute<{ book_id: string }>(sql`
+            select book_id from user_library where user_id = ${userId} and has_digital_access and book_id in (${sql.join(ebooks.map((l) => sql`${l.bookId}::uuid`), sql`, `)})`);
+          if (owned.rows.length) {
+            throw new AppException('CONFLICT', 'api.digital.alreadyOwned', owned.rows.map((r) => ({ field: 'items', code: 'owned', message: 'api.digital.alreadyOwned', meta: { variantId: ebooks.find((l) => l.bookId === r.book_id)!.variantId } })));
+          }
+        }
         const method = quote.paymentMethods.find((m) => m.method === input.paymentMethod);
         if (!method?.available) throw AppException.validation([{ field: 'paymentMethod', code: 'unavailable', message: method?.reason ?? 'api.commerce.methodUnavailable' }]);
         if (input.expectedTotal && compareMoney(input.expectedTotal, quote.totals.grandTotal) !== 0) {
@@ -184,6 +193,7 @@ export class OrdersService implements OnModuleInit {
               sku: l.sku ?? `V-${l.variantId.slice(0, 8)}`,
               imageKey: l.imageKey,
               condition: l.condition as 'new' | null,
+              isDigital: l.isDigital,
               quantity: l.quantity,
               unitPrice: l.unitPrice,
               discountAmount: l.discount,
@@ -291,7 +301,42 @@ export class OrdersService implements OnModuleInit {
       return;
     }
     await this.notifications.notify(order.userId, { type: 'order', titleKey: 'api.orders.paidTitle', bodyKey: 'api.orders.paidBody', params: { number: order.number, total: payment.amount }, link: `/account/orders/${order.number}` }, tx);
+    if (await this.deliverDigital(tx, order)) {
+      await this.notifications.notify(order.userId, { type: 'delivery', titleKey: 'api.digital.readyTitle', bodyKey: 'api.digital.readyBody', params: { number: order.number }, link: '/library?digital=1' }, tx);
+    }
     await this.notifySellersOfNewOrder(order.id, tx);
+  }
+
+  /**
+   * Paid e-books are delivered on the spot: each buyer gets the file in their library, and a seller
+   * order holding only e-books is complete. Returns whether anything digital was delivered.
+   */
+  private async deliverDigital(tx: DbOrTx, order: OrderRow): Promise<boolean> {
+    const items = await tx.select().from(orderItems).where(and(eq(orderItems.orderId, order.id), eq(orderItems.isDigital, true)));
+    if (!items.length) return false;
+    const subs = await tx.select().from(sellerOrders).where(eq(sellerOrders.orderId, order.id)).for('update');
+    const all = await tx.select({ sellerOrderId: orderItems.sellerOrderId, isDigital: orderItems.isDigital }).from(orderItems).where(eq(orderItems.orderId, order.id));
+    const now = new Date();
+    const delivered = new Set<string>();
+    for (const so of subs) {
+      const lines = all.filter((i) => i.sellerOrderId === so.id);
+      if (!lines.length || !lines.every((i) => i.isDigital) || !['pending', 'confirmed'].includes(so.status)) continue;
+      await tx.update(sellerOrders).set({ status: 'delivered', confirmedAt: so.confirmedAt ?? now, deliveredAt: now, updatedAt: now }).where(eq(sellerOrders.id, so.id));
+      await tx.insert(orderStatusHistory).values({ orderId: order.id, sellerOrderId: so.id, fromStatus: so.status, toStatus: 'delivered', actorRole: 'system', note: 'digital_delivery' });
+      delivered.add(so.id);
+    }
+    // Counters move with the completed e-book orders; e-books inside a parcel order are counted when it arrives.
+    await recordDelivery(tx, order.userId, items.filter((i) => delivered.has(i.sellerOrderId)));
+    for (const i of items.filter((x) => !delivered.has(x.sellerOrderId) && x.bookId)) {
+      await tx.execute(sql`
+        insert into user_library (user_id, book_id, shelf, source, order_item_id, has_digital_access) values (${order.userId}, ${i.bookId}, 'purchased', 'purchase', ${i.id}, true)
+        on conflict (user_id, book_id) do update set order_item_id = excluded.order_item_id, source = 'purchase', has_digital_access = true, updated_at = now()`);
+    }
+    if (delivered.size) {
+      const statuses = subs.map((s) => (delivered.has(s.id) ? 'delivered' : s.status));
+      await tx.update(orders).set({ status: deriveOrderStatus(statuses), updatedAt: now }).where(eq(orders.id, order.id));
+    }
+    return true;
   }
 
   private async notifySellersOfNewOrder(orderId: string, tx: DbOrTx = this.db): Promise<void> {
@@ -396,6 +441,8 @@ export class OrdersService implements OnModuleInit {
       payment: latestPayment ? { id: latestPayment.id, method: latestPayment.method, status: latestPayment.status, redirectUrl: latestPayment.status === 'pending' ? latestPayment.redirectUrl : null, failureReason: latestPayment.failureReason } : null,
       sellerOrders: subOrders.rows.map((so) => {
         const deliveredAt = so.delivered_at ? new Date(so.delivered_at as string) : null;
+        // E-books can't be returned, so a parcel of e-books only has no return window.
+        const physical = items.some((i) => i.sellerOrderId === so.id && !i.isDigital);
         return {
           id: so.id as string,
           number: so.number as string,
@@ -408,11 +455,11 @@ export class OrdersService implements OnModuleInit {
           shippedAt: so.shipped_at ? new Date(so.shipped_at as string).toISOString() : null,
           deliveredAt: deliveredAt?.toISOString() ?? null,
           cancelReason: so.cancel_reason as string | null,
-          returnableUntil: deliveredAt && so.status === 'delivered' ? new Date(deliveredAt.getTime() + returnWindowDays * 86_400_000).toISOString() : null,
+          returnableUntil: deliveredAt && so.status === 'delivered' && physical ? new Date(deliveredAt.getTime() + returnWindowDays * 86_400_000).toISOString() : null,
           shipment: shipmentsBySo.get(so.id as string) ?? null,
           items: items
             .filter((i) => i.sellerOrderId === so.id)
-            .map((i) => ({ id: i.id, productId: i.productId, bookId: i.bookId, title: i.title, variantName: i.variantName, condition: i.condition, imageUrl: this.storage.publicUrl(i.imageKey), quantity: i.quantity, unitPrice: i.unitPrice, discountAmount: i.discountAmount, lineTotal: i.lineTotal, refundedQuantity: i.refundedQuantity, path: reviewPath.get(i.id) ?? null })),
+            .map((i) => ({ id: i.id, productId: i.productId, bookId: i.bookId, title: i.title, variantName: i.variantName, condition: i.condition, isDigital: i.isDigital, imageUrl: this.storage.publicUrl(i.imageKey), quantity: i.quantity, unitPrice: i.unitPrice, discountAmount: i.discountAmount, lineTotal: i.lineTotal, refundedQuantity: i.refundedQuantity, path: reviewPath.get(i.id) ?? null })),
         };
       }),
       refunds: refundRows.rows.map((r) => ({ id: r.id, sellerOrderId: r.seller_order_id, amount: r.amount, status: r.status, reason: r.reason, createdAt: new Date(r.created_at as string).toISOString(), processedAt: r.processed_at ? new Date(r.processed_at as string).toISOString() : null })),
@@ -494,6 +541,7 @@ export class OrdersService implements OnModuleInit {
       items.filter((i) => i.variantId).map((i) => ({ variantId: i.variantId!, quantity: i.quantity })),
       { type: 'order', id: order.id, actorId: actor.id },
     );
+    await revokeDigitalAccess(tx, items.filter((i) => i.isDigital).map((i) => i.id));
 
     const all = await tx.select({ id: sellerOrders.id, status: sellerOrders.status }).from(sellerOrders).where(eq(sellerOrders.orderId, order.id));
     const status = deriveOrderStatus(all.map((s) => s.status));

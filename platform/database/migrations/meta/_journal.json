@@ -57,6 +57,13 @@
       "when": 1792900898128,
       "tag": "0007_author_claims",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792919778003,
+      "tag": "0008_digital_assets_status",
+      "breakpoints": true
     }
   ]
 }
