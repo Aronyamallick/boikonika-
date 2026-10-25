@@ -35,6 +35,7 @@ import { DigitalModule } from './modules/digital/digital.module';
 import { ActivityModule } from './modules/admin/activity.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CmsModule } from './modules/cms/cms.module';
+import { AiModule } from './modules/ai/ai.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -89,6 +90,7 @@ const isProduction = process.env.NODE_ENV === 'production';
     ActivityModule,
     AdminModule,
     CmsModule,
+    AiModule,
     HealthModule,
   ],
   controllers: isProduction ? [] : [DevController],

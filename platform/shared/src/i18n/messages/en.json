@@ -2686,6 +2686,14 @@
         "replyTitle": "Reply to your message {ref}",
         "replyBody": "Hi {name},\n\n{reply}\n\n— The Boikonika team\n\nYour message:\n{message}"
       }
+    },
+    "ai": {
+      "unavailable": "The assistant isn't available right now.",
+      "dailyLimit": "You've used today's {limit} assistant requests. You can ask again tomorrow.",
+      "inProgress": "Your previous request is still being answered. Please wait for it to finish.",
+      "declined": "The assistant can't help with that request. Try asking in a different way.",
+      "busy": "The assistant is busy. Please try again in a minute.",
+      "failed": "The assistant couldn't answer this time. Please try again."
     }
   },
   "digital": {
@@ -3280,7 +3288,8 @@
     "groups": {
       "commerce": "Orders and selling",
       "digital": "E-books",
-      "privacy": "Privacy and data"
+      "privacy": "Privacy and data",
+      "ai": "Reading & writing assistant"
     },
     "labels": {
       "commission_defaultPercent": "Default commission (%)",
@@ -3292,7 +3301,8 @@
       "digital_downloadsPerDay": "E-book downloads per person per day",
       "recommendations_minSupport": "Readers needed before “also bought” shows",
       "kyc_approvedRetentionDays": "Keep approved ID documents (days)",
-      "kyc_rejectedRetentionDays": "Keep rejected ID documents (days)"
+      "kyc_rejectedRetentionDays": "Keep rejected ID documents (days)",
+      "ai_dailyRequests": "Assistant requests per person per day"
     },
     "hints": {
       "commission_defaultPercent": "Used when a seller has no agreed rate",
@@ -3304,7 +3314,8 @@
       "digital_downloadsPerDay": "Limits sharing of purchased files",
       "recommendations_minSupport": "Higher keeps individual purchases from being guessed",
       "kyc_approvedRetentionDays": "Files are deleted after this; the decision is kept",
-      "kyc_rejectedRetentionDays": "Files are deleted after this; the decision is kept"
+      "kyc_rejectedRetentionDays": "Files are deleted after this; the decision is kept",
+      "ai_dailyRequests": "0 turns the assistant off for everyone"
     },
     "range": "{min}–{max}, default {default}",
     "updated": "changed {date}",
@@ -3719,5 +3730,111 @@
     "writeInEnglish": "They wrote in English.",
     "closeAfter": "Close the message after replying",
     "send": "Send reply"
+  },
+  "assistant": {
+    "title": "Reading & writing helper",
+    "intro": "Ask about a book or an idea, make study questions or a reading plan, and polish your own writing — in Bangla or English.",
+    "studyBook": "Study this book with the helper",
+    "studyHelper": "Study helper",
+    "unavailable": "The helper isn't available right now",
+    "unavailableText": "Please check back later. Everything else on Boikonika works as usual.",
+    "signInTitle": "Sign in to use the helper",
+    "signInText": "The helper is free for members, with a daily allowance.",
+    "signIn": "Sign in",
+    "mode": "What kind of help",
+    "modes": {
+      "book": "Reading & study",
+      "writing": "My writing"
+    },
+    "whatToDo": "What should it do?",
+    "tasks": {
+      "explain": "Explain",
+      "summarize": "Summarise my text",
+      "questions": "Study questions",
+      "vocabulary": "Vocabulary",
+      "reading_plan": "Reading plan",
+      "grammar": "Grammar & spelling",
+      "improve": "Improve my writing",
+      "brainstorm": "Brainstorm ideas",
+      "outline": "Make an outline"
+    },
+    "taskHints": {
+      "explain": "A concept, a question or part of a book, explained simply",
+      "summarize": "The main points of text you wrote or may use",
+      "questions": "Questions with hints to test yourself",
+      "vocabulary": "Meanings in Bangla and English, with examples",
+      "reading_plan": "A day-by-day plan to finish a book",
+      "grammar": "Corrections with the reason for each",
+      "improve": "Specific suggestions that keep your voice",
+      "brainstorm": "Fresh ideas for a topic",
+      "outline": "A structure for an essay, story or talk"
+    },
+    "inputLabel": {
+      "explain": "Your question",
+      "summarize": "Your text",
+      "questions": "Topic or text",
+      "vocabulary": "Words or a passage",
+      "reading_plan": "Your goal",
+      "grammar": "Your text",
+      "improve": "Your text",
+      "brainstorm": "Topic",
+      "outline": "What are you writing?"
+    },
+    "inputHint": {
+      "explain": "Ask about the chosen book or anything you're studying.",
+      "summarize": "Paste only text you wrote or may use.",
+      "questions": "Optional if you chose a book.",
+      "vocabulary": "Paste a short passage or list the words.",
+      "reading_plan": "Optional if you chose a book, e.g. “finish before my exam on the 20th”.",
+      "grammar": "Paste only text you wrote or may use.",
+      "improve": "Paste only text you wrote or may use.",
+      "brainstorm": "What do you need ideas for?",
+      "outline": "The title or a few lines about it."
+    },
+    "placeholder": {
+      "explain": "What does the river stand for in this novel?",
+      "summarize": "Paste your notes, essay or chapter here…",
+      "questions": "Photosynthesis, or a chapter you're revising",
+      "vocabulary": "অপরিহার্য, অবলীলায়, অনুধাবন…",
+      "reading_plan": "Finish it before my exam on the 20th",
+      "grammar": "Paste your writing here…",
+      "improve": "Paste your writing here…",
+      "brainstorm": "A short story set during the monsoon",
+      "outline": "An essay on why every village needs a library"
+    },
+    "ownTextHint": "Paste only text you wrote or have permission to use. Up to 12,000 characters.",
+    "characters": "{count} / {max}",
+    "chooseBook": "About a book",
+    "optional": "optional",
+    "findBook": "Find a book by title or author",
+    "noBooks": "No books found.",
+    "aboutBook": "About",
+    "removeBook": "Remove the book",
+    "answerIn": "Answer in",
+    "level": "Explain for",
+    "levels": {
+      "school": "School students",
+      "college": "College (HSC)",
+      "university": "University",
+      "general": "Any reader"
+    },
+    "countLabel": {
+      "questions": "Number of questions",
+      "vocabulary": "Up to how many words",
+      "brainstorm": "Number of ideas"
+    },
+    "days": "Days to finish",
+    "minutesPerDay": "Minutes a day",
+    "ownText": "This is my own text, or I have permission to use it.",
+    "remaining": "{count, plural, =0 {No requests left today} one {# request left today} other {# requests left today}}",
+    "ask": "Ask the helper",
+    "privacy": "Answers are written by AI (Claude, by Anthropic) and can be wrong. What you send goes to Anthropic only to write the answer; Boikonika doesn't store it.",
+    "answer": "Answer",
+    "thinking": "Writing your answer…",
+    "copy": "Copy",
+    "copied": "Copied",
+    "truncated": "This answer was cut short. Ask for less at a time to get the rest.",
+    "checkIt": "Check important facts against your textbook or teacher.",
+    "emptyAnswer": "Your answer will appear here."
   }
 }

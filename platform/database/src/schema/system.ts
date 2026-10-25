@@ -67,8 +67,13 @@ export const aiUsage = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     feature: varchar('feature', { length: 30 }).notNull(),
     model: varchar('model', { length: 60 }).notNull(),
+    /** ok · declined (the model refused) · failed (provider error) — only counts and outcomes, never text. */
+    status: varchar('status', { length: 20 }).notNull().default('ok'),
     inputTokens: integer('input_tokens').notNull().default(0),
     outputTokens: integer('output_tokens').notNull().default(0),
+    cacheReadTokens: integer('cache_read_tokens').notNull().default(0),
+    cacheWriteTokens: integer('cache_write_tokens').notNull().default(0),
+    durationMs: integer('duration_ms').notNull().default(0),
     createdAt: createdAt(),
   },
   (t) => [index('ai_usage_user_time_idx').on(t.userId, t.createdAt)],

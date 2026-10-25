@@ -22,5 +22,6 @@ export const SETTINGS_CATALOG = {
   'recommendations.minSupport': { type: 'number', default: 2, min: 2, max: 50, step: 1, group: 'privacy' },
   'kyc.approvedRetentionDays': { type: 'number', default: 1825, min: 365, max: 3650, step: 1, group: 'privacy' },
   'kyc.rejectedRetentionDays': { type: 'number', default: 90, min: 30, max: 730, step: 1, group: 'privacy' },
+  'ai.dailyRequests': { type: 'number', default: 20, min: 0, max: 200, step: 1, group: 'ai' },
 } as const satisfies Record<string, { type: 'number'; default: number; min: number; max: number; step: number; group: string } | { type: 'boolean'; default: boolean; group: string }>;
 export type SettingKey = keyof typeof SETTINGS_CATALOG;

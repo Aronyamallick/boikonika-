@@ -1,5 +1,5 @@
 import { formatMoney, localizeDigits, placeName, toMinor } from '@boikonika/shared';
-import { BadgeCheck, BookOpenText, MapPin, Star, Store } from 'lucide-react';
+import { BadgeCheck, BookOpenText, MapPin, Sparkles, Star, Store } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -55,6 +55,7 @@ export default async function BookPage({ params }: { params: Params }) {
   const t = await getTranslations();
   // Aggregated across many readers, so it changes slowly; an hour's cache is plenty.
   const alsoLiked = (await serverApi<BookCardData[]>(`/books/${encodeURIComponent(book.slug)}/also-liked`, { locale, revalidate: 3600 }).catch(() => null)) ?? [];
+  const assistant = (await serverApi<{ enabled: boolean }>('/ai/status', { locale, revalidate: 300 }).catch(() => null))?.enabled ?? false;
 
   const byRole = (role: string) => book.contributors.filter((c) => c.role === role);
   const authors = byRole('author');
@@ -127,6 +128,12 @@ export default async function BookPage({ params }: { params: Params }) {
             <Link href={`/books/${book.slug}/preview`} className={buttonClasses({ variant: 'outline', className: 'mt-3 w-full' })}>
               <BookOpenText className="h-4 w-4" aria-hidden="true" />
               {t('digital.lookInside')}
+            </Link>
+          ) : null}
+          {assistant ? (
+            <Link href={`/assistant?book=${encodeURIComponent(book.slug)}&task=questions`} className={buttonClasses({ variant: 'ghost', className: 'mt-2 w-full' })}>
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              {t('assistant.studyBook')}
             </Link>
           ) : null}
         </div>

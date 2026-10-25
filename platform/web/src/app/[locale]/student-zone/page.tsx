@@ -1,4 +1,4 @@
-import { CalendarDays, ExternalLink, GraduationCap, NotebookPen, Trophy, Users } from 'lucide-react';
+import { CalendarDays, ExternalLink, GraduationCap, NotebookPen, Sparkles, Trophy, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { BookCard } from '@/components/catalog/book-card';
@@ -27,10 +27,11 @@ export default async function StudentZonePage({ params }: { params: Promise<{ lo
   setRequestLocale(locale);
   const t = await getTranslations();
   const format = await getFormatter();
-  const [home, banners, resources] = await Promise.all([
+  const [home, banners, resources, assistant] = await Promise.all([
     serverApi<StudentHome>('/student-zone', { locale, revalidate: 120 }),
     serverApi<Banner[]>('/banners?placement=student_zone', { locale, revalidate: 120 }).catch(() => null),
     serverPage<ArticleCardData>('/articles?kind=study_resource&audience=student&pageSize=4', { locale, revalidate: 120 }).catch(() => ({ items: [] as ArticleCardData[] })),
+    serverApi<{ enabled: boolean }>('/ai/status', { locale, revalidate: 300 }).catch(() => null),
   ]);
   const day = (d: string) => format.dateTime(new Date(d), { day: 'numeric', month: 'short' });
   return (
@@ -54,6 +55,12 @@ export default async function StudentZonePage({ params }: { params: Promise<{ lo
               <Users className="h-4 w-4" aria-hidden="true" />
               {t('student.studyGroups')}
             </Link>
+            {assistant?.enabled ? (
+              <Link href="/assistant" className={buttonClasses({ variant: 'outline' })}>
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                {t('assistant.studyHelper')}
+              </Link>
+            ) : null}
           </nav>
         </div>
       </section>

@@ -79,7 +79,7 @@ export const envSchema = z
     SSLCOMMERZ_STORE_PASSWORD: z.string().optional(),
 
     ANTHROPIC_API_KEY: z.string().optional(),
-    AI_MODEL: z.string().default('claude-sonnet-5-5'),
+    AI_MODEL: z.string().default('claude-opus-5-5'),
 
     RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().default(60),
     RATE_LIMIT_MAX: z.coerce.number().int().default(120),
