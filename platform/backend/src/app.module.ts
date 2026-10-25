@@ -29,6 +29,7 @@ import { CommunityModule } from './modules/community/community.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { ModerationModule } from './modules/moderation/moderation.module';
 import { ReadingModule } from './modules/reading/reading.module';
+import { ClubsModule } from './modules/clubs/clubs.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -77,6 +78,7 @@ const isProduction = process.env.NODE_ENV === 'production';
     CommunityModule,
     ModerationModule,
     ReadingModule,
+    ClubsModule,
     HealthModule,
   ],
   controllers: isProduction ? [] : [DevController],

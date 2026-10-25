@@ -26,3 +26,4 @@ export * from './schemas/commerce';
 export * from './schemas/creators';
 export * from './schemas/community';
 export * from './schemas/reading';
+export * from './schemas/clubs';

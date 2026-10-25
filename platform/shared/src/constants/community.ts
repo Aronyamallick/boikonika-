@@ -49,3 +49,13 @@ export type StudySubject = (typeof STUDY_SUBJECTS)[number];
 /** Things a user can report from the UI (the API validates the target exists). */
 export const REPORT_TARGET_TYPES = ['post', 'comment', 'review', 'product', 'book', 'user', 'club', 'club_post', 'store'] as const;
 export type ReportTargetType = (typeof REPORT_TARGET_TYPES)[number];
+
+export const CLUB_PURPOSES = ['reading', 'study'] as const;
+export type ClubPurpose = (typeof CLUB_PURPOSES)[number];
+export const JOIN_POLICIES = ['open', 'request', 'invite'] as const;
+export type JoinPolicy = (typeof JOIN_POLICIES)[number];
+export const MEMBER_ACTIONS = ['approve', 'reject', 'remove', 'ban', 'promote', 'demote'] as const;
+export type MemberAction = (typeof MEMBER_ACTIONS)[number];
+/** Club types tied to an institution (they name it). */
+export const INSTITUTION_CLUB_TYPES = ['school', 'college', 'university'] as const;
+export const MAX_POLL_OPTIONS = 8;

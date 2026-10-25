@@ -15,7 +15,7 @@ export type SellerRow = typeof sellers.$inferSelect;
 type StoreSettings = z.output<typeof storeSettingsSchema>;
 
 /** Finds a free slug in `table.slug`, adding a short random suffix when the plain one is taken. */
-export async function uniqueSlug(tx: DbOrTx, table: 'books' | 'authors' | 'publishers' | 'seller_stores' | 'products', base: string): Promise<string> {
+export async function uniqueSlug(tx: DbOrTx, table: 'books' | 'authors' | 'publishers' | 'seller_stores' | 'products' | 'book_clubs' | 'quizzes', base: string): Promise<string> {
   const root = slugify(base, 60);
   for (let i = 0; i < 6; i++) {
     const candidate = i === 0 && table !== 'products' ? root : `${root}-${slugSuffix(i < 3 ? 4 : 8)}`;
