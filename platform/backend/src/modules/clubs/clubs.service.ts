@@ -18,6 +18,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { z } from 'zod';
 import { AppException } from '../../common/errors/app-exception';
+import { assertNotRestricted } from '../../common/util/restrictions';
 import { DB } from '../../infra/database/database.module';
 import { StorageService } from '../../infra/storage/storage.service';
 import { processUpload } from '../../infra/storage/uploads';
@@ -384,6 +385,7 @@ export class ClubsService {
 
   async createPost(userId: string, slug: string, input: z.output<typeof clubPostSchema>) {
     const result = await this.db.transaction(async (tx) => {
+      await assertNotRestricted(tx, userId, 'post');
       const club = await this.club(tx, slug);
       const m = await this.member(tx, club.id, userId);
       if (!isActive(m)) throw AppException.forbidden('api.clubs.membersOnly');

@@ -13,11 +13,12 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ name, className }: { name: string; className?: string }) {
+/** `compact` keeps only the mark on very narrow phones (the name stays for screen readers). */
+export function Logo({ name, className, compact }: { name: string; className?: string; compact?: boolean }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
       <LogoMark />
-      <span className="text-xl font-extrabold tracking-tight text-fg">{name}</span>
+      <span className={cn('text-xl font-extrabold tracking-tight text-fg', compact && 'max-[379px]:sr-only')}>{name}</span>
     </span>
   );
 }

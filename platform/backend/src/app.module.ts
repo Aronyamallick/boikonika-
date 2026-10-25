@@ -32,6 +32,8 @@ import { ReadingModule } from './modules/reading/reading.module';
 import { ClubsModule } from './modules/clubs/clubs.module';
 import { StudentModule } from './modules/student/student.module';
 import { DigitalModule } from './modules/digital/digital.module';
+import { ActivityModule } from './modules/admin/activity.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -83,6 +85,8 @@ const isProduction = process.env.NODE_ENV === 'production';
     ClubsModule,
     StudentModule,
     DigitalModule,
+    ActivityModule,
+    AdminModule,
     HealthModule,
   ],
   controllers: isProduction ? [] : [DevController],

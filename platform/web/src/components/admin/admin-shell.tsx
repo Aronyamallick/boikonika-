@@ -1,6 +1,6 @@
 'use client';
 
-import { Banknote, FileLock2, GraduationCap, Megaphone, PenLine, Receipt, RotateCcw, ShieldCheck, Tags, TicketPercent, UsersRound } from 'lucide-react';
+import { Banknote, Copyright, FileLock2, Flag, GraduationCap, LayoutDashboard, Megaphone, PenLine, Receipt, RotateCcw, ScrollText, Settings2, ShieldCheck, Tags, TicketPercent, UserRound, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { RequireAuth } from '@/components/auth/require-auth';
@@ -11,6 +11,9 @@ import { cn } from '@/lib/cn';
 
 /** Staff navigation. Each module adds its entry with the permission that unlocks it. */
 export const ADMIN_NAV = [
+  { href: '/admin', key: 'adminOverview.nav', permission: 'analytics.view', Icon: LayoutDashboard },
+  { href: '/admin/moderation', key: 'adminModeration.nav', permission: 'reports.view', Icon: Flag },
+  { href: '/admin/users', key: 'adminUsers.nav', permission: 'users.view', Icon: UserRound },
   { href: '/admin/orders', key: 'adminOrders.nav', permission: 'orders.view', Icon: Receipt },
   { href: '/admin/refunds', key: 'adminRefunds.nav', permission: 'orders.refund', Icon: RotateCcw },
   { href: '/admin/payouts', key: 'adminPayouts.nav', permission: 'payouts.view', Icon: Banknote },
@@ -19,9 +22,12 @@ export const ADMIN_NAV = [
   { href: '/admin/kyc', key: 'admin.navVerification', permission: 'kyc.view', Icon: ShieldCheck },
   { href: '/admin/author-claims', key: 'adminClaims.nav', permission: 'authors.manage', Icon: PenLine },
   { href: '/admin/student', key: 'adminStudent.nav', permission: 'student.manage', Icon: GraduationCap },
+  { href: '/admin/copyright', key: 'adminCopyright.nav', permission: 'copyright.manage', Icon: Copyright },
   { href: '/admin/digital', key: 'adminDigital.nav', permission: 'copyright.manage', Icon: FileLock2 },
   { href: '/admin/announcements', key: 'adminAnnouncements.nav', permission: 'notifications.broadcast', Icon: Megaphone },
   { href: '/admin/roles', key: 'admin.navRoles', permission: 'roles.view', Icon: UsersRound },
+  { href: '/admin/audit', key: 'adminAudit.nav', permission: 'audit.view', Icon: ScrollText },
+  { href: '/admin/settings', key: 'adminSettings.nav', permission: 'settings.manage', Icon: Settings2 },
 ] as const;
 
 function Shell({ children }: { children: ReactNode }) {
@@ -30,13 +36,15 @@ function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const items = ADMIN_NAV.filter((item) => can(item.permission));
   if (!items.length) return <EmptyState title={t('admin.noAccess')} className="container-page my-10" />;
+  // minmax(0, …) keeps the sideways-scrolling phone nav from widening the page.
   return (
-    <div className="container-page grid gap-6 py-6 lg:grid-cols-[220px_1fr] lg:py-8">
-      <nav aria-label={t('admin.title')} className="lg:sticky lg:top-24 lg:self-start">
+    <div className="container-page grid grid-cols-[minmax(0,1fr)] gap-6 py-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:py-8">
+      <nav aria-label={t('admin.title')} className="min-w-0 lg:sticky lg:top-24 lg:self-start">
         <p className="mb-2 px-3 text-xs font-bold uppercase tracking-wide text-fg-subtle">{t('admin.title')}</p>
         <ul className="flex gap-1 overflow-x-auto lg:flex-col">
           {items.map(({ href, key, Icon }) => {
-            const active = pathname.startsWith(href);
+            // The overview lives at /admin itself, which every other section starts with.
+            const active = href === '/admin' ? pathname === href : pathname.startsWith(href);
             return (
               <li key={href}>
                 <Link

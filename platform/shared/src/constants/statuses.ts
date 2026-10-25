@@ -130,6 +130,8 @@ export const NOTIFICATION_TYPES = [
   'payout',
   'listing',
   'announcement',
+  /** Moderation and copyright decisions about the reader's account or content. */
+  'moderation',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -152,10 +154,11 @@ export const DEFAULT_NOTIFICATION_CHANNELS: Record<NotificationType, Notificatio
   payout: ['in_app', 'email'],
   listing: ['in_app', 'email'],
   announcement: ['in_app'],
+  moderation: ['in_app', 'push', 'email'],
 };
 
 /** Types users cannot switch off (account security). */
-export const MANDATORY_NOTIFICATION_TYPES: readonly NotificationType[] = ['security'];
+export const MANDATORY_NOTIFICATION_TYPES: readonly NotificationType[] = ['security', 'moderation'];
 
 /** Channels a reader can choose for each type. SMS costs money, so it is offered only where it matters. */
 export const NOTIFICATION_CHANNEL_OPTIONS: Record<NotificationType, NotificationChannel[]> = {
@@ -173,6 +176,7 @@ export const NOTIFICATION_CHANNEL_OPTIONS: Record<NotificationType, Notification
   payout: ['in_app', 'push', 'email'],
   listing: ['in_app', 'push', 'email'],
   announcement: ['in_app', 'push', 'email'],
+  moderation: ['in_app', 'push', 'email'],
 };
 
 /** Who an announcement goes to. */

@@ -30,6 +30,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { requestContext } from '../../common/context/request-context';
 import { AppException } from '../../common/errors/app-exception';
+import { assertNotRestricted } from '../../common/util/restrictions';
 import { isUniqueViolation } from '../../common/errors/pg';
 import { DB } from '../../infra/database/database.module';
 import { StorageService } from '../../infra/storage/storage.service';
@@ -71,6 +72,7 @@ export class SellerProductsService {
 
   async createBookListing(userId: string, input: BookListing) {
     const seller = await this.sellers.requireSeller(userId);
+    await assertNotRestricted(this.db, userId, 'sell');
     const roles = await this.rbac.rolesOf(userId);
     if (!roles.some((r) => BOOK_ROLES.includes(r))) throw new AppException('FORBIDDEN', 'api.marketplace.bookRoleRequired');
     const review = await this.settings.get<boolean>('marketplace.requireListingReview', false);
@@ -142,6 +144,7 @@ export class SellerProductsService {
 
   async createProduct(userId: string, input: GeneralProduct) {
     const seller = await this.sellers.requireSeller(userId);
+    await assertNotRestricted(this.db, userId, 'sell');
     const roles = await this.rbac.rolesOf(userId);
     if (!roles.includes('general_seller')) throw new AppException('FORBIDDEN', 'api.marketplace.generalRoleRequired');
     await this.assertCategory(this.db, input.categoryId, 'general');

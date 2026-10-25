@@ -21,7 +21,7 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
       <div className="container-page flex h-16 items-center gap-3 lg:gap-6">
         <Link href="/" className="shrink-0 rounded-lg" aria-label={t('common.appName')}>
-          <Logo name={t('common.appName')} />
+          <Logo name={t('common.appName')} compact />
         </Link>
         <div className="hidden flex-1 md:block">
           <SearchBox action="/search" />

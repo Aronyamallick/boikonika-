@@ -4,6 +4,7 @@ import type { reviewListQuerySchema, reviewSchema, reviewUpdateSchema } from '@b
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import { AppException } from '../../common/errors/app-exception';
+import { assertNotRestricted } from '../../common/util/restrictions';
 import { isUniqueViolation } from '../../common/errors/pg';
 import { DB } from '../../infra/database/database.module';
 import { StorageService } from '../../infra/storage/storage.service';
@@ -85,6 +86,7 @@ export class ReviewsService {
     const minBody = await this.settings.number('reviews.minBodyLength', 20);
     if (input.body && input.body.length < minBody) throw AppException.validation([{ field: 'body', code: 'too_short', message: 'api.reviews.bodyTooShort' }]).withParams({ count: minBody });
     const created = await this.db.transaction(async (tx) => {
+      await assertNotRestricted(tx, userId, 'review');
       const purchase = await this.purchase(tx, userId, target);
       if ('productId' in target && !purchase) throw new AppException('FORBIDDEN', 'api.reviews.purchaseRequired');
       const [user] = await tx.select({ createdAt: users.createdAt }).from(users).where(eq(users.id, userId));

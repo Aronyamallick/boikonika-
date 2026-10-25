@@ -4,6 +4,7 @@ import { IS_PUBLIC } from '../decorators/public.decorator';
 import { AppException } from '../errors/app-exception';
 import { requestContext } from '../context/request-context';
 import type { RequestWithContext } from '../http/request-id.middleware';
+import { ActivityService } from '../../modules/admin/activity.service';
 import { SessionsService } from '../../modules/auth/sessions.service';
 import { TokenService } from '../../modules/auth/token.service';
 
@@ -18,6 +19,7 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly tokens: TokenService,
     private readonly sessions: SessionsService,
+    private readonly activity: ActivityService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -42,6 +44,8 @@ export class AuthGuard implements CanActivate {
     }
     req.user = { id: verified.claims.sub, sessionId: verified.claims.sid };
     requestContext.setUser(verified.claims.sub, verified.claims.sid);
+    const client = req.header('x-client-platform');
+    this.activity.touch(verified.claims.sub, client === 'android' || client === 'ios' ? client : 'web');
     return true;
   }
 }

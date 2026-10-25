@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { z } from 'zod';
 import { AppException } from '../../common/errors/app-exception';
+import { assertNotRestricted } from '../../common/util/restrictions';
 import { DB } from '../../infra/database/database.module';
 import { StorageService } from '../../infra/storage/storage.service';
 import { processUpload } from '../../infra/storage/uploads';
@@ -74,10 +75,8 @@ export class PostsService {
   ) {}
 
   /** Active moderation restrictions block posting/commenting for their scope. */
-  async assertNotRestricted(tx: DbOrTx, userId: string, scope: 'post' | 'comment'): Promise<void> {
-    const rows = await tx.execute(sql`
-      select 1 from user_restrictions where user_id = ${userId} and lifted_at is null and (until is null or until > now()) and scope in (${scope}, 'all') limit 1`);
-    if (rows.rows.length) throw new AppException('FORBIDDEN', 'api.community.restricted');
+  assertNotRestricted(tx: DbOrTx, userId: string, scope: 'post' | 'comment'): Promise<void> {
+    return assertNotRestricted(tx, userId, scope);
   }
 
   async create(userId: string, input: z.output<typeof postSchema>, images: Buffer[]): Promise<PostView> {
