@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { notificationPreferences, notifications, users, type Database, type DbOrTx } from '@boikonika/database';
+import { notificationPreferences, notifications, pushSubscriptions, users, type Database, type DbOrTx } from '@boikonika/database';
 import { DEFAULT_NOTIFICATION_CHANNELS, isLocale, MANDATORY_NOTIFICATION_TYPES, translate, type NotificationChannel, type NotificationType } from '@boikonika/shared';
 import { and, eq } from 'drizzle-orm';
 import { APP_CONFIG, type AppConfig } from '../../config/config.module';
@@ -56,6 +56,11 @@ export class NotificationsService {
       await tx.insert(notifications).values({ userId, type: input.type, title, body, link: input.link ?? null, data: input.data ?? null, actorId: input.actorId ?? null, groupKey: input.groupKey ?? null });
     }
     const url = input.link ? `${this.config.APP_URL}${locale === 'en' ? '/en' : ''}${input.link}` : undefined;
+    if (channels.includes('push')) {
+      const [device] = await tx.select({ id: pushSubscriptions.id }).from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId)).limit(1);
+      // Inside a transaction the push waits for the commit (the outbox poller sends it).
+      if (device) await this.messages.sendPush(userId, { title, body, url, tag: input.groupKey }, tx === this.db ? undefined : tx);
+    }
     try {
       if (channels.includes('email') && user.email && user.emailVerifiedAt) await this.messages.sendNotice(user.email, title, body, locale, url);
       if (channels.includes('sms') && user.phone && user.phoneVerifiedAt && (!user.email || !user.emailVerifiedAt || input.type !== 'security')) {

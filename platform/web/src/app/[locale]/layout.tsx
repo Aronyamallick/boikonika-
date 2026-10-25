@@ -10,6 +10,7 @@ import { colors } from '@boikonika/shared';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { CartProvider } from '@/components/cart/cart-provider';
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
+import { ServiceWorker } from '@/components/layout/service-worker';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { themeInitScript } from '@/components/layout/theme-toggle';
@@ -80,6 +81,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
                 </main>
                 <SiteFooter />
                 <MobileTabBar />
+                <ServiceWorker />
               </ToastProvider>
             </CartProvider>
           </AuthProvider>

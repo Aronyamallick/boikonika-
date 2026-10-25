@@ -156,3 +156,25 @@ export const DEFAULT_NOTIFICATION_CHANNELS: Record<NotificationType, Notificatio
 
 /** Types users cannot switch off (account security). */
 export const MANDATORY_NOTIFICATION_TYPES: readonly NotificationType[] = ['security'];
+
+/** Channels a reader can choose for each type. SMS costs money, so it is offered only where it matters. */
+export const NOTIFICATION_CHANNEL_OPTIONS: Record<NotificationType, NotificationChannel[]> = {
+  order: ['in_app', 'push', 'email', 'sms'],
+  delivery: ['in_app', 'push', 'email', 'sms'],
+  follower: ['in_app', 'push', 'email'],
+  comment: ['in_app', 'push', 'email'],
+  review: ['in_app', 'push', 'email'],
+  book_release: ['in_app', 'push', 'email'],
+  author_update: ['in_app', 'push', 'email'],
+  book_club: ['in_app', 'push', 'email'],
+  reading_challenge: ['in_app', 'push', 'email'],
+  security: ['in_app', 'push', 'email', 'sms'],
+  kyc: ['in_app', 'push', 'email'],
+  payout: ['in_app', 'push', 'email'],
+  listing: ['in_app', 'push', 'email'],
+  announcement: ['in_app', 'push', 'email'],
+};
+
+/** Who an announcement goes to. */
+export const BROADCAST_AUDIENCES = ['everyone', 'students', 'teachers', 'sellers', 'authors', 'publishers'] as const;
+export type BroadcastAudience = (typeof BROADCAST_AUDIENCES)[number];

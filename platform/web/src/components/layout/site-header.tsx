@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Link } from '@/i18n/navigation';
 import { UserMenu } from '../auth/user-menu';
 import { CartButton } from '../cart/cart-button';
+import { NotificationBell } from '../notifications/notification-bell';
 import { LocaleSwitcher } from './locale-switcher';
 import { Logo } from './logo';
 import { SearchBox } from './search-box';
@@ -41,6 +42,7 @@ export async function SiteHeader() {
             <LocaleSwitcher />
           </Suspense>
           <ThemeToggle />
+          <NotificationBell />
           <CartButton />
           <UserMenu />
         </div>

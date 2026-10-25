@@ -68,6 +68,11 @@ export class MessagesService {
     });
   }
 
+  /** Push to all of a user's devices; inside `tx` it is sent only if that transaction commits. */
+  async sendPush(userId: string, payload: { title: string; body: string; url?: string; tag?: string }, tx?: DbOrTx): Promise<string> {
+    return this.outbox.enqueue({ channel: 'push', recipient: userId, body: JSON.stringify(payload), template: 'push' }, tx);
+  }
+
   async sendSms(phone: string, text: string, template: string): Promise<string> {
     return this.outbox.enqueue({ channel: 'sms', recipient: phone, body: text, template });
   }

@@ -5,9 +5,11 @@ import { and, eq, lte, sql } from 'drizzle-orm';
 import { APP_CONFIG, type AppConfig } from '../../config/config.module';
 import { DB } from '../database/database.module';
 import { createMailDriver, createSmsDriver, type MailDriver, type SmsDriver } from './drivers';
+import { PushService, type PushPayload } from './push.service';
 
 export interface OutgoingMessage {
-  channel: 'email' | 'sms';
+  /** Push messages go to every device of the user whose id is the recipient; the body is the JSON payload. */
+  channel: 'email' | 'sms' | 'push';
   recipient: string;
   subject?: string;
   body: string;
@@ -38,6 +40,7 @@ export class OutboxService implements OnApplicationShutdown {
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(APP_CONFIG) private readonly config: AppConfig,
+    private readonly push: PushService,
   ) {
     this.mail = createMailDriver(config);
     this.sms = createSmsDriver(config);
@@ -95,6 +98,8 @@ export class OutboxService implements OnApplicationShutdown {
     try {
       if (message.channel === 'email') {
         await this.mail.send({ to: message.recipient, subject: message.subject ?? '', text: message.body, html: message.html ?? undefined });
+      } else if (message.channel === 'push') {
+        await this.push.sendToUser(message.recipient, JSON.parse(message.body) as PushPayload);
       } else {
         await this.sms.send({ to: message.recipient, text: message.body });
       }
@@ -128,5 +133,6 @@ export class OutboxService implements OnApplicationShutdown {
 }
 
 function mask(recipient: string): string {
+  if (/^[0-9a-f-]{36}$/.test(recipient)) return `user ${recipient.slice(0, 8)}`;
   return recipient.includes('@') ? recipient.replace(/^(.).*(@.*)$/, '$1***$2') : `${recipient.slice(0, 6)}****${recipient.slice(-2)}`;
 }

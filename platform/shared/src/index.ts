@@ -30,3 +30,4 @@ export * from './schemas/reading';
 export * from './schemas/clubs';
 export * from './schemas/student';
 export * from './schemas/digital';
+export * from './schemas/notifications';

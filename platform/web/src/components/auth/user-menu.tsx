@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCheck, Building2, LayoutDashboard, LibraryBig, LogOut, MapPin, Package, PenLine, Settings, Shield, Store, Tablet, User } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, LayoutDashboard, LibraryBig, LogOut, MapPin, Package, PenLine, Settings, Shield, Store, Tablet, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';
@@ -9,7 +9,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from './auth-provider';
 
 /** Permissions that unlock at least one page of the staff area. */
-const STAFF_PERMISSIONS = ['kyc.view', 'roles.view', 'users.view', 'products.view', 'orders.view', 'orders.refund', 'payouts.view', 'coupons.manage', 'authors.manage', 'student.manage', 'copyright.manage'];
+const STAFF_PERMISSIONS = ['kyc.view', 'roles.view', 'users.view', 'products.view', 'orders.view', 'orders.refund', 'payouts.view', 'coupons.manage', 'authors.manage', 'student.manage', 'copyright.manage', 'notifications.broadcast'];
 
 /** Header account control: "Log in" for visitors, an accessible account menu for signed-in users. */
 export function UserMenu() {
@@ -61,6 +61,7 @@ export function UserMenu() {
     ...(hasRole('author') || hasRole('publisher') ? [{ href: '/studio/digital', label: t('studio.title'), Icon: Tablet }] : []),
     { href: '/account/profile', label: t('profileSettings.title'), Icon: Settings },
     { href: '/account/security', label: t('account.security'), Icon: Shield },
+    { href: '/account/notifications', label: t('notifications.settingsTitle'), Icon: Bell },
     { href: '/account/verification', label: t('verification.title'), Icon: BadgeCheck },
     ...(STAFF_PERMISSIONS.some((p) => can(p)) ? [{ href: '/admin', label: t('nav.adminDashboard'), Icon: LayoutDashboard }] : []),
   ];

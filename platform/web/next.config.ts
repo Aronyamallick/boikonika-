@@ -53,7 +53,11 @@ const nextConfig: NextConfig = {
     })),
   },
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    return [
+      { source: '/(.*)', headers: securityHeaders },
+      // The service worker must always be re-checked so updates reach every reader.
+      { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }, { key: 'Service-Worker-Allowed', value: '/' }] },
+    ];
   },
   async rewrites() {
     // Same-origin API calls keep the refresh cookie first-party and avoid CORS preflights.
