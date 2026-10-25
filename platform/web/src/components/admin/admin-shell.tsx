@@ -1,6 +1,6 @@
 'use client';
 
-import { Banknote, Copyright, FileLock2, Flag, GraduationCap, LayoutDashboard, Megaphone, PenLine, Receipt, RotateCcw, ScrollText, Settings2, ShieldCheck, Tags, TicketPercent, UserRound, UsersRound } from 'lucide-react';
+import { Banknote, Copyright, FileLock2, FileText, Flag, GraduationCap, Inbox, LayoutDashboard, LayoutTemplate, Megaphone, PenLine, Receipt, RotateCcw, ScrollText, Settings2, ShieldCheck, Tags, TicketPercent, UserRound, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { RequireAuth } from '@/components/auth/require-auth';
@@ -14,6 +14,7 @@ export const ADMIN_NAV = [
   { href: '/admin', key: 'adminOverview.nav', permission: 'analytics.view', Icon: LayoutDashboard },
   { href: '/admin/moderation', key: 'adminModeration.nav', permission: 'reports.view', Icon: Flag },
   { href: '/admin/users', key: 'adminUsers.nav', permission: 'users.view', Icon: UserRound },
+  { href: '/admin/messages', key: 'adminMessages.nav', permission: 'support.manage', Icon: Inbox },
   { href: '/admin/orders', key: 'adminOrders.nav', permission: 'orders.view', Icon: Receipt },
   { href: '/admin/refunds', key: 'adminRefunds.nav', permission: 'orders.refund', Icon: RotateCcw },
   { href: '/admin/payouts', key: 'adminPayouts.nav', permission: 'payouts.view', Icon: Banknote },
@@ -24,6 +25,8 @@ export const ADMIN_NAV = [
   { href: '/admin/student', key: 'adminStudent.nav', permission: 'student.manage', Icon: GraduationCap },
   { href: '/admin/copyright', key: 'adminCopyright.nav', permission: 'copyright.manage', Icon: Copyright },
   { href: '/admin/digital', key: 'adminDigital.nav', permission: 'copyright.manage', Icon: FileLock2 },
+  { href: '/admin/homepage', key: 'adminHomepage.nav', permission: 'homepage.manage', Icon: LayoutTemplate },
+  { href: '/admin/content', key: 'adminContent.nav', permission: 'cms.manage', Icon: FileText },
   { href: '/admin/announcements', key: 'adminAnnouncements.nav', permission: 'notifications.broadcast', Icon: Megaphone },
   { href: '/admin/roles', key: 'admin.navRoles', permission: 'roles.view', Icon: UsersRound },
   { href: '/admin/audit', key: 'adminAudit.nav', permission: 'audit.view', Icon: ScrollText },

@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { articleListQuerySchema, BANNER_PLACEMENTS, contactMessageSchema } from '@boikonika/shared';
 import { z } from 'zod';
@@ -61,8 +61,16 @@ export class CmsController {
   @Public()
   @Get('articles/:slug')
   @ApiOperation({ summary: 'An article with related reading' })
-  article(@CurrentUser() user: AuthenticatedUser | undefined, @Param('slug') slug: string) {
-    return this.cms.article(slug, user?.id ?? requestContext.get()?.ip ?? undefined);
+  article(@Param('slug') slug: string) {
+    return this.cms.article(slug);
+  }
+
+  @Public()
+  @Post('articles/:id/view')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Count a read of an article (once per reader per day)' })
+  view(@CurrentUser() user: AuthenticatedUser | undefined, @Param('id', new ParseUUIDPipe()) id: string) {
+    return this.cms.view(id, user?.id ?? requestContext.get()?.ip ?? 'unknown');
   }
 
   @Public()

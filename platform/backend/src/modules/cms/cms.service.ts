@@ -69,7 +69,7 @@ export class CmsService {
     return rows.rows.map((r) => this.card(r));
   }
 
-  async article(slug: string, viewer: string | undefined) {
+  async article(slug: string) {
     const [r] = await this.db
       .execute<Row>(sql`
         select a.*, u.display_name, u.username, p.avatar_key from articles a
@@ -77,17 +77,25 @@ export class CmsService {
         where a.slug = ${slug} and a.status = 'published'`)
       .then((x) => x.rows);
     if (!r) throw AppException.notFound('Article');
-    // One view per reader (or address) per article per day.
-    if (viewer) {
-      const fresh = await this.redis.set(`view:a:${r.id as string}:${viewer}`, '1', 'EX', 86_400, 'NX').catch(() => null);
-      if (fresh) await this.db.execute(sql`update articles set view_count = view_count + 1 where id = ${r.id as string}`);
-    }
     const related = await this.db.execute<Row>(sql`
       select a.*, u.display_name, u.username, p.avatar_key from articles a
       left join users u on u.id = a.author_id left join user_profiles p on p.user_id = a.author_id
       where a.status = 'published' and a.kind = ${r.kind as string} and a.id <> ${r.id as string}
       order by (a.tags && array[${sql.join(((r.tags as string[] | null) ?? []).map((tag) => sql`${tag}`), sql`, `)}]::text[]) desc, a.published_at desc nulls last limit 3`);
     return { ...this.card(r), body: r.body as string, viewCount: Number(r.view_count ?? 0), updatedAt: new Date(r.updated_at as string).toISOString(), related: related.rows.map((x) => this.card(x)) };
+  }
+
+  /**
+   * Counts a read: one per reader (or address) per article per day. Sent by the reader's browser, since
+   * pages are rendered and cached on the server where every request looks alike.
+   */
+  async view(id: string, viewer: string) {
+    const fresh = await this.redis.set(`view:a:${id}:${viewer}`, '1', 'EX', 86_400, 'NX').catch(() => null);
+    const [r] = fresh
+      ? await this.db.execute<{ view_count: number }>(sql`update articles set view_count = view_count + 1 where id = ${id} and status = 'published' returning view_count`).then((x) => x.rows)
+      : await this.db.execute<{ view_count: number }>(sql`select view_count from articles where id = ${id} and status = 'published'`).then((x) => x.rows);
+    if (!r) throw AppException.notFound('Article');
+    return { viewCount: Number(r.view_count) };
   }
 
   /** Help centre search over FAQs (both languages) and help articles. */

@@ -83,8 +83,9 @@ describe('Content, homepage builder and contact (e2e)', () => {
 
     const reader = await registerUser(ctx, { name: 'Reader' });
     const path = `${API}/articles/${encodeURIComponent(created.slug)}`;
-    await ctx.http.get(path).set(as(reader)).expect(200);
-    const again = (await ctx.http.get(path).set(as(reader)).expect(200)).body.data;
+    expect((await ctx.http.post(`${API}/articles/${created.id}/view`).set(as(reader)).expect(200)).body.data.viewCount).toBe(1);
+    expect((await ctx.http.post(`${API}/articles/${created.id}/view`).set(as(reader)).expect(200)).body.data.viewCount).toBe(1);
+    const again = (await ctx.http.get(path).expect(200)).body.data;
     expect(again.viewCount).toBe(1);
     expect(again.body).toBe(BODY);
 
@@ -95,6 +96,7 @@ describe('Content, homepage builder and contact (e2e)', () => {
 
     await ctx.http.delete(`${API}/admin/cms/articles/${created.id}`).set(as(admin)).expect(200);
     await ctx.http.get(path).expect(404);
+    await ctx.http.post(`${API}/articles/${created.id}/view`).expect(404);
   });
 
   it('builds the homepage from sections, banners and testimonials', async () => {

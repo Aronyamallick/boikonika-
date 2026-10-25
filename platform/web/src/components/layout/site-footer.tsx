@@ -8,7 +8,7 @@ export async function SiteFooter() {
   const columns = [
     { title: t('footer.shop'), links: [['/books', t('nav.books')], ['/products', t('nav.marketplace')], ['/explore', t('nav.categories')], ['/seller', t('nav.sell')]] },
     { title: t('footer.learn'), links: [['/student-zone', t('nav.studentZone')], ['/clubs', t('nav.bookClubs')], ['/challenges', t('nav.challenges')], ['/blog', t('nav.blog')]] },
-    { title: t('footer.company'), links: [['/pages/about', t('nav.about')], ['/authors', t('nav.authors')], ['/publishers', t('nav.publishers')], ['/pages/contact', t('nav.contact')]] },
+    { title: t('footer.company'), links: [['/pages/about', t('nav.about')], ['/authors', t('nav.authors')], ['/publishers', t('nav.publishers')], ['/contact', t('nav.contact')]] },
     { title: t('footer.support'), links: [['/help', t('nav.help')], ['/pages/terms', t('nav.terms')], ['/pages/privacy', t('nav.privacy')], ['/copyright', t('nav.copyright')]] },
   ];
   return (

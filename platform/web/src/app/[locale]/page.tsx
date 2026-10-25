@@ -1,18 +1,24 @@
-import { BadgeCheck, BookOpenCheck, Brain, CalendarDays, GraduationCap, HandCoins, PenLine, Share2, ShoppingBag, Sparkles, Trophy, Users } from 'lucide-react';
+import { BadgeCheck, BookOpenCheck, Brain, CalendarDays, GraduationCap, HandCoins, PenLine, Quote, Share2, ShoppingBag, Sparkles, Trophy, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { BookCard } from '@/components/catalog/book-card';
 import { CategoryIcon } from '@/components/catalog/category-icon';
 import { JsonLd } from '@/components/catalog/json-ld';
 import { AuthorCard, StoreCard } from '@/components/catalog/people-cards';
+import { ClubCard } from '@/components/clubs/club-card';
+import { ArticleCard } from '@/components/content/article-card';
+import { BannerStrip } from '@/components/content/banner-strip';
 import { Shelf } from '@/components/catalog/shelf';
 import { ForYou } from '@/components/recommendations/for-you';
 import { SearchBox } from '@/components/layout/search-box';
+import { Avatar } from '@/components/ui/avatar';
 import { buttonClasses } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Link } from '@/i18n/navigation';
 import { serverApi } from '@/lib/api/server';
 import { localized, type AuthorCardData, type BookCardData, type HomeSection, type LocalizedText, type StoreCardData } from '@/lib/catalog';
+import type { ClubCard as Club } from '@/lib/clubs';
+import type { ArticleCard as ArticleCardData, Banner, Testimonial } from '@/lib/content';
 import { SITE_URL } from '@/lib/env';
 import { alternates, localePath } from '@/lib/seo';
 
@@ -147,6 +153,64 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </Link>
               ))}
             </div>
+          </section>
+        );
+      case 'banner':
+        return (
+          <section key={s.key} aria-labelledby={id} className="py-4">
+            <h2 id={id} className="sr-only">
+              {title}
+            </h2>
+            <BannerStrip banners={s.items as Banner[]} locale={locale} label={title} priority={index < 2} />
+          </section>
+        );
+      case 'book_clubs':
+        return (
+          <section key={s.key} aria-labelledby={id} className="container-page py-6">
+            <SectionHeader id={id} title={title} description={subtitle} href="/clubs" linkLabel={t('common.viewAll')} />
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {(s.items as Club[]).map((c) => (
+                <li key={c.id}>
+                  <ClubCard club={c} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      case 'articles':
+        return (
+          <section key={s.key} aria-labelledby={id} className="container-page py-6">
+            <SectionHeader id={id} title={title} description={subtitle} href="/blog" linkLabel={t('common.viewAll')} />
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {(s.items as ArticleCardData[]).map((a) => (
+                <li key={a.id}>
+                  <ArticleCard article={a} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      case 'testimonials':
+        return (
+          <section key={s.key} aria-labelledby={id} className="container-page py-6">
+            <SectionHeader id={id} title={title} description={subtitle} />
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {(s.items as Testimonial[]).map((q) => (
+                <li key={q.id}>
+                  <figure className="flex h-full flex-col rounded-xl border border-line bg-surface p-5 shadow-sm">
+                    <Quote className="h-6 w-6 text-accent" aria-hidden="true" />
+                    <blockquote className="mt-2 flex-1 text-fg">{localized(q.quote, locale)}</blockquote>
+                    <figcaption className="mt-4 flex items-center gap-3 text-sm">
+                      <Avatar name={q.name} src={q.avatarUrl} size="sm" />
+                      <span>
+                        <span className="block font-semibold text-fg">{q.name}</span>
+                        {localized(q.role, locale) ? <span className="block text-fg-muted">{localized(q.role, locale)}</span> : null}
+                      </span>
+                    </figcaption>
+                  </figure>
+                </li>
+              ))}
+            </ul>
           </section>
         );
       case 'why_choose_us':

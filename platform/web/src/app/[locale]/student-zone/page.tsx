@@ -3,12 +3,15 @@ import type { Metadata } from 'next';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { BookCard } from '@/components/catalog/book-card';
 import { Shelf } from '@/components/catalog/shelf';
+import { ArticleCard } from '@/components/content/article-card';
+import { BannerStrip } from '@/components/content/banner-strip';
 import { QuizCard } from '@/components/student/quiz-card';
 import { Badge } from '@/components/ui/badge';
 import { buttonClasses } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Link } from '@/i18n/navigation';
-import { serverApi } from '@/lib/api/server';
+import { serverApi, serverPage } from '@/lib/api/server';
+import type { ArticleCard as ArticleCardData, Banner } from '@/lib/content';
 import { alternates } from '@/lib/seo';
 import type { StudentHome } from '@/lib/student';
 import { StudentFeed } from './student-feed';
@@ -24,7 +27,11 @@ export default async function StudentZonePage({ params }: { params: Promise<{ lo
   setRequestLocale(locale);
   const t = await getTranslations();
   const format = await getFormatter();
-  const home = await serverApi<StudentHome>('/student-zone', { locale, revalidate: 120 });
+  const [home, banners, resources] = await Promise.all([
+    serverApi<StudentHome>('/student-zone', { locale, revalidate: 120 }),
+    serverApi<Banner[]>('/banners?placement=student_zone', { locale, revalidate: 120 }).catch(() => null),
+    serverPage<ArticleCardData>('/articles?kind=study_resource&audience=student&pageSize=4', { locale, revalidate: 120 }).catch(() => ({ items: [] as ArticleCardData[] })),
+  ]);
   const day = (d: string) => format.dateTime(new Date(d), { day: 'numeric', month: 'short' });
   return (
     <div className="pb-10">
@@ -50,6 +57,12 @@ export default async function StudentZonePage({ params }: { params: Promise<{ lo
           </nav>
         </div>
       </section>
+
+      {banners?.length ? (
+        <div className="pt-6">
+          <BannerStrip banners={banners} locale={locale} label={t('student.title')} priority />
+        </div>
+      ) : null}
 
       <div className="container-page space-y-10 pt-8">
         <section aria-labelledby="quizzes">
@@ -176,6 +189,19 @@ export default async function StudentZonePage({ params }: { params: Promise<{ lo
               <BookCard key={b.id} book={b} />
             ))}
           </Shelf>
+        ) : null}
+
+        {resources.items.length ? (
+          <section aria-labelledby="resources">
+            <SectionHeader id="resources" title={t('student.resources')} description={t('student.resourcesText')} href="/blog?kind=study_resource" linkLabel={t('common.viewAll')} />
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {resources.items.map((a) => (
+                <li key={a.id}>
+                  <ArticleCard article={a} />
+                </li>
+              ))}
+            </ul>
+          </section>
         ) : null}
       </div>
     </div>

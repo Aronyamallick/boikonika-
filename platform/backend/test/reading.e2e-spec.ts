@@ -92,14 +92,17 @@ describe('Library, reading tracker and challenges (e2e)', () => {
     const reader = await registerUser(ctx);
     const { bookId } = await listBook('শ্রীকান্ত', 300);
     const yesterday = new Date(Date.now() - 24 * 3_600_000).toISOString();
+    // Sessions are dated by when they started; starting them "now" keeps them on today in Dhaka
+    // even just after midnight, when a long session that ends now would have begun yesterday.
+    const now = () => new Date().toISOString();
     await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ bookId, minutes: 20, currentPage: 25, startedAt: yesterday }).expect(201);
-    const today = await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ bookId, minutes: 15, currentPage: 55, source: 'timer' }).expect(201);
+    const today = await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ bookId, minutes: 15, currentPage: 55, source: 'timer', startedAt: now() }).expect(201);
     expect(today.body.data).toMatchObject({ minutes: 15, pages: 30 });
-    await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ minutes: 5, pages: 4 }).expect(201);
+    await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ minutes: 5, pages: 4, startedAt: now() }).expect(201);
     await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ minutes: 601 }).expect(400);
     await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ minutes: 10, startedAt: new Date(Date.now() - 10 * 86_400_000).toISOString() }).expect(400);
-    for (let i = 0; i < 2; i++) await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ minutes: 450 }).expect(201);
-    await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ minutes: 100 }).expect(400);
+    for (let i = 0; i < 2; i++) await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ minutes: 450, startedAt: now() }).expect(201);
+    await ctx.http.post(`${API}/me/reading/sessions`).set(as(reader)).send({ minutes: 100, startedAt: now() }).expect(400);
 
     const s = await stats(reader);
     expect(s).toMatchObject({ current_streak: 2, longest_streak: 2, minutes_read: 940, pages_read: 59 });
@@ -111,13 +114,13 @@ describe('Library, reading tracker and challenges (e2e)', () => {
     expect(res.body.data).toMatchObject({ today: { minutes: 920, goal: 30 }, week: { minutes: 940, goal: 200 }, year: { books: 0, goal: 24 }, streak: { current: 2, longest: 2 } });
     expect(res.body.data.series).toHaveLength(7);
     expect(res.body.data.series.at(-1).minutes).toBe(920);
-    expect(res.body.data.recentSessions[0].book).toBeNull();
+    const fiveMinutes = (res.body.data.recentSessions as Array<{ id: string; minutes: number; book: unknown }>).find((x) => x.minutes === 5)!;
+    expect(fiveMinutes.book).toBeNull();
 
     const shelf = await ctx.http.get(`${API}/me/library/${bookId}`).set(as(reader)).expect(200);
     expect(shelf.body.data).toEqual({ shelf: 'currently_reading', percent: 18, currentPage: 55, hasDigitalAccess: false });
 
-    const toDelete = res.body.data.recentSessions[0].id;
-    await ctx.http.delete(`${API}/me/reading/sessions/${toDelete}`).set(as(reader)).expect(200);
+    await ctx.http.delete(`${API}/me/reading/sessions/${fiveMinutes.id}`).set(as(reader)).expect(200);
     expect((await stats(reader)).minutes_read).toBe(935);
   });
 

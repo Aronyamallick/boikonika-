@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { alternates } from '@/lib/seo';
 import { CopyrightForm } from './copyright-form';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'copyrightForm' });
-  return { title: t('title'), description: t('intro'), alternates: { canonical: `/${locale}/copyright`, languages: { bn: '/bn/copyright', en: '/en/copyright' } } };
+  return { title: t('title'), description: t('intro'), alternates: alternates(locale, '/copyright') };
 }
 
 /** Public takedown form for rights holders; explains the process before asking for anything. */

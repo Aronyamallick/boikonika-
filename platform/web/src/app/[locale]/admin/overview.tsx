@@ -1,7 +1,7 @@
 'use client';
 
 import { formatMoney } from '@boikonika/shared';
-import { AlertTriangle, BadgeCheck, Copyright, Flag, ListChecks, MessageSquareWarning, RotateCcw } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, Copyright, Flag, Inbox, ListChecks, MessageSquareWarning, RotateCcw } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { ColumnChart, type ColumnDatum } from '@/components/dashboard/column-chart';
@@ -36,7 +36,7 @@ interface Overview {
     commission: string;
     conversion: number | null;
   };
-  queues: { pendingKyc: number; openRefunds: number; pendingListings: number; openReports: number; urgentReports: number; heldContent: number; copyrightClaims: number };
+  queues: { pendingKyc: number; openRefunds: number; pendingListings: number; openReports: number; urgentReports: number; heldContent: number; copyrightClaims: number; openMessages: number };
   series: Array<{ day: string; signups: number; active: number; orders: number; revenue: number }>;
   popular: {
     books: Array<{ slug: string; title: string; coverUrl: string | null; sales: number; views: number }>;
@@ -83,6 +83,7 @@ export function AdminOverview() {
     { key: 'pendingKyc', count: data.queues.pendingKyc, href: '/admin/kyc', Icon: BadgeCheck },
     { key: 'pendingListings', count: data.queues.pendingListings, href: '/admin/products', Icon: ListChecks },
     { key: 'openRefunds', count: data.queues.openRefunds, href: '/admin/refunds', Icon: RotateCcw },
+    { key: 'openMessages', count: data.queues.openMessages, href: '/admin/messages', Icon: Inbox },
   ] as const;
 
   return (
