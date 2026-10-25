@@ -124,3 +124,28 @@ export const testimonials = pgTable('testimonials', {
   isPublished: boolean('is_published').notNull().default(true),
   ...timestamps(),
 });
+
+/**
+ * Messages sent through the contact form. Guests leave an email for the reply; signed-in people are
+ * answered in their notifications as well. Only staff with support access can read them.
+ */
+export const contactMessages = pgTable(
+  'contact_messages',
+  {
+    id: id(),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    name: varchar('name', { length: 120 }).notNull(),
+    email: varchar('email', { length: 254 }),
+    phone: varchar('phone', { length: 20 }),
+    topic: varchar('topic', { length: 30 }).notNull(),
+    orderNumber: varchar('order_number', { length: 40 }),
+    message: text('message').notNull(),
+    locale: varchar('locale', { length: 5 }).notNull().default('bn'),
+    status: varchar('status', { length: 20 }).notNull().default('open'), // open | answered | closed
+    reply: text('reply'),
+    repliedBy: uuid('replied_by').references(() => users.id, { onDelete: 'set null' }),
+    repliedAt: timestamp('replied_at', { withTimezone: true }),
+    ...timestamps(),
+  },
+  (t) => [index('contact_messages_status_idx').on(t.status, t.createdAt), index('contact_messages_user_idx').on(t.userId)],
+);

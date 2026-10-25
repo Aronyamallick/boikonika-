@@ -132,6 +132,8 @@ export const NOTIFICATION_TYPES = [
   'announcement',
   /** Moderation and copyright decisions about the reader's account or content. */
   'moderation',
+  /** Staff answers to the reader's own contact messages. */
+  'support',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -155,10 +157,12 @@ export const DEFAULT_NOTIFICATION_CHANNELS: Record<NotificationType, Notificatio
   listing: ['in_app', 'email'],
   announcement: ['in_app'],
   moderation: ['in_app', 'push', 'email'],
+  // The reply itself is emailed to the address on the message, so no email here.
+  support: ['in_app', 'push'],
 };
 
-/** Types users cannot switch off (account security). */
-export const MANDATORY_NOTIFICATION_TYPES: readonly NotificationType[] = ['security', 'moderation'];
+/** Types users cannot switch off: account security, decisions about them, and answers they asked for. */
+export const MANDATORY_NOTIFICATION_TYPES: readonly NotificationType[] = ['security', 'moderation', 'support'];
 
 /** Channels a reader can choose for each type. SMS costs money, so it is offered only where it matters. */
 export const NOTIFICATION_CHANNEL_OPTIONS: Record<NotificationType, NotificationChannel[]> = {
@@ -177,6 +181,7 @@ export const NOTIFICATION_CHANNEL_OPTIONS: Record<NotificationType, Notification
   listing: ['in_app', 'push', 'email'],
   announcement: ['in_app', 'push', 'email'],
   moderation: ['in_app', 'push', 'email'],
+  support: ['in_app', 'push'],
 };
 
 /** Who an announcement goes to. */

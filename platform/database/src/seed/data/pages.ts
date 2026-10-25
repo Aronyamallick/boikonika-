@@ -334,7 +334,7 @@ Late shipping, high cancellation rates and policy violations can lead to warning
       en: `Boikonika respects the rights of authors and publishers. Digital books, previews and excerpts may be uploaded only by the rights holder or with their written permission.
 
 ## Reporting infringement
-If you own the rights to a work and believe it is being shared on Boikonika without permission, use **Report → Copyright** on the item, or the copyright form in the Help Centre. Include:
+If you own the rights to a work and believe it is being shared on Boikonika without permission, use **Report → Copyright** on the item, or the [copyright complaint form](/copyright). Include:
 - your name and contact details, and whether you are the rights holder or act for them;
 - the work that is being infringed;
 - links to the content on Boikonika;
@@ -343,7 +343,7 @@ If you own the rights to a work and believe it is being shared on Boikonika with
 We review complete notices, usually within 2 working days. Infringing content is removed or restricted and the uploader is notified.
 
 ## Counter-notice
-If your content was removed and you believe that was a mistake, or that you have the right to share it, you can file a counter-notice from the notification you received. Explain why and provide evidence such as a licence or a publishing agreement. We forward the counter-notice to the person who reported the content and may restore the content if they do not pursue the claim.
+If your content was removed and you believe that was a mistake, or that you have the right to share it, you can send a counter-notice from your [account standing](/account/standing) page (the notification you received links there). Explain why and provide evidence such as a licence or a publishing agreement. We forward the counter-notice to the person who reported the content and may restore the content if they do not pursue the claim.
 
 ## Repeat infringers
 Accounts that repeatedly infringe copyright are suspended or closed.
@@ -353,7 +353,7 @@ Short quotations for review, criticism, teaching or research are welcome when th
       bn: `বইকণিকা লেখক ও প্রকাশকদের অধিকারকে সম্মান করে। ডিজিটাল বই, প্রিভিউ ও অংশবিশেষ শুধু স্বত্বাধিকারী অথবা তার লিখিত অনুমতি নিয়ে আপলোড করা যায়।
 
 ## লঙ্ঘনের অভিযোগ
-কোনো রচনার স্বত্ব আপনার হলে এবং তা অনুমতি ছাড়া বইকণিকায় শেয়ার হচ্ছে মনে হলে সংশ্লিষ্ট কনটেন্টে **রিপোর্ট → কপিরাইট** ব্যবহার করুন অথবা সহায়তা কেন্দ্রের কপিরাইট ফর্ম পূরণ করুন। যা দিতে হবে:
+কোনো রচনার স্বত্ব আপনার হলে এবং তা অনুমতি ছাড়া বইকণিকায় শেয়ার হচ্ছে মনে হলে সংশ্লিষ্ট কনটেন্টে **রিপোর্ট → কপিরাইট** ব্যবহার করুন অথবা [কপিরাইট অভিযোগের ফর্ম](/copyright) পূরণ করুন। যা দিতে হবে:
 - আপনার নাম ও যোগাযোগের তথ্য, এবং আপনি স্বত্বাধিকারী নাকি তার পক্ষে অভিযোগ করছেন;
 - কোন রচনার স্বত্ব লঙ্ঘিত হয়েছে;
 - বইকণিকায় সংশ্লিষ্ট কনটেন্টের লিংক;
@@ -362,7 +362,7 @@ Short quotations for review, criticism, teaching or research are welcome when th
 সম্পূর্ণ অভিযোগ সাধারণত ২ কর্মদিবসের মধ্যে পর্যালোচনা করা হয়। লঙ্ঘনকারী কনটেন্ট সরিয়ে বা সীমিত করে আপলোডকারীকে জানানো হয়।
 
 ## পাল্টা আবেদন
-আপনার কনটেন্ট ভুলবশত সরানো হয়েছে বা তা শেয়ার করার অধিকার আপনার আছে মনে হলে প্রাপ্ত নোটিফিকেশন থেকে পাল্টা আবেদন করতে পারেন। কারণ ব্যাখ্যা করুন এবং লাইসেন্স বা প্রকাশনা চুক্তির মতো প্রমাণ দিন। পাল্টা আবেদনটি অভিযোগকারীর কাছে পাঠানো হয়, এবং তারা দাবি অব্যাহত না রাখলে কনটেন্ট পুনর্বহাল করা হতে পারে।
+আপনার কনটেন্ট ভুলবশত সরানো হয়েছে বা তা শেয়ার করার অধিকার আপনার আছে মনে হলে আপনার [অ্যাকাউন্টের অবস্থান](/account/standing) পাতা থেকে পাল্টা আবেদন করতে পারেন (প্রাপ্ত নোটিফিকেশন সেখানেই নিয়ে যায়)। কারণ ব্যাখ্যা করুন এবং লাইসেন্স বা প্রকাশনা চুক্তির মতো প্রমাণ দিন। পাল্টা আবেদনটি অভিযোগকারীর কাছে পাঠানো হয়, এবং তারা দাবি অব্যাহত না রাখলে কনটেন্ট পুনর্বহাল করা হতে পারে।
 
 ## বারবার লঙ্ঘন
 যেসব অ্যাকাউন্ট বারবার কপিরাইট লঙ্ঘন করে সেগুলো স্থগিত বা বন্ধ করা হয়।

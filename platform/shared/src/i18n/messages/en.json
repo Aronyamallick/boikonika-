@@ -456,7 +456,15 @@
     "ebookUnreadable": "This file couldn't be read. Export it again and upload the new copy.",
     "ebookType": "Upload the e-book as a PDF or EPUB file.",
     "durationRequired": "Choose how many days this lasts.",
-    "outOfRange": "This value is outside the allowed range."
+    "outOfRange": "This value is outside the allowed range.",
+    "link": "Use a page on this site (starting with /) or an https:// address.",
+    "pickBooks": "Pick at least one book.",
+    "tooMany": "That's more than allowed here.",
+    "endBeforeStart": "The end must be after the start.",
+    "linkForButton": "A button needs a link.",
+    "consentDate": "Enter the date the person agreed to be quoted.",
+    "emailForReply": "Leave an email so we can reply.",
+    "slug": "Use lower-case letters, numbers and dashes."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -2654,6 +2662,28 @@
         "restoredTitle": "Copyright complaint {ref}: content restored",
         "restoredBody": "\"{title}\" was restored after the publisher's counter-notice. Note from the moderator: {note}."
       }
+    },
+    "cms": {
+      "saved": "Saved.",
+      "deleted": "Deleted.",
+      "reordered": "Order saved.",
+      "slugTaken": "A page already uses this address.",
+      "builtInSection": "Built-in sections can't be deleted. Turn it off instead."
+    },
+    "contact": {
+      "received": "Message sent. We usually reply within one working day.",
+      "tooMany": "You've sent several messages recently. Please wait a while before sending another.",
+      "noWayToReply": "This message has no email or account to reply to.",
+      "replied": "Reply sent.",
+      "statusChanged": "Status updated.",
+      "repliedTitle": "We answered your message {ref}",
+      "repliedBody": "{reply}",
+      "mail": {
+        "receivedTitle": "We received your message ({ref})",
+        "receivedBody": "Hi {name}, thanks for writing to Boikonika. Your reference is {ref}. We usually reply within one working day.",
+        "replyTitle": "Reply to your message {ref}",
+        "replyBody": "Hi {name},\n\n{reply}\n\n— The Boikonika team\n\nYour message:\n{message}"
+      }
     }
   },
   "digital": {
@@ -2873,7 +2903,7 @@
     "pushUnsupported": "This browser doesn't support push notifications. You'll still get them in the app and by email.",
     "pushNotConfigured": "Push notifications aren't available on this site yet.",
     "typeColumn": "Notice",
-    "mandatory": "Always on for your safety",
+    "mandatory": "Always on: these are about your account",
     "notOffered": "Not offered",
     "toggleLabel": "{type} by {channel}",
     "wellbeing": "Security notices (new sign-ins, password changes) are always on so you can protect your account.",
@@ -2897,7 +2927,9 @@
       "kyc": "Verification",
       "payout": "Payouts",
       "listing": "Listings & e-books",
-      "announcement": "Announcements"
+      "announcement": "Announcements",
+      "moderation": "Account standing",
+      "support": "Support replies"
     },
     "typeHints": {
       "order": "Placed, paid, cancelled, refunded",
@@ -2913,7 +2945,9 @@
       "kyc": "Identity verification decisions",
       "payout": "Seller payouts",
       "listing": "Listing reviews, e-book takedowns",
-      "announcement": "News from Boikonika"
+      "announcement": "News from Boikonika",
+      "moderation": "Moderators' decisions and copyright complaints about your content",
+      "support": "Answers to messages you send us"
     },
     "pushFailed": "This browser couldn’t register for push notifications. Private windows don’t support them — try a regular window."
   },

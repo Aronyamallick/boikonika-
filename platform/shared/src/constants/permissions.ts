@@ -48,6 +48,7 @@ export const PERMISSIONS = {
   'banners.manage': 'Manage banners',
   'cms.manage': 'Manage pages, articles and FAQs',
   'homepage.manage': 'Configure the homepage',
+  'support.manage': 'Read and answer contact messages',
   'analytics.view': 'View analytics',
   'settings.manage': 'Change system settings',
   'audit.view': 'View audit logs',
@@ -69,6 +70,7 @@ const moderatorPermissions: Permission[] = [
   'community.moderate',
   'clubs.manage',
   'copyright.manage',
+  'support.manage',
 ];
 
 /** Default permissions per staff role (super_admin implicitly has every permission). */

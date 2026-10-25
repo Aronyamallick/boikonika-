@@ -61,7 +61,8 @@ export class AdminService {
           (select count(distinct user_id) from user_activity_days where day > (now() at time zone 'Asia/Dhaka')::date - ${days}::int) as active_in_period,
           (select count(*) from kyc_verifications where status in ('pending', 'under_review')) as pending_kyc,
           (select count(*) from refunds where status in ('requested', 'approved', 'processing')) as open_refunds,
-          (select count(*) from products where status = 'pending_review' and deleted_at is null) as pending_listings`)
+          (select count(*) from products where status = 'pending_review' and deleted_at is null) as pending_listings,
+          (select count(*) from contact_messages where status = 'open') as open_messages`)
       .then((r) => r.rows);
     const [moderation, copyright, series, books, authors, searches, categories] = await Promise.all([
       this.moderation.counts(),
@@ -116,6 +117,7 @@ export class AdminService {
         urgentReports: moderation.urgent,
         heldContent: moderation.held,
         copyrightClaims: copyright,
+        openMessages: n(t.open_messages),
       },
       series: series.rows.map((r) => ({ day: r.day as string, signups: n(r.signups), active: n(r.active), orders: n(r.orders), revenue: Number(r.revenue ?? 0) })),
       popular: {

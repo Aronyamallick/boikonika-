@@ -1,9 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { BLOG_KINDS, clubListQuerySchema } from '@boikonika/shared';
 import { categories, homepageSections, readingChallenges, type Database, type HomepageSectionConfig } from '@boikonika/database';
 import { and, asc, eq, isNull, sql, type SQL } from 'drizzle-orm';
 import type Redis from 'ioredis';
 import { DB } from '../../infra/database/database.module';
 import { REDIS } from '../../infra/redis/redis.module';
+import { ClubsService } from '../clubs/clubs.service';
+import { CmsService } from '../cms/cms.service';
 import { CatalogService } from './catalog.service';
 
 const CACHE_KEY = 'home:v1';
@@ -16,6 +20,8 @@ export class HomeService {
     @Inject(DB) private readonly db: Database,
     @Inject(REDIS) private readonly redis: Redis,
     private readonly catalog: CatalogService,
+    // Clubs and content modules depend on the catalogue, so they are looked up when needed instead of imported.
+    private readonly modules: ModuleRef,
   ) {}
 
   async sections() {
@@ -63,6 +69,18 @@ export class HomeService {
               .orderBy(asc(readingChallenges.durationDays))
               .limit(limit);
             break;
+          case 'book_clubs':
+            items = (await this.modules.get(ClubsService, { strict: false }).list(clubListQuerySchema.parse({ pageSize: limit }), undefined)).items;
+            break;
+          case 'articles':
+            items = await this.modules.get(CmsService, { strict: false }).latest(BLOG_KINDS, limit);
+            break;
+          case 'testimonials':
+            items = await this.modules.get(CmsService, { strict: false }).testimonials(limit);
+            break;
+          case 'banner':
+            items = await this.modules.get(CmsService, { strict: false }).banners('home', config.bannerIds);
+            break;
           default:
             items = [];
         }
@@ -70,7 +88,7 @@ export class HomeService {
       }),
     );
     // Data-driven shelves with nothing to show are left out; static blocks (hero, why us…) always stay.
-    const dataTypes = new Set(['book_list', 'category_grid', 'author_list', 'featured_sellers', 'reading_challenges', 'book_clubs', 'articles', 'testimonials']);
+    const dataTypes = new Set(['book_list', 'category_grid', 'author_list', 'featured_sellers', 'reading_challenges', 'book_clubs', 'articles', 'testimonials', 'banner']);
     return resolved.filter((s) => !dataTypes.has(s.type) || s.items.length > 0);
   }
 
