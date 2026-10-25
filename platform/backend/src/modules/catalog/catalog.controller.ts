@@ -93,6 +93,13 @@ export class CatalogController {
     return this.catalog.author(slug, viewer?.id);
   }
 
+  @Get('authors/:slug/follow')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Whether I follow this author' })
+  followState(@CurrentUser() user: AuthenticatedUser, @Param('slug') slug: string) {
+    return this.catalog.followState(user.id, slug);
+  }
+
   @Post('authors/:slug/follow')
   @HttpCode(200)
   @ApiBearerAuth('access-token')

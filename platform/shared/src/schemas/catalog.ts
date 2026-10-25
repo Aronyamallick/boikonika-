@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { BD_DISTRICT_KEYS, findDivision, isDistrictInDivision } from '../constants/bangladesh';
+import { CATALOG_SORTS, OWNERSHIP_CAPACITIES, STOCK_ADJUST_REASONS } from '../constants/catalog';
 import { ACADEMIC_LEVELS, AGE_GROUPS, BOOK_LANGUAGES, INTEREST_KEYS } from '../constants/interests';
 import { BOOK_CONDITIONS, BOOK_FORMATS } from '../constants/statuses';
 import { toEnglishDigits } from '../utils/bangla';
@@ -30,8 +32,6 @@ export const isbnSchema = z
     return isbn;
   });
 
-export const CATALOG_SORTS = ['relevance', 'newest', 'popular', 'price_asc', 'price_desc', 'rating'] as const;
-export type CatalogSort = (typeof CATALOG_SORTS)[number];
 
 const csv = <T extends string>(values: readonly [T, ...T[]]) =>
   z
@@ -83,7 +83,6 @@ export const productListQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(60).default(24),
 });
 
-export const OWNERSHIP_CAPACITIES = ['reseller_physical', 'author', 'publisher', 'licensed_distributor'] as const;
 
 const newBookSchema = z.object({
   title: nfcText(1, 300),
@@ -176,7 +175,6 @@ export const updateListingSchema = z.object({
     .optional(),
 });
 
-export const STOCK_ADJUST_REASONS = ['restock', 'adjustment', 'damaged', 'return'] as const;
 export const stockAdjustSchema = z.object({
   variantId: z.uuid(),
   delta: z.coerce.number().int().min(-100_000).max(100_000).refine((v) => v !== 0, { error: 'validation.nonZero' }),
@@ -186,7 +184,8 @@ export const stockAdjustSchema = z.object({
 
 export const moderationDecisionSchema = z.object({ reason: z.string().trim().max(1000).optional() });
 
-export const storeSettingsSchema = z.object({
+export const storeSettingsSchema = z
+  .object({
   name: nfcText(2, 160).optional(),
   tagline: nfcText(0, 200).nullable().optional(),
   description: z.string().max(3000).transform((v) => v.normalize('NFC').trim()).nullable().optional(),
@@ -197,4 +196,7 @@ export const storeSettingsSchema = z.object({
   address: z.string().trim().max(500).nullable().optional(),
   returnPolicy: z.string().trim().max(3000).nullable().optional(),
   shippingPolicy: z.string().trim().max(3000).nullable().optional(),
-});
+  })
+  // Districts are keys from the official list, and must belong to the chosen division.
+  .refine((v) => !v.division || !!findDivision(v.division), { error: 'validation.invalidChoice', path: ['division'] })
+  .refine((v) => !v.district || (v.division ? isDistrictInDivision(v.division, v.district) : BD_DISTRICT_KEYS.includes(v.district)), { error: 'validation.invalidChoice', path: ['district'] });

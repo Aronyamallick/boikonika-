@@ -8,6 +8,7 @@ export * from './constants/interests';
 export * from './constants/bangladesh';
 export * from './constants/security';
 export * from './constants/kyc';
+export * from './constants/catalog';
 export * from './utils/bangla';
 export * from './utils/money';
 export * from './utils/phone';

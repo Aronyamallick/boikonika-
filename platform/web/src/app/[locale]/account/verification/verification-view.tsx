@@ -51,10 +51,10 @@ function initialRows(purpose: KycPurpose): DocRow[] {
   });
 }
 
-export function VerificationView() {
+export function VerificationView({ initialPurpose }: { initialPurpose?: KycPurpose }) {
   const t = useTranslations('verification');
   const [items, setItems] = useState<Verification[] | null>(null);
-  const [purpose, setPurpose] = useState<KycPurpose | null>(null);
+  const [purpose, setPurpose] = useState<KycPurpose | null>(initialPurpose ?? null);
   const load = useCallback(() => {
     api<Verification[]>('/kyc/verifications').then(setItems, () => setItems([]));
   }, []);

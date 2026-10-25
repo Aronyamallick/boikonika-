@@ -57,3 +57,13 @@ export function findDivision(key: string): Division | undefined {
 export function isDistrictInDivision(divisionKey: string, districtKey: string): boolean {
   return !!findDivision(divisionKey)?.districts.some((ds) => ds.key === districtKey);
 }
+
+/** Display name of a district or division key in the visitor's language (unknown keys are returned as is). */
+export function placeName(key: string | null | undefined, locale: string): string {
+  if (!key) return '';
+  for (const dv of BD_DIVISIONS) {
+    const match = dv.key === key ? dv : dv.districts.find((ds) => ds.key === key);
+    if (match) return locale.startsWith('bn') ? match.bn : match.en;
+  }
+  return key;
+}

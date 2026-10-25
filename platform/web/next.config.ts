@@ -3,11 +3,13 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 /** Where the Next.js server forwards /api/v1 (in production the reverse proxy usually routes it directly). */
 const apiInternalUrl = (process.env.API_INTERNAL_URL ?? apiUrl).replace(/\/$/, '');
 const google = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? ' https://accounts.google.com' : '';
-const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL ?? apiUrl;
+const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL || apiUrl;
+/** Uploaded media can also be served through this site's own /api/v1 rewrite. */
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 const isDev = process.env.NODE_ENV !== 'production';
 
 const toWs = (url: string) => url.replace(/^http/, 'ws');
@@ -42,7 +44,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   images: {
     formats: ['image/avif', 'image/webp'],
-    remotePatterns: [new URL(`${assetsUrl}/**`), new URL(`${apiUrl}/**`)].map((u) => ({
+    remotePatterns: [new URL(`${assetsUrl}/**`), new URL(`${apiUrl}/**`), new URL(`${siteUrl}/**`)].map((u) => ({
       protocol: u.protocol.replace(':', '') as 'http' | 'https',
       hostname: u.hostname,
       port: u.port,

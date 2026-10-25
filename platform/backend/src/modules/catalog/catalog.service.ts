@@ -406,6 +406,13 @@ export class CatalogService {
     };
   }
 
+  async followState(userId: string, slug: string) {
+    const [author] = await this.db.select({ id: authors.id, followerCount: authors.followerCount }).from(authors).where(and(eq(authors.slug, slug), eq(authors.status, 'published')));
+    if (!author) throw AppException.notFound('Author');
+    const rows = await this.db.select({ id: follows.targetId }).from(follows).where(and(eq(follows.followerId, userId), eq(follows.targetType, 'author'), eq(follows.targetId, author.id)));
+    return { following: rows.length > 0, followerCount: author.followerCount };
+  }
+
   async followAuthor(userId: string, slug: string, follow: boolean) {
     const [author] = await this.db.select({ id: authors.id }).from(authors).where(eq(authors.slug, slug));
     if (!author) throw AppException.notFound('Author');

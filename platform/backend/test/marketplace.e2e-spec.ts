@@ -43,6 +43,15 @@ describe('Catalogue and marketplace (e2e)', () => {
     const seller = await approvedSeller(ctx, admin, 'book_seller', 'রহিম বুক হাউস');
     const me = await ctx.http.get(`${API}/seller/me`).set(as(seller)).expect(200);
     expect(me.body.data).toMatchObject({ type: 'book_seller', status: 'active', store: { name: 'রহিম বুক হাউস', slug: 'রহিম-বুক-হাউস' } });
+    // Districts come from the official list and must sit inside the division.
+    const wrong = await ctx.http.patch(`${API}/seller/store`).set(as(seller)).send({ division: 'dhaka', district: 'sylhet' }).expect(400);
+    expect(wrong.body.errors[0].field).toBe('district');
+    await ctx.http.patch(`${API}/seller/store`).set(as(seller)).send({ division: 'atlantis' }).expect(400);
+    const saved = await ctx.http.patch(`${API}/seller/store`).set(as(seller)).send({ division: 'sylhet', district: 'sylhet', tagline: 'পুরোনো বইয়ের ঠিকানা' }).expect(200);
+    expect(saved.body.data.store).toMatchObject({ division: 'sylhet', district: 'sylhet', tagline: 'পুরোনো বইয়ের ঠিকানা' });
+    await ctx.http.patch(`${API}/seller/store`).set(as(seller)).send({ district: 'gazipur' }).expect(400);
+    const page = await ctx.http.get(`${API}/stores/${encodeURIComponent('রহিম-বুক-হাউস')}`).expect(200);
+    expect(page.body.data).toMatchObject({ district: 'sylhet', name: 'রহিম বুক হাউস' });
     const stranger = await registerUser(ctx);
     const denied = await ctx.http.get(`${API}/seller/products`).set(as(stranger)).expect(403);
     expect(denied.body.message).toMatch(/seller|বিক্রেতা/);
@@ -166,6 +175,9 @@ describe('Catalogue and marketplace (e2e)', () => {
     await ctx.http.post(`${API}/authors/${encodeURIComponent(card.authors[0].slug)}/follow`).set(as(admin)).expect(200);
     const followed = await ctx.http.get(`${API}/authors/${encodeURIComponent(card.authors[0].slug)}`).set(as(admin)).expect(200);
     expect(followed.body.data).toMatchObject({ following: true, followerCount: 1 });
+    const state = await ctx.http.get(`${API}/authors/${encodeURIComponent(card.authors[0].slug)}/follow`).set(as(admin)).expect(200);
+    expect(state.body.data).toEqual({ following: true, followerCount: 1 });
+    await ctx.http.get(`${API}/authors/${encodeURIComponent(card.authors[0].slug)}/follow`).expect(401);
 
     await ctx.redis.del('home:v1');
     const home = await ctx.http.get(`${API}/home`).expect(200);

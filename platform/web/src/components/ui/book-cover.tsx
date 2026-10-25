@@ -1,11 +1,17 @@
 import Image from 'next/image';
 import { cn } from '@/lib/cn';
 
+/**
+ * Fallback cover colours are fixed (not theme tokens) so white text keeps at least 4.5:1 contrast
+ * in light and dark mode alike.
+ */
 const palettes = [
-  ['var(--bk-primary)', 'var(--bk-primary-hover)'],
-  ['var(--bk-secondary)', 'var(--bk-secondary-hover)'],
-  ['var(--bk-primary-soft-fg)', 'var(--bk-primary)'],
-  ['var(--bk-secondary-soft-fg)', 'var(--bk-secondary)'],
+  ['#1E3A8A', '#2563EB'],
+  ['#134E4A', '#0F766E'],
+  ['#7C2D12', '#B45309'],
+  ['#1E293B', '#475569'],
+  ['#4C1D95', '#6D28D9'],
+  ['#881337', '#BE123C'],
 ];
 
 /**

@@ -1,6 +1,6 @@
 'use client';
 
-import { ShieldCheck, UsersRound } from 'lucide-react';
+import { ShieldCheck, Tags, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { RequireAuth } from '@/components/auth/require-auth';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/cn';
 /** Staff navigation. Each module adds its entry with the permission that unlocks it. */
 export const ADMIN_NAV = [
   { href: '/admin/kyc', key: 'navVerification', permission: 'kyc.view', Icon: ShieldCheck },
+  { href: '/admin/products', key: 'navProducts', permission: 'products.view', Icon: Tags },
   { href: '/admin/roles', key: 'navRoles', permission: 'roles.view', Icon: UsersRound },
 ] as const;
 

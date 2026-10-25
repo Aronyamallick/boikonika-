@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { authors, publishers, sellers, sellerStores, users, type Database, type DbOrTx } from '@boikonika/database';
-import { slugify, slugSuffix, storeSettingsSchema } from '@boikonika/shared';
+import { isDistrictInDivision, slugify, slugSuffix, storeSettingsSchema } from '@boikonika/shared';
 import { eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -118,6 +118,13 @@ export class SellersService implements OnModuleInit {
 
   async updateStore(userId: string, input: StoreSettings) {
     const seller = await this.requireSeller(userId);
+    if (input.district && input.division === undefined) {
+      // A district alone must still sit inside the store's current division.
+      const [store] = await this.db.select({ division: sellerStores.division }).from(sellerStores).where(eq(sellerStores.sellerId, seller.id));
+      if (store?.division && !isDistrictInDivision(store.division, input.district)) {
+        throw AppException.validation([{ field: 'district', code: 'invalid_choice', message: 'validation.invalidChoice' }]);
+      }
+    }
     const changes = Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined));
     if (Object.keys(changes).length) {
       await this.db.update(sellerStores).set(changes).where(eq(sellerStores.sellerId, seller.id));
