@@ -7,6 +7,7 @@ import { AppException } from '../../common/errors/app-exception';
 import { isUniqueViolation } from '../../common/errors/pg';
 import { DB } from '../../infra/database/database.module';
 import { StorageService } from '../../infra/storage/storage.service';
+import { GamificationService } from '../gamification/gamification.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SettingsService } from '../settings/settings.service';
 
@@ -42,6 +43,7 @@ export class ReviewsService {
     private readonly settings: SettingsService,
     private readonly notifications: NotificationsService,
     private readonly storage: StorageService,
+    private readonly gamification: GamificationService,
   ) {}
 
   /** The most recent delivered purchase of this book/product by the user (gives the verified badge). */
@@ -107,13 +109,17 @@ export class ReviewsService {
           })
           .returning();
         await this.refresh(tx, row!);
+        if (row!.status === 'published') await this.reward(tx, row!);
         return row!;
       } catch (error) {
         if (isUniqueViolation(error)) throw new AppException('CONFLICT', 'api.reviews.alreadyReviewed');
         throw error;
       }
     });
-    if (created.status === 'published') await this.notifyOwners(created);
+    if (created.status === 'published') {
+      await this.notifyOwners(created);
+      await this.gamification.evaluateBadges(userId).catch(() => undefined);
+    }
     return { id: created.id, status: created.status };
   }
 
@@ -143,6 +149,12 @@ export class ReviewsService {
       if (!row) throw AppException.notFound('Review');
       await this.refresh(tx, row);
     });
+  }
+
+  /** Counters and XP for a review that went live (XP once per review, a few per day). */
+  private async reward(tx: DbOrTx, review: Review): Promise<void> {
+    await this.gamification.bump(tx, review.userId, { reviewsWritten: 1 });
+    if ((review.body ?? '').length >= 40) await this.gamification.award(tx, review.userId, 'review', review.id);
   }
 
   private async refresh(tx: DbOrTx, review: Review): Promise<void> {

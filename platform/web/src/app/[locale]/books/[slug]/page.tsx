@@ -8,6 +8,7 @@ import { AddToCart } from '@/components/cart/add-to-cart';
 import { BookCard } from '@/components/catalog/book-card';
 import { Breadcrumbs } from '@/components/catalog/breadcrumbs';
 import { JsonLd } from '@/components/catalog/json-ld';
+import { PostFeed } from '@/components/community/post-feed';
 import { ReviewsList } from '@/components/reviews/reviews-list';
 import { Shelf } from '@/components/catalog/shelf';
 import { Badge } from '@/components/ui/badge';
@@ -249,6 +250,18 @@ export default async function BookPage({ params }: { params: Params }) {
           {t('book.reviews')}
         </h2>
         <ReviewsList kind="book" slug={book.slug} targetId={book.id} rating={book.rating} />
+      </section>
+
+      <section aria-labelledby="discussions" className="mt-12 max-w-3xl">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="discussions" className="text-xl font-bold text-fg">
+            {t('community.aboutThisBook')}
+          </h2>
+          <Link href="/community" className="text-sm font-semibold text-primary hover:underline">
+            {t('community.startDiscussion')}
+          </Link>
+        </div>
+        <PostFeed endpoint={`/books/${encodeURIComponent(book.slug)}/posts`} query={{ limit: 5 }} label={t('community.aboutThisBook')} empty={t('community.noBookPosts')} />
       </section>
 
       {book.related.length ? (

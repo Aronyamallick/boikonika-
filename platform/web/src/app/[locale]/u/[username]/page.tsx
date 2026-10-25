@@ -2,6 +2,7 @@ import { BadgeCheck, CalendarDays, GraduationCap, Link2, MapPin } from 'lucide-r
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
+import { PostFeed } from '@/components/community/post-feed';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { serverApi } from '@/lib/api/server';
@@ -104,6 +105,14 @@ export default async function ProfilePage({ params }: { params: Params }) {
             </span>
           </p>
         </div>
+        {profile.visibility.profile ? (
+          <section aria-labelledby="profile-posts" className="mt-8 max-w-2xl">
+            <h2 id="profile-posts" className="mb-4 text-xl font-bold text-fg">
+              {t('community.posts')}
+            </h2>
+            <PostFeed endpoint={`/users/${encodeURIComponent(profile.username)}/posts`} label={t('community.posts')} empty={t('community.noPostsYet', { name: profile.displayName })} />
+          </section>
+        ) : null}
       </div>
     </div>
   );

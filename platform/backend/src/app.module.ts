@@ -25,6 +25,9 @@ import { KycModule } from './modules/kyc/kyc.module';
 import { CommerceModule } from './modules/commerce/commerce.module';
 import { CreatorsModule } from './modules/creators/creators.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { CommunityModule } from './modules/community/community.module';
+import { GamificationModule } from './modules/gamification/gamification.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -67,8 +70,11 @@ const isProduction = process.env.NODE_ENV === 'production';
     CatalogModule,
     MarketplaceModule,
     CommerceModule,
+    GamificationModule,
     ReviewsModule,
     CreatorsModule,
+    CommunityModule,
+    ModerationModule,
     HealthModule,
   ],
   controllers: isProduction ? [] : [DevController],
