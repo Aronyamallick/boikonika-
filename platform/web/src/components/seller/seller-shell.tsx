@@ -1,6 +1,6 @@
 'use client';
 
-import { BookPlus, ExternalLink, PackagePlus, Settings2, Store, Tags } from 'lucide-react';
+import { BookPlus, ExternalLink, PackagePlus, Receipt, Settings2, Store, Tags, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
@@ -22,10 +22,12 @@ export function useSeller() {
 }
 
 const NAV = [
-  { href: '/seller/products', key: 'navListings', Icon: Tags, exact: true },
-  { href: '/seller/products/new-book', key: 'navNewBook', Icon: BookPlus, books: true },
-  { href: '/seller/products/new', key: 'navNewProduct', Icon: PackagePlus, general: true },
-  { href: '/seller/store', key: 'navStore', Icon: Settings2 },
+  { href: '/seller/orders', key: 'sellerOrders.nav', Icon: Receipt },
+  { href: '/seller/products', key: 'seller.navListings', Icon: Tags, exact: true },
+  { href: '/seller/products/new-book', key: 'seller.navNewBook', Icon: BookPlus, books: true },
+  { href: '/seller/products/new', key: 'seller.navNewProduct', Icon: PackagePlus, general: true },
+  { href: '/seller/payouts', key: 'payouts.nav', Icon: Wallet },
+  { href: '/seller/store', key: 'seller.navStore', Icon: Settings2 },
 ] as const;
 
 function Shell({ children }: { children: ReactNode }) {
@@ -91,7 +93,7 @@ function Shell({ children }: { children: ReactNode }) {
                     className={cn('flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold', active ? 'bg-primary-soft text-primary-soft-fg' : 'text-fg-muted hover:bg-subtle hover:text-fg')}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
-                    {t(`seller.${key}`)}
+                    {t(key)}
                   </Link>
                 </li>
               );

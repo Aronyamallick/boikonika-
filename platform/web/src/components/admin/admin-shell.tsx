@@ -1,6 +1,6 @@
 'use client';
 
-import { ShieldCheck, Tags, UsersRound } from 'lucide-react';
+import { Banknote, Receipt, RotateCcw, ShieldCheck, Tags, TicketPercent, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { RequireAuth } from '@/components/auth/require-auth';
@@ -11,21 +11,25 @@ import { cn } from '@/lib/cn';
 
 /** Staff navigation. Each module adds its entry with the permission that unlocks it. */
 export const ADMIN_NAV = [
-  { href: '/admin/kyc', key: 'navVerification', permission: 'kyc.view', Icon: ShieldCheck },
-  { href: '/admin/products', key: 'navProducts', permission: 'products.view', Icon: Tags },
-  { href: '/admin/roles', key: 'navRoles', permission: 'roles.view', Icon: UsersRound },
+  { href: '/admin/orders', key: 'adminOrders.nav', permission: 'orders.view', Icon: Receipt },
+  { href: '/admin/refunds', key: 'adminRefunds.nav', permission: 'orders.refund', Icon: RotateCcw },
+  { href: '/admin/payouts', key: 'adminPayouts.nav', permission: 'payouts.view', Icon: Banknote },
+  { href: '/admin/coupons', key: 'adminCoupons.nav', permission: 'coupons.manage', Icon: TicketPercent },
+  { href: '/admin/products', key: 'admin.navProducts', permission: 'products.view', Icon: Tags },
+  { href: '/admin/kyc', key: 'admin.navVerification', permission: 'kyc.view', Icon: ShieldCheck },
+  { href: '/admin/roles', key: 'admin.navRoles', permission: 'roles.view', Icon: UsersRound },
 ] as const;
 
 function Shell({ children }: { children: ReactNode }) {
-  const t = useTranslations('admin');
+  const t = useTranslations();
   const { can } = useAuth();
   const pathname = usePathname();
   const items = ADMIN_NAV.filter((item) => can(item.permission));
-  if (!items.length) return <EmptyState title={t('noAccess')} className="container-page my-10" />;
+  if (!items.length) return <EmptyState title={t('admin.noAccess')} className="container-page my-10" />;
   return (
     <div className="container-page grid gap-6 py-6 lg:grid-cols-[220px_1fr] lg:py-8">
-      <nav aria-label={t('title')} className="lg:sticky lg:top-24 lg:self-start">
-        <p className="mb-2 px-3 text-xs font-bold uppercase tracking-wide text-fg-subtle">{t('title')}</p>
+      <nav aria-label={t('admin.title')} className="lg:sticky lg:top-24 lg:self-start">
+        <p className="mb-2 px-3 text-xs font-bold uppercase tracking-wide text-fg-subtle">{t('admin.title')}</p>
         <ul className="flex gap-1 overflow-x-auto lg:flex-col">
           {items.map(({ href, key, Icon }) => {
             const active = pathname.startsWith(href);

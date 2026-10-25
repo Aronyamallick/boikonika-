@@ -8,6 +8,7 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import type { ReactNode } from 'react';
 import { colors } from '@boikonika/shared';
 import { AuthProvider } from '@/components/auth/auth-provider';
+import { CartProvider } from '@/components/cart/cart-provider';
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
@@ -71,14 +72,16 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         </a>
         <NextIntlClientProvider messages={clientMessages}>
           <AuthProvider>
-            <ToastProvider closeLabel={t('close')}>
-              <SiteHeader />
-              <main id="main" tabIndex={-1} className="flex-1 outline-none">
-                {children}
-              </main>
-              <SiteFooter />
-              <MobileTabBar />
-            </ToastProvider>
+            <CartProvider>
+              <ToastProvider closeLabel={t('close')}>
+                <SiteHeader />
+                <main id="main" tabIndex={-1} className="flex-1 outline-none">
+                  {children}
+                </main>
+                <SiteFooter />
+                <MobileTabBar />
+              </ToastProvider>
+            </CartProvider>
           </AuthProvider>
         </NextIntlClientProvider>
       </body>

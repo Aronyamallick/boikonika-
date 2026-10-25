@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { AddToCart } from '@/components/cart/add-to-cart';
 import { Price } from '@/components/ui/price';
 import type { ProductVariant } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
@@ -40,6 +41,7 @@ export function VariantPicker({ variants }: { variants: ProductVariant[] }) {
       <p className={variant.available > 0 ? (variant.available <= 3 ? 'text-sm font-semibold text-warning-soft-fg' : 'text-sm text-success') : 'text-sm text-fg-subtle'} aria-live="polite">
         {variant.available > 0 ? (variant.available <= 3 ? t('catalog.lowStock', { count: variant.available }) : t('common.inStock')) : t('common.outOfStock')}
       </p>
+      <AddToCart variantId={variant.id} available={variant.available} size="lg" buyNow />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCheck, LayoutDashboard, LibraryBig, LogOut, Package, Settings, Shield, User } from 'lucide-react';
+import { BadgeCheck, LayoutDashboard, LibraryBig, LogOut, MapPin, Package, Settings, Shield, Store, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';
@@ -8,10 +8,13 @@ import { buttonClasses } from '@/components/ui/button';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from './auth-provider';
 
+/** Permissions that unlock at least one page of the staff area. */
+const STAFF_PERMISSIONS = ['kyc.view', 'roles.view', 'users.view', 'products.view', 'orders.view', 'orders.refund', 'payouts.view', 'coupons.manage'];
+
 /** Header account control: "Log in" for visitors, an accessible account menu for signed-in users. */
 export function UserMenu() {
   const t = useTranslations();
-  const { status, user, signOut, can } = useAuth();
+  const { status, user, signOut, can, hasRole } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const menuId = useId();
@@ -50,11 +53,13 @@ export function UserMenu() {
   const items = [
     { href: `/u/${user.username}`, label: t('nav.profile'), Icon: User },
     { href: '/library', label: t('nav.library'), Icon: LibraryBig },
-    { href: '/orders', label: t('nav.orders'), Icon: Package },
+    { href: '/account/orders', label: t('nav.orders'), Icon: Package },
+    { href: '/account/addresses', label: t('addresses.title'), Icon: MapPin },
+    ...(hasRole('book_seller', 'general_seller', 'publisher', 'author') ? [{ href: '/seller', label: t('nav.sellerDashboard'), Icon: Store }] : []),
     { href: '/account/profile', label: t('profileSettings.title'), Icon: Settings },
     { href: '/account/security', label: t('account.security'), Icon: Shield },
     { href: '/account/verification', label: t('verification.title'), Icon: BadgeCheck },
-    ...(can('kyc.view') || can('roles.view') || can('users.view') ? [{ href: '/admin', label: t('nav.adminDashboard'), Icon: LayoutDashboard }] : []),
+    ...(STAFF_PERMISSIONS.some((p) => can(p)) ? [{ href: '/admin', label: t('nav.adminDashboard'), Icon: LayoutDashboard }] : []),
   ];
 
   return (

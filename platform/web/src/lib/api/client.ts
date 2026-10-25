@@ -92,6 +92,8 @@ export interface RequestOptions {
   signal?: AbortSignal;
   /** Send the access token (default true; harmless on public endpoints). */
   auth?: boolean;
+  /** Extra request headers (e.g. the guest cart token). */
+  headers?: Record<string, string>;
 }
 
 export interface ApiResult<T> {
@@ -102,7 +104,7 @@ export interface ApiResult<T> {
 
 /** Calls the API and unwraps the `{ success, data, message, errors }` envelope. */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
-  const { method = 'GET', body, query, signal, auth = true } = options;
+  const { method = 'GET', body, query, signal, auth = true, headers: extraHeaders } = options;
   const url = new URL(`${API_BASE}${path}`, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
   for (const [key, value] of Object.entries(query ?? {})) if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
 
@@ -110,7 +112,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   if (auth && hasSessionHint() && (!accessToken || accessExpiresAt - Date.now() < 30_000)) await refreshSession();
 
   const send = () => {
-    const headers: Record<string, string> = { Accept: 'application/json', 'Accept-Language': locale(), 'X-Requested-With': 'boikonika' };
+    const headers: Record<string, string> = { ...extraHeaders, Accept: 'application/json', 'Accept-Language': locale(), 'X-Requested-With': 'boikonika' };
     if (body !== undefined && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
     if (auth && accessToken) headers.Authorization = `Bearer ${accessToken}`;
     return fetch(url.pathname + url.search, {

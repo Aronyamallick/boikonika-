@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { AddToCart } from '@/components/cart/add-to-cart';
 import { BookCard } from '@/components/catalog/book-card';
 import { Breadcrumbs } from '@/components/catalog/breadcrumbs';
 import { JsonLd } from '@/components/catalog/json-ld';
@@ -168,6 +169,7 @@ export default async function BookPage({ params }: { params: Params }) {
             <div className="mt-5">
               <Price amount={best.price} compareAt={best.compareAtPrice} locale={locale} size="lg" />
               {inStockOffers.length > 1 ? <p className="mt-1 text-sm text-fg-muted">{t('book.offersCount', { count: inStockOffers.length })}</p> : null}
+              {best.variantId ? <AddToCart variantId={best.variantId} available={best.stock} size="lg" buyNow className="mt-4" /> : null}
             </div>
           ) : book.isFree ? (
             <p className="mt-5 text-2xl font-bold text-success">{t('common.free')}</p>
@@ -299,9 +301,12 @@ async function OfferRow({ offer, locale }: { offer: BookOffer; locale: string })
           <span className="font-semibold text-fg">{t('catalog.conditionNote')}:</span> {offer.conditionNote}
         </p>
       ) : null}
-      <p className={offer.stock > 0 ? (offer.stock <= 3 ? 'mt-2 text-xs font-semibold text-warning-soft-fg' : 'mt-2 text-xs text-success') : 'mt-2 text-xs text-fg-subtle'}>
-        {offer.stock > 0 ? (offer.stock <= 3 ? t('catalog.lowStock', { count: offer.stock }) : t('common.inStock')) : t('common.outOfStock')}
-      </p>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <p className={offer.stock > 0 ? (offer.stock <= 3 ? 'text-xs font-semibold text-warning-soft-fg' : 'text-xs text-success') : 'text-xs text-fg-subtle'}>
+          {offer.stock > 0 ? (offer.stock <= 3 ? t('catalog.lowStock', { count: offer.stock }) : t('common.inStock')) : t('common.outOfStock')}
+        </p>
+        {offer.variantId && offer.stock > 0 ? <AddToCart variantId={offer.variantId} available={offer.stock} size="sm" /> : null}
+      </div>
     </li>
   );
 }

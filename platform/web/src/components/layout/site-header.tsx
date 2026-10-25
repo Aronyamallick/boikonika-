@@ -1,8 +1,8 @@
-import { ShoppingCart } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Suspense } from 'react';
 import { Link } from '@/i18n/navigation';
 import { UserMenu } from '../auth/user-menu';
+import { CartButton } from '../cart/cart-button';
 import { LocaleSwitcher } from './locale-switcher';
 import { Logo } from './logo';
 import { SearchBox } from './search-box';
@@ -41,9 +41,7 @@ export async function SiteHeader() {
             <LocaleSwitcher />
           </Suspense>
           <ThemeToggle />
-          <Link href="/cart" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-fg-muted hover:bg-subtle hover:text-fg" aria-label={t('nav.cart')}>
-            <ShoppingCart className="h-5 w-5" aria-hidden="true" />
-          </Link>
+          <CartButton />
           <UserMenu />
         </div>
       </div>
