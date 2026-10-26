@@ -1,12 +1,15 @@
 import { Tabs } from 'expo-router/js-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Compass, Home, Library, MessagesSquare, UserRound } from 'lucide-react-native';
 import { useTranslations } from 'use-intl';
 import { HeaderActions } from '@/components/header-actions';
+import { Text } from '@/components/ui';
 import { useTheme } from '@/lib/theme';
 
 /** Five tabs, as on most phones: what's new, finding books, the community, my books, and me. */
 export default function TabsLayout() {
   const { c } = useTheme();
+  const insets = useSafeAreaInsets();
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   return (
@@ -14,8 +17,13 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c.textMuted,
-        tabBarStyle: { backgroundColor: c.surface, borderTopColor: c.border },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        // Bangla needs a taller line than the default tab bar allows, or the vowel signs are cut off.
+        tabBarStyle: { backgroundColor: c.surface, borderTopColor: c.border, height: 72 + insets.bottom, paddingTop: 4, paddingBottom: insets.bottom + 6 },
+        tabBarLabel: ({ color, children }) => (
+          <Text size="xs" weight="semibold" numberOfLines={1} style={{ color, marginTop: 2, flexShrink: 0 }}>
+            {children}
+          </Text>
+        ),
         headerStyle: { backgroundColor: c.surface },
         headerTintColor: c.text,
         headerTitleStyle: { fontWeight: '700' },

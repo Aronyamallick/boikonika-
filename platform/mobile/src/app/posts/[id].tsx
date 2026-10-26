@@ -68,6 +68,7 @@ export default function PostScreen() {
       setReplyTo(null);
       toast(res.message);
       comments.reload();
+      post.reload();
     } catch (error) {
       toast(errorMessage(error, t), 'danger');
     } finally {

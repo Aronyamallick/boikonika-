@@ -1,4 +1,4 @@
-import { LIBRARY_SHELVES, localizeDigits, radius, spacing, type BookDetail, type BookOffer, type DownloadLink, type LibraryShelf } from '@boikonika/shared';
+import { LIBRARY_SHELVES, localizeDigits, placeName, radius, spacing, type BookDetail, type BookOffer, type DownloadLink, type LibraryShelf } from '@boikonika/shared';
 import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { BookOpen, Download, Heart, ShoppingCart } from 'lucide-react-native';
@@ -36,7 +36,7 @@ function OfferRow({ offer, book, onAdd, adding }: { offer: BookOffer; book: Book
           </View>
           <Text size="sm" tone="muted">
             {t('book.soldBy', { seller: offer.store.name })}
-            {offer.store.district ? ` · ${offer.store.district}` : ''}
+            {offer.store.district ? ` · ${placeName(offer.store.district, locale)}` : ''}
           </Text>
           {offer.conditionNote ? (
             <Text size="xs" tone="subtle">
