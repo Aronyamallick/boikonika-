@@ -56,7 +56,7 @@ export function EbookPanel({ bookId, title, digital, offer }: { bookId: string; 
 
       {owned ? (
         <div className="mt-3 space-y-3">
-          <p className="flex items-center gap-1.5 text-sm font-semibold text-success">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-success-text">
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             {t('inYourLibrary')}
           </p>

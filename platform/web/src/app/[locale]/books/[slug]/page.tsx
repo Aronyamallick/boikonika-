@@ -195,7 +195,7 @@ export default async function BookPage({ params }: { params: Params }) {
               {best.variantId ? <AddToCart variantId={best.variantId} available={best.stock} size="lg" buyNow className="mt-4" /> : null}
             </div>
           ) : book.isFree ? (
-            <p className="mt-5 text-2xl font-bold text-success">{t('common.free')}</p>
+            <p className="mt-5 text-2xl font-bold text-success-text">{t('common.free')}</p>
           ) : null}
           <div className="mt-3 flex max-w-md flex-wrap gap-2">
             <ShelfButton bookId={book.id} className="min-w-48 flex-1" />
@@ -368,7 +368,7 @@ async function OfferRow({ offer, locale }: { offer: BookOffer; locale: string })
         </p>
       ) : null}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <p className={offer.stock > 0 ? (offer.stock <= 3 ? 'text-xs font-semibold text-warning-soft-fg' : 'text-xs text-success') : 'text-xs text-fg-subtle'}>
+        <p className={offer.stock > 0 ? (offer.stock <= 3 ? 'text-xs font-semibold text-warning-soft-fg' : 'text-xs text-success-text') : 'text-xs text-fg-subtle'}>
           {offer.stock > 0 ? (offer.stock <= 3 ? t('catalog.lowStock', { count: offer.stock }) : t('common.inStock')) : t('common.outOfStock')}
         </p>
         {offer.variantId && offer.stock > 0 ? <AddToCart variantId={offer.variantId} available={offer.stock} size="sm" /> : null}

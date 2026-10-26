@@ -280,7 +280,7 @@ export function OrderView({ number, paymentOutcome, placed }: { number: string; 
                 const label = i === 0 && h.status === 'pending' && !h.note ? t('orders.events.placed') : t.has(`orders.events.${event}`) ? t(`orders.events.${event}`) : t(`status.order.${h.status}`);
                 return (
                   <li key={i} className="flex gap-2.5">
-                    <Icon className={h.status === 'cancelled' ? 'mt-0.5 h-4 w-4 shrink-0 text-danger' : 'mt-0.5 h-4 w-4 shrink-0 text-success'} aria-hidden="true" />
+                    <Icon className={h.status === 'cancelled' ? 'mt-0.5 h-4 w-4 shrink-0 text-danger' : 'mt-0.5 h-4 w-4 shrink-0 text-success-text'} aria-hidden="true" />
                     <span>
                       <span className="font-medium text-fg">{label}</span>
                       <span className="block text-xs text-fg-subtle">{format.dateTime(new Date(h.at), { dateStyle: 'medium', timeStyle: 'short' })}</span>

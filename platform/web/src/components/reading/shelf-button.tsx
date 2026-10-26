@@ -57,7 +57,7 @@ export function ShelfButton({ bookId, className }: { bookId: string; className?:
         {t('shelfFor')}
       </label>
       <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted" aria-hidden="true">
-        {shelf ? <Check className="h-4 w-4 text-success" /> : <BookmarkPlus className="h-4 w-4" />}
+        {shelf ? <Check className="h-4 w-4 text-success-text" /> : <BookmarkPlus className="h-4 w-4" />}
       </span>
       <select
         id={id}

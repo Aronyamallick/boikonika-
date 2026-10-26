@@ -40,6 +40,7 @@
   --color-accent-soft: var(--bk-accent-soft);
   --color-accent-soft-fg: var(--bk-accent-soft-fg);
   --color-success: var(--bk-success);
+  --color-success-text: var(--bk-success-text);
   --color-success-soft: var(--bk-success-soft);
   --color-success-soft-fg: var(--bk-success-soft-fg);
   --color-warning: var(--bk-warning);

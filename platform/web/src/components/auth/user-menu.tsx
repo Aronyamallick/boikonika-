@@ -1,9 +1,8 @@
 'use client';
 
-import { BadgeCheck, Bell, Building2, LayoutDashboard, LibraryBig, LogOut, MapPin, Package, PenLine, Settings, Shield, ShieldCheck, Store, Tablet, User } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, LayoutDashboard, LibraryBig, LogOut, MapPin, Package, PenLine, Settings, Shield, ShieldCheck, Store, Tablet, User, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
-import { Avatar } from '@/components/ui/avatar';
 import { buttonClasses } from '@/components/ui/button';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from './auth-provider';
@@ -76,10 +75,18 @@ export function UserMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
-        aria-label={t('account.menu')}
+        aria-label={`${t('account.menu')}: ${user.displayName}`}
         onClick={() => setOpen((o) => !o)}
       >
-        <Avatar name={user.displayName} src={user.avatarUrl ?? undefined} size="sm" />
+        {/* Photo, or a person icon: initials here would be visible text that isn't the button's name. */}
+        {user.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- avatars are user uploads with arbitrary sizes
+          <img src={user.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+        ) : (
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-primary-soft-fg" aria-hidden="true">
+            <UserRound className="h-5 w-5" />
+          </span>
+        )}
       </button>
       {open ? (
         <div ref={menuRef} id={menuId} role="menu" className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-xl border border-line bg-surface-raised py-1 shadow-lg">

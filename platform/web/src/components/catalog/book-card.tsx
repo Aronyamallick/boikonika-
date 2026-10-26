@@ -46,7 +46,7 @@ export function BookCard({ book, priority, className }: { book: BookCardData; pr
             <Price amount={book.minPrice} compareAt={book.compareAtPrice} locale={locale} size="sm" />
           )
         ) : book.isFree ? (
-          <p className="text-sm font-bold text-success">{t('common.free')}</p>
+          <p className="text-sm font-bold text-success-text">{t('common.free')}</p>
         ) : (
           <p className="text-xs text-fg-subtle">{t('catalog.unavailable')}</p>
         )}

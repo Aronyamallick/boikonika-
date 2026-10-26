@@ -179,7 +179,7 @@ export function SellerOrderView({ id }: { id: string }) {
                 <dt className="text-fg-muted">{t('sellerOrders.commission', { percent: format.number(Number(order.totals.commissionPercent)) })}</dt>
                 <dd>−{formatMoney(order.totals.commission, locale)}</dd>
               </div>
-              <div className="flex justify-between border-t border-line pt-2 font-bold text-success">
+              <div className="flex justify-between border-t border-line pt-2 font-bold text-success-text">
                 <dt>{t('sellerOrders.earning')}</dt>
                 <dd>{formatMoney(order.totals.earning, locale)}</dd>
               </div>

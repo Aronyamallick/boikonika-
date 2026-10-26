@@ -190,7 +190,7 @@ export function CheckoutView() {
                     </span>
                     <span className="mt-0.5 block text-fg-muted">{t('checkout.days', { min: m.minDays, max: m.maxDays })}</span>
                     <span className="block text-fg-muted">{t('checkout.insideDhaka', { inside: formatMoney(m.insideDhakaFee, locale, { hideZeroDecimals: true }).slice(1), outside: formatMoney(m.outsideDhakaFee, locale, { hideZeroDecimals: true }).slice(1) })}</span>
-                    {m.freeShippingThreshold ? <span className="block text-success">{t('checkout.freeAbove', { amount: formatMoney(m.freeShippingThreshold, locale, { hideZeroDecimals: true }).slice(1) })}</span> : null}
+                    {m.freeShippingThreshold ? <span className="block text-success-text">{t('checkout.freeAbove', { amount: formatMoney(m.freeShippingThreshold, locale, { hideZeroDecimals: true }).slice(1) })}</span> : null}
                   </span>
                 </label>
               ))}
@@ -270,7 +270,7 @@ export function CheckoutView() {
                 </Button>
               )}
             </div>
-            {quote?.coupon ? <p className={cn('mt-1.5 text-sm', quote.coupon.applied ? 'text-success' : 'text-danger')} role="status">{quote.coupon.applied ? t('checkout.couponApplied', { code: quote.coupon.code }) : quote.coupon.message}</p> : null}
+            {quote?.coupon ? <p className={cn('mt-1.5 text-sm', quote.coupon.applied ? 'text-success-text' : 'text-danger')} role="status">{quote.coupon.applied ? t('checkout.couponApplied', { code: quote.coupon.code }) : quote.coupon.message}</p> : null}
           </div>
           <dl className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
             <div className="flex justify-between">
@@ -278,7 +278,7 @@ export function CheckoutView() {
               <dd className="text-fg">{formatMoney(quote?.totals.itemsSubtotal ?? '0', locale)}</dd>
             </div>
             {quote && Number(quote.totals.discountTotal) > 0 ? (
-              <div className="flex justify-between text-success">
+              <div className="flex justify-between text-success-text">
                 <dt>{t('checkout.discount')}</dt>
                 <dd>−{formatMoney(quote.totals.discountTotal, locale)}</dd>
               </div>
@@ -316,7 +316,7 @@ export function CheckoutView() {
           <p className="mt-3 text-xs text-fg-subtle">{t('checkout.terms')}</p>
           {paymentMethod && paymentMethod !== 'cod' ? (
             <p className="mt-3 flex items-start gap-2 text-xs text-fg-muted">
-              <ShieldCheck className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+              <ShieldCheck className="h-4 w-4 shrink-0 text-success-text" aria-hidden="true" />
               {t('checkout.onlineHint')}
             </p>
           ) : null}

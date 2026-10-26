@@ -110,7 +110,7 @@ export function SellerOrdersList({ initialStatus = 'pending' }: { initialStatus?
                     <span className="font-semibold text-fg">{formatMoney(r.total, locale, { hideZeroDecimals: true })}</span>
                     <span className="block text-xs text-fg-subtle">{t(`payment.${r.paymentMethod}`)}</span>
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold text-success">{formatMoney(r.earning, locale, { hideZeroDecimals: true })}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-success-text">{formatMoney(r.earning, locale, { hideZeroDecimals: true })}</td>
                   <td className="px-4 py-3">
                     <Badge tone={ORDER_TONE[r.status] ?? 'neutral'}>{t(`status.order.${r.status}`)}</Badge>
                   </td>

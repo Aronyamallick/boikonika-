@@ -65,7 +65,7 @@ export function PayoutsView() {
   };
 
   const cards = [
-    { label: t('payouts.available'), value: data.available, tone: 'text-success' },
+    { label: t('payouts.available'), value: data.available, tone: 'text-success-text' },
     { label: t('payouts.pending'), value: data.pending, tone: 'text-fg' },
     { label: t('payouts.inTransfer'), value: data.inTransfer, tone: 'text-fg' },
     { label: t('payouts.paid'), value: data.paid, tone: 'text-fg' },

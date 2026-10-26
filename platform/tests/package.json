@@ -1,0 +1,18 @@
+{
+  "name": "@boikonika/tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser end-to-end, accessibility and load tests for the Boikonika website",
+  "scripts": {
+    "e2e": "playwright test",
+    "a11y": "playwright test --project=a11y",
+    "load": "node load/smoke.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.19.3",
+    "typescript": "5.9.3"
+  }
+}

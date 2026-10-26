@@ -190,7 +190,7 @@ export default function AdminArticleEditor() {
               {form.coverUrl ? <img src={form.coverUrl} alt="" className="aspect-[16/9] w-full rounded-lg object-cover" /> : <div className="flex aspect-[16/9] items-center justify-center rounded-lg bg-subtle text-xs text-fg-subtle">{t('noCover')}</div>}
               {form.id ? (
                 <>
-                  <input ref={fileRef} id="cover-file" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && uploadCover(e.target.files[0])} />
+                  <input ref={fileRef} id="cover-file" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => e.target.files?.[0] && uploadCover(e.target.files[0])} />
                   <Button type="button" size="sm" variant="outline" loading={busy === 'cover'} onClick={() => fileRef.current?.click()}>
                     <ImagePlus className="h-4 w-4" aria-hidden="true" />
                     {form.coverUrl ? t('replaceCover') : t('addCover')}

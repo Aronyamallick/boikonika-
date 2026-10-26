@@ -508,7 +508,7 @@ function Stock({ listing, onChanged }: { listing: ListingDetail; onChanged: () =
                   {m.note ? <p className="text-fg-muted">{m.note}</p> : null}
                   <p className="text-xs text-fg-subtle">{format.dateTime(new Date(m.createdAt), { dateStyle: 'medium', timeStyle: 'short' })}</p>
                 </div>
-                <p className={`shrink-0 font-semibold tabular-nums ${m.onHandDelta > 0 ? 'text-success' : m.onHandDelta < 0 ? 'text-danger' : 'text-fg-muted'}`}>
+                <p className={`shrink-0 font-semibold tabular-nums ${m.onHandDelta > 0 ? 'text-success-text' : m.onHandDelta < 0 ? 'text-danger' : 'text-fg-muted'}`}>
                   {m.onHandDelta > 0 ? '+' : ''}
                   {format.number(m.onHandDelta)}
                   {m.reservedDelta ? <span className="ml-2 text-xs font-normal text-fg-subtle">({t('seller.reserved')} {m.reservedDelta > 0 ? '+' : ''}{format.number(m.reservedDelta)})</span> : null}

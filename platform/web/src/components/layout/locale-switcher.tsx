@@ -23,12 +23,14 @@ export function LocaleSwitcher() {
       disabled={pending}
       onClick={() => startTransition(() => router.replace(query ? `${pathname}?${query}` : pathname, { locale: target }))}
       className="inline-flex h-10 items-center gap-1.5 rounded-lg px-2 text-sm sm:px-2.5 font-semibold text-fg-muted hover:bg-subtle hover:text-fg disabled:opacity-60"
-      aria-label={`${t('language')}: ${target === 'en' ? 'English' : 'বাংলা'}`}
-      lang={target}
     >
       {/* On phones the short language name alone is the clearer cue, and the header has no room for both. */}
       <Languages className="hidden h-5 w-5 sm:block" aria-hidden="true" />
-      <span>{target === 'en' ? 'EN' : 'বাং'}</span>
+      {/* The spoken name starts with the visible text, so voice control users can say what they see. */}
+      <span lang={target}>{target === 'en' ? 'EN' : 'বাং'}</span>
+      <span className="sr-only">
+        ({t('language')}: <span lang={target}>{target === 'en' ? 'English' : 'বাংলা'}</span>)
+      </span>
     </button>
   );
 }

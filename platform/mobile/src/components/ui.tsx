@@ -27,7 +27,7 @@ type Tone = 'default' | 'muted' | 'subtle' | 'primary' | 'danger' | 'success' | 
 /** Text in the token type scale. Bangla needs the taller line heights the tokens carry. */
 export function Text({ size = 'base', weight = 'regular', tone = 'default', style, ...props }: TextProps & { size?: Size; weight?: keyof typeof typography.fontWeight; tone?: Tone }) {
   const { c } = useTheme();
-  const color = { default: c.text, muted: c.textMuted, subtle: c.textSubtle, primary: c.primary, danger: c.danger, success: c.success, inverse: c.textInverse }[tone];
+  const color = { default: c.text, muted: c.textMuted, subtle: c.textSubtle, primary: c.primary, danger: c.danger, success: c.successText, inverse: c.textInverse }[tone];
   const { size: fontSize, lineHeight } = typography.fontSize[size];
   return <RNText {...props} style={[{ color, fontSize, lineHeight, fontWeight: String(typography.fontWeight[weight]) as TextStyle['fontWeight'] }, style]} />;
 }

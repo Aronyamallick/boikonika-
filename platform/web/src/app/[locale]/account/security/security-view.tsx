@@ -456,7 +456,7 @@ function DevicesSection() {
             </Button>
           ) : (
             <p className="mt-2 flex items-center gap-2 text-sm text-fg-muted">
-              <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
+              <CheckCircle2 className="h-4 w-4 text-success-text" aria-hidden="true" />
               {t('security.noOtherDevices')}
             </p>
           )}

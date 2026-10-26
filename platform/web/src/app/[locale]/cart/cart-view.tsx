@@ -116,7 +116,7 @@ export function CartView() {
             </Link>
           )}
           <p className="mt-4 flex items-start gap-2 text-xs text-fg-muted">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+            <ShieldCheck className="h-4 w-4 shrink-0 text-success-text" aria-hidden="true" />
             {t('cart.secure')}
           </p>
         </aside>

@@ -48,6 +48,9 @@ const PAIRS: Array<[Key, Key, number]> = [
   ['borderInput', 'bg', 3],
   ['focusRing', 'bg', 3],
   ['focusRing', 'surface', 3],
+  ['successText', 'surface', 4.5],
+  ['successText', 'bg', 4.5],
+  ['successText', 'successSoft', 4.5],
   ['success', 'surface', 3],
   ['info', 'surface', 3],
 ];

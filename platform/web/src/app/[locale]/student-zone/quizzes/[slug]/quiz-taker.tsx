@@ -152,7 +152,7 @@ export function QuizTaker({ quiz }: { quiz: QuizDetail }) {
                           >
                             <input type="radio" name={`q-${q.id}`} checked={answers[i] === j} onChange={() => setAnswers((a) => a.map((x, k) => (k === i ? j : x)))} className="accent-[var(--bk-primary)]" />
                             <span className="flex-1 text-fg">{o}</span>
-                            {isCorrect ? <CheckCircle2 className="h-5 w-5 text-success" aria-label={t('student.correctAnswer')} /> : null}
+                            {isCorrect ? <CheckCircle2 className="h-5 w-5 text-success-text" aria-label={t('student.correctAnswer')} /> : null}
                             {isWrongChoice ? <XCircle className="h-5 w-5 text-danger" aria-label={t('student.yourAnswerWrong')} /> : null}
                           </label>
                         );

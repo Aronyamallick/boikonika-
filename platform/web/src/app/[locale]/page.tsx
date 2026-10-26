@@ -243,7 +243,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section className="container-page grid gap-5 py-14 md:grid-cols-2">
         <div className="rounded-2xl bg-primary p-8 text-primary-fg shadow-md dark:bg-primary-soft dark:text-primary-soft-fg dark:ring-1 dark:ring-primary/30">
           <h2 className="text-2xl font-bold">{t('landing.ctaTitle')}</h2>
-          <p className="mt-2 opacity-90">{t('landing.ctaText')}</p>
+          <p className="mt-2">{t('landing.ctaText')}</p>
           <Link href="/register" className={buttonClasses({ variant: 'accent', className: 'mt-6' })}>
             {t('common.getStarted')}
           </Link>

@@ -42,7 +42,7 @@ export function ToastProvider({ children, closeLabel }: { children: ReactNode; c
                 'pointer-events-auto flex w-full max-w-sm animate-slide-up items-start gap-3 rounded-xl border border-line bg-surface-raised px-4 py-3 text-sm shadow-lg',
               )}
             >
-              <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', t.tone === 'success' ? 'text-success' : t.tone === 'danger' ? 'text-danger' : 'text-info')} aria-hidden="true" />
+              <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', t.tone === 'success' ? 'text-success-text' : t.tone === 'danger' ? 'text-danger' : 'text-info')} aria-hidden="true" />
               <p className="flex-1 text-fg">{t.message}</p>
               <button type="button" onClick={() => dismiss(t.id)} className="rounded p-0.5 text-fg-subtle hover:text-fg" aria-label={closeLabel}>
                 <X className="h-4 w-4" aria-hidden="true" />

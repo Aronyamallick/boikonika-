@@ -116,7 +116,7 @@ export function SellerDashboard() {
         </h2>
         {caughtUp ? (
           <p className="flex items-center gap-2 rounded-xl border border-line bg-surface p-4 text-sm text-fg-muted shadow-sm">
-            <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
+            <CheckCircle2 className="h-5 w-5 text-success-text" aria-hidden="true" />
             {t('sellerDashboard.caughtUp')}
           </p>
         ) : (

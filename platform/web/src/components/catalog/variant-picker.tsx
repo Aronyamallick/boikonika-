@@ -38,7 +38,7 @@ export function VariantPicker({ variants }: { variants: ProductVariant[] }) {
           </div>
         </fieldset>
       ) : null}
-      <p className={variant.available > 0 ? (variant.available <= 3 ? 'text-sm font-semibold text-warning-soft-fg' : 'text-sm text-success') : 'text-sm text-fg-subtle'} aria-live="polite">
+      <p className={variant.available > 0 ? (variant.available <= 3 ? 'text-sm font-semibold text-warning-soft-fg' : 'text-sm text-success-text') : 'text-sm text-fg-subtle'} aria-live="polite">
         {variant.available > 0 ? (variant.available <= 3 ? t('catalog.lowStock', { count: variant.available }) : t('common.inStock')) : t('common.outOfStock')}
       </p>
       <AddToCart variantId={variant.id} available={variant.available} size="lg" buyNow />

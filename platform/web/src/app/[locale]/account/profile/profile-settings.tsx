@@ -119,7 +119,7 @@ function PhotoPanel({ profile, onChange }: { profile: OwnProfile; onChange: (url
       <div className="flex flex-wrap items-center gap-4">
         <Avatar name={profile.displayName} src={profile.avatarUrl} size="xl" />
         <div className="flex flex-wrap gap-2">
-          <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" id="avatar-file" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+          <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" id="avatar-file" tabIndex={-1} aria-hidden="true" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
           <Button onClick={() => input.current?.click()} loading={busy}>
             {t('profileSettings.uploadPhoto')}
           </Button>

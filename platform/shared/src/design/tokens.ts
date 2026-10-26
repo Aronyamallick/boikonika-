@@ -41,6 +41,8 @@ export interface SemanticColors {
   accentSoft: string;
   accentSoftFg: string;
   success: string;
+  /** Green text ("Free", "In stock"): `success` is for icons and fills and is too light for text on white. */
+  successText: string;
   successSoft: string;
   successSoftFg: string;
   warning: string;
@@ -91,6 +93,7 @@ export const colors: Record<ColorScheme, SemanticColors> = {
     accentSoft: '#FFFBEB',
     accentSoftFg: '#92400E',
     success: '#16A34A',
+    successText: '#15803D',
     successSoft: '#F0FDF4',
     successSoftFg: '#166534',
     warning: '#F59E0B',
@@ -141,6 +144,7 @@ export const colors: Record<ColorScheme, SemanticColors> = {
     accentSoft: '#3A2A0A',
     accentSoftFg: '#FDE68A',
     success: '#22C55E',
+    successText: '#22C55E',
     successSoft: '#0E2A1B',
     successSoftFg: '#BBF7D0',
     warning: '#FBBF24',
