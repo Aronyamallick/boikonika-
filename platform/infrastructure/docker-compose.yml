@@ -2,9 +2,10 @@
 # Uploads live on the `uploads` volume (local storage driver); to use S3 / Cloudflare R2 instead, set
 # STORAGE_DRIVER=s3 and the S3_* values in .env (see docs/deployment.md).
 #   cp infrastructure/.env.example infrastructure/.env   # then fill in every secret
-#   docker compose -f infrastructure/docker-compose.yml --env-file infrastructure/.env up -d --build
+#   docker compose -f infrastructure/docker-compose.yml --env-file infrastructure/.env build
 #   docker compose -f infrastructure/docker-compose.yml --env-file infrastructure/.env run --rm migrate
-# For development, `docker compose ... up -d postgres redis` gives just the databases.
+#   docker compose -f infrastructure/docker-compose.yml --env-file infrastructure/.env up -d
+# For local development use docker-compose.dev.yml (just PostgreSQL and Redis).
 name: boikonika
 
 x-api-env: &api-env
