@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Database } from '@boikonika/database';
 import { sql } from 'drizzle-orm';
+import type Redis from 'ioredis';
 import { DB } from '../../infra/database/database.module';
+import { REDIS } from '../../infra/redis/redis.module';
 import { ACTIVE_OFFER } from './catalog.sql';
 
 export interface SitemapEntry {
@@ -9,6 +11,9 @@ export interface SitemapEntry {
   updatedAt: string;
 }
 
+const CACHE_KEY = 'sitemap:v1';
+/** The list is public and costs ten queries, so it is built at most every 15 minutes. */
+const CACHE_SECONDS = 900;
 /** Search engines get at most 50,000 URLs per sitemap; books take most of the room. */
 const LIMITS = { books: 30_000, products: 8_000, authors: 5_000, other: 1_500 };
 
@@ -18,9 +23,20 @@ const LIMITS = { books: 30_000, products: 8_000, authors: 5_000, other: 1_500 };
  */
 @Injectable()
 export class SitemapService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    @Inject(REDIS) private readonly redis: Redis,
+  ) {}
 
   async entries(): Promise<SitemapEntry[]> {
+    const cached = await this.redis.get(CACHE_KEY).catch(() => null);
+    if (cached) return JSON.parse(cached) as SitemapEntry[];
+    const entries = await this.build();
+    await this.redis.set(CACHE_KEY, JSON.stringify(entries), 'EX', CACHE_SECONDS).catch(() => undefined);
+    return entries;
+  }
+
+  private async build(): Promise<SitemapEntry[]> {
     const q = (query: ReturnType<typeof sql>) => this.db.execute<{ path: string; updated_at: Date | string }>(query).then((r) => r.rows);
     const groups = await Promise.all([
       q(sql`select '/books/' || slug as path, updated_at from books where status = 'published' and deleted_at is null and (offer_count > 0 or is_free) order by updated_at desc limit ${LIMITS.books}`),

@@ -12,3 +12,9 @@ onlyBuiltDependencies:
   - '@swc/core'
   - '@parcel/watcher'
   - sharp
+
+# Security fixes for transitive dependencies (pnpm audit), until the parents update them.
+overrides:
+  multer: ^2.5.0
+  next>postcss: ^8.5.31
+  js-yaml@>=5.0.0 <5.4.1: ^5.5.0

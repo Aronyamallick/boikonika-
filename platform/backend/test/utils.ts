@@ -29,7 +29,18 @@ export async function createTestApp(): Promise<TestContext> {
 
 /** Removes users (cascading to sessions, codes, roles…), message history and Redis state between suites. */
 export async function resetState(ctx: TestContext): Promise<void> {
-  await ctx.db.execute(sql`truncate users, otp_codes, outbound_messages, login_events, audit_logs, notifications, books, authors, publishers, search_queries restart identity cascade`);
+  // Writes the previous test started in the background (login events, notifications) can still be
+  // finishing; TRUNCATE then loses a lock race with them, so it is retried instead of failing the test.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await ctx.db.execute(sql`truncate users, otp_codes, outbound_messages, login_events, audit_logs, notifications, books, authors, publishers, search_queries restart identity cascade`);
+      break;
+    } catch (error) {
+      const code = (error as { cause?: { code?: string } }).cause?.code;
+      if (code !== '40P01' || attempt === 3) throw error;
+      await new Promise((r) => setTimeout(r, 200 * attempt));
+    }
+  }
   // TRUNCATE … CASCADE also empties reference tables that point at users (settings, homepage
   // sections, challenges…), so the idempotent reference seed is applied again.
   await seedReference(ctx.db);
