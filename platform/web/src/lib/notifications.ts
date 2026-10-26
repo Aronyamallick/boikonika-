@@ -1,22 +1,6 @@
-import type { NotificationChannel, NotificationType } from '@boikonika/shared';
 import { api } from '@/lib/api/client';
 
-/** Notification shapes (mirror the API) and the browser side of Web Push. */
-export interface NotificationItem {
-  id: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  link: string | null;
-  read: boolean;
-  createdAt: string;
-}
-
-export interface NotificationPreferences {
-  pushAvailable: boolean;
-  hasPushDevice: boolean;
-  types: Array<{ type: NotificationType; mandatory: boolean; channels: Array<{ channel: NotificationChannel; enabled: boolean }> }>;
-}
+export type { NotificationItem, NotificationPreferences } from '@boikonika/shared';
 
 /** Fired after the inbox changes so the header bell refreshes its count. */
 export const INBOX_CHANGED = 'bk:inbox-changed';

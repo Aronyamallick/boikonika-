@@ -19,6 +19,7 @@ export * from './utils/phone';
 export * from './utils/isbn';
 export * from './utils/slug';
 export * from './api/envelope';
+export type * from './api/types';
 export * from './validation/fields';
 export * from './schemas/common';
 export * from './schemas/auth';

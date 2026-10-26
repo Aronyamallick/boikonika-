@@ -40,7 +40,7 @@ export function configureApp(app: NestExpressApplication, config: AppConfig): vo
     origin: (origin, cb) => cb(null, !origin || config.CORS_ORIGINS.includes(origin)),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-Requested-With', 'Idempotency-Key', 'Accept-Language', 'X-Cart-Token'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-Requested-With', 'Idempotency-Key', 'Accept-Language', 'X-Cart-Token', 'X-Client-Platform'],
     exposedHeaders: ['X-Request-Id', 'Retry-After'],
     maxAge: 600,
   });

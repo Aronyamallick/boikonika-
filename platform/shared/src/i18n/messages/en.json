@@ -3836,5 +3836,16 @@
     "truncated": "This answer was cut short. Ask for less at a time to get the rest.",
     "checkIt": "Check important facts against your textbook or teacher.",
     "emptyAnswer": "Your answer will appear here."
+  },
+  "mobile": {
+    "showingSaved": "You're offline. Showing what was saved on this phone.",
+    "pushTitle": "Push notifications on this phone",
+    "push": {
+      "on": "This phone gets notifications for the notices you chose in your notification settings.",
+      "off": "Turn them on to hear about your orders, replies and club news. You choose which kinds in your notification settings.",
+      "denied": "Notifications are blocked for Boikonika. You can allow them in your phone's settings.",
+      "unavailable": "Push notifications work in the installed app from the Play Store or App Store."
+    },
+    "version": "Version {version}"
   }
 }
