@@ -85,6 +85,7 @@ return [
     'switchTo' => 'View in English',
     'switchToLabel' => 'English (ইংরেজি)',
     'currency' => 'টাকা',
+    'select' => 'বাছাই করুন…',
     'from' => 'শুরু',
     'by' => ':name',
     'and' => 'ও',

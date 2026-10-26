@@ -1,0 +1,22 @@
+<?php
+return [
+    'hello' => 'Hello :name,',
+    'footer' => 'You’re getting this email because you have an account on Boikonika.',
+    'preferences' => 'Email preferences',
+    'open' => 'Open Boikonika',
+    'verifySubject' => 'Your Boikonika verification code',
+    'verifyText' => 'Use this code to finish creating your account:',
+    'resetSubject' => 'Reset your Boikonika password',
+    'resetText' => 'Use this code to choose a new password:',
+    'codeExpires' => 'The code expires in :minutes minutes.',
+    'notYou' => 'If you didn’t ask for this, you can ignore this email — nobody can use your account without the code.',
+    'orderSubject' => 'Order :number confirmed',
+    'orderCod' => 'Thank you for your order :number. Please keep the cash ready when the courier arrives.',
+    'orderPaid' => 'Thank you — we’ve received your payment for order :number.',
+    'deliverTo' => 'Delivering to',
+    'trackOrder' => 'Track your order',
+    'replySubject' => 'Re: :subject',
+    'yourMessage' => 'Your message:',
+    'testSubject' => 'Boikonika test email',
+    'testText' => 'Email is working. You can send verification codes and order updates.',
+];

@@ -16,7 +16,6 @@ final class Cron
     public static function maybeRun(): void
     {
         $now = time();
-        DB::exec("INSERT IGNORE INTO settings (`key`, value, updated_at) VALUES ('cron.last_run', '0', NOW())");
         // Claim the run atomically so two visitors don't both start it.
         $claimed = DB::exec("UPDATE settings SET value = ?, updated_at = NOW() WHERE `key` = 'cron.last_run' AND CAST(COALESCE(NULLIF(value, ''), '0') AS UNSIGNED) < ?", [(string) $now, $now - 300]);
         if ($claimed === 1) {

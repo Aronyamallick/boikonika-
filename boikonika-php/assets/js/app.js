@@ -66,6 +66,14 @@
     el.addEventListener('change', function () { if (el.form) el.form.requestSubmit ? el.form.requestSubmit() : el.form.submit(); });
   });
 
+  // Checkout: re-price when the address, delivery or payment choice changes.
+  $all('[data-refresh]').forEach(function (el) {
+    el.addEventListener('change', function () {
+      var btn = document.getElementById('refresh');
+      if (el.form && btn) { if (el.form.requestSubmit) el.form.requestSubmit(btn); else btn.click(); }
+    });
+  });
+
   // Show / hide password.
   $all('[data-toggle-password]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -87,6 +95,7 @@
   // Prevent double submits (orders, payments).
   $all('form[data-once]').forEach(function (f) {
     f.addEventListener('submit', function (e) {
+      if (e.submitter && e.submitter.hasAttribute('formaction')) return;
       if (f.getAttribute('data-sent')) { e.preventDefault(); return; }
       f.setAttribute('data-sent', '1');
       $all('button[type=submit]', f).forEach(function (b) {

@@ -542,3 +542,15 @@ dialog::backdrop { background: var(--overlay); }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 @media print { .site-header, .site-footer, .dash-nav, .btn, form { display: none !important; } body { background: #fff; color: #000; } }
+.hero-art svg { width: 100%; height: auto; }
+.hero-art .shelf { fill: var(--border-strong); }
+.hero-art .b1 { fill: var(--primary); } .hero-art .l1 { fill: var(--primary-fg); opacity: .7; }
+.hero-art .b2 { fill: var(--secondary); } .hero-art .l2 { fill: var(--secondary-fg); opacity: .7; }
+.hero-art .b3 { fill: var(--accent); } .hero-art .l3 { fill: var(--accent-fg); opacity: .55; }
+.hero-art .b4 { fill: var(--primary-soft-fg); } .hero-art .l4 { fill: var(--surface); opacity: .7; }
+.hero-art .sun { fill: var(--accent); }
+.block { display: block; }
+.notice-row { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.notice-row:last-child { border-bottom: 0; }
+.notice-row.unread { background: var(--primary-soft); }
+.notice-row.unread strong a { color: var(--primary-soft-fg); }

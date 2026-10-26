@@ -279,3 +279,12 @@ function mask_email(?string $email): string
     [$name, $domain] = explode('@', $email, 2);
     return mb_substr($name, 0, 2) . str_repeat('•', max(1, mb_strlen($name) - 2)) . '@' . $domain;
 }
+
+/** A stored reason code ("changed_mind") in words, or the seller's own text as typed. */
+function reason_label(?string $reason): string
+{
+    if ($reason === null || $reason === '') {
+        return '';
+    }
+    return preg_match('/^[a-z_]+$/', $reason) && I18n::has('orders.reasons.' . $reason) ? t('orders.reasons.' . $reason) : $reason;
+}

@@ -1,0 +1,21 @@
+<?php
+return [
+    'title' => 'Addresses',
+    'name' => 'Recipient’s name',
+    'phone' => 'Mobile number',
+    'district' => 'District',
+    'area' => 'Area / thana',
+    'areaHint' => 'For example: Dhanmondi, Kotwali, Sadar',
+    'postcode' => 'Postcode',
+    'line' => 'House, road and village or block',
+    'lineHint' => 'For example: House 12, Road 5, Block C',
+    'label' => 'Label',
+    'labelHint' => 'For example: Home or Office',
+    'save' => 'Save address',
+    'saved' => 'Address saved.',
+    'deleted' => 'Address removed.',
+    'default' => 'Default',
+    'makeDefault' => 'Make default',
+    'none' => 'You haven’t saved an address yet.',
+    'tooMany' => 'You can save up to 10 addresses. Remove one first.',
+];

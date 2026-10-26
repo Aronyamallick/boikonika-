@@ -30,6 +30,7 @@ return static function (Router $r): void {
     $r->get('/checkout', 'CheckoutController@show', ['auth' => true]);
     $r->post('/checkout', 'CheckoutController@place', ['auth' => true]);
     $r->post('/checkout/address', 'CheckoutController@saveAddress', ['auth' => true]);
+    $r->post('/checkout/refresh', 'CheckoutController@refresh', ['auth' => true]);
     $r->post('/orders/{number}/pay', 'PaymentController@pay', ['auth' => true]);
     // Gateways call these from their own sites: no session (it would replace the buyer's), no CSRF token.
     $r->get('/payment/bkash/callback/{ref}', 'PaymentController@bkashCallback', ['session' => false]);

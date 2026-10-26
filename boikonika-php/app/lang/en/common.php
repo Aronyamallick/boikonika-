@@ -85,6 +85,7 @@ return [
     'switchTo' => 'বাংলায় দেখুন',
     'switchToLabel' => 'বাংলা (Bangla)',
     'currency' => 'BDT',
+    'select' => 'Select…',
     'from' => 'from',
     'by' => 'by :name',
     'and' => 'and',
