@@ -14,14 +14,13 @@ const isDev = process.env.NODE_ENV !== 'production';
 /** HTTPS-only directives; a production build served over plain http (local QA) must not send them. */
 const httpsOnly = !isDev && siteUrl.startsWith('https://');
 
-const toWs = (url: string) => url.replace(/^http/, 'ws');
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}${google}`,
   `style-src 'self' 'unsafe-inline'${google}`,
   `img-src 'self' data: blob: ${assetsUrl} ${apiUrl} https:`,
   "font-src 'self' data:",
-  `connect-src 'self' ${apiUrl} ${toWs(apiUrl)}${isDev ? ' ws://localhost:3000' : ''}${google}`,
+  `connect-src 'self' ${apiUrl}${isDev ? ' ws://localhost:3000' : ''}${google}`,
   `frame-src 'self'${google}`,
   "media-src 'self' blob:",
   "frame-ancestors 'none'",

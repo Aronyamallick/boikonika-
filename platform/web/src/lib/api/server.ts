@@ -1,4 +1,5 @@
 import type { PageMeta } from '@boikonika/shared';
+import { connection } from 'next/server';
 import { API_INTERNAL_URL } from '@/lib/env';
 
 interface ServerOptions {
@@ -7,11 +8,19 @@ interface ServerOptions {
 }
 
 async function fetchEnvelope<T>(path: string, options: ServerOptions): Promise<{ data: T; meta?: PageMeta } | null> {
-  const res = await fetch(`${API_INTERNAL_URL}/api/v1${path}`, {
-    headers: { Accept: 'application/json', 'Accept-Language': options.locale },
-    next: options.revalidate === false ? undefined : { revalidate: options.revalidate ?? 60 },
-    cache: options.revalidate === false ? 'no-store' : undefined,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_INTERNAL_URL}/api/v1${path}`, {
+      headers: { Accept: 'application/json', 'Accept-Language': options.locale },
+      next: options.revalidate === false ? undefined : { revalidate: options.revalidate ?? 60 },
+      cache: options.revalidate === false ? 'no-store' : undefined,
+    });
+  } catch (error) {
+    // No API to reach while the site is being built (container builds): render this page per request
+    // instead of failing the build or caching an empty page. At request time this is a no-op.
+    await connection();
+    throw error;
+  }
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`API ${path} responded ${res.status}`);
   return (await res.json()) as { data: T; meta?: PageMeta };

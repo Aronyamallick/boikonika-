@@ -4,6 +4,9 @@
   "private": true,
   "description": "Boikonika REST + WebSocket API (NestJS, PostgreSQL, Redis)",
   "main": "dist/src/main.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",

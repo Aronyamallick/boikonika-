@@ -10,6 +10,9 @@ Three clients (web, PWA, mobile) need one stable, documented API with consistent
   decorators; the same schemas are converted to OpenAPI so docs never drift from validation.
 - One response envelope: `{ success, data, message, errors, meta?, code?, requestId? }`.
 - WebSocket (Socket.IO) only for real-time needs: in-app notifications and book club chat.
+  *Update:* not built. Notifications reach people through Web Push and Expo push, and clients refresh the
+  unread count; club discussions are threads rather than live chat. A socket gateway can still be added
+  later without changing the REST API.
 - Authorization is enforced in guards and services; the UI only hides what the API would refuse.
 
 ## Consequences

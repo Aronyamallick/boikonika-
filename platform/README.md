@@ -43,7 +43,7 @@ pnpm dev:web                            # http://localhost:3000 (Bangla) and /en
 ```
 shared/          tokens, permissions, statuses, i18n messages, validation, money/phone/ISBN utils
 database/        Drizzle schema, SQL migrations, seed data
-backend/         NestJS REST API + WebSocket gateway + jobs
+backend/         NestJS REST API + scheduled jobs and the notification outbox
 web/             Next.js website and PWA
 mobile/          Expo React Native app
 tests/           end-to-end and load tests

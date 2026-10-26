@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: platform
+
+env:
+  NODE_VERSION: '22'
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  checks:
+    name: Typecheck, unit tests, audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: platform/package.json }
+      - uses: actions/setup-node@v4
+        with: { node-version: '${{ env.NODE_VERSION }}', cache: pnpm, cache-dependency-path: platform/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:libs
+      - run: pnpm typecheck
+      - run: pnpm --filter @boikonika/shared test
+      - run: pnpm --filter @boikonika/mobile test
+      # Blocks on critical advisories; high ones are reviewed by hand (docs/security.md lists accepted ones).
+      - run: pnpm audit --prod --audit-level=critical
+
+  api:
+    name: API tests (PostgreSQL + Redis)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: boikonika, POSTGRES_PASSWORD: boikonika_dev_pw, POSTGRES_DB: boikonika_test }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U boikonika" --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://boikonika:boikonika_dev_pw@127.0.0.1:5432/boikonika_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: platform/package.json }
+      - uses: actions/setup-node@v4
+        with: { node-version: '${{ env.NODE_VERSION }}', cache: pnpm, cache-dependency-path: platform/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:libs
+      - run: pnpm --filter @boikonika/backend test
+
+  e2e:
+    name: Browser end-to-end and accessibility
+    runs-on: ubuntu-latest
+    needs: [checks]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: boikonika, POSTGRES_PASSWORD: boikonika_dev_pw, POSTGRES_DB: boikonika_dev }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U boikonika" --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+    env:
+      DATABASE_URL: postgres://boikonika:boikonika_dev_pw@127.0.0.1:5432/boikonika_dev
+      SEED_ADMIN_EMAIL: admin@example.com
+      SEED_ADMIN_PASSWORD: Admin-Pass-2026
+      E2E_BASE_URL: http://localhost:3000
+      E2E_API_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: platform/package.json }
+      - uses: actions/setup-node@v4
+        with: { node-version: '${{ env.NODE_VERSION }}', cache: pnpm, cache-dependency-path: platform/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:libs
+      - run: pnpm db:migrate && pnpm db:seed && pnpm db:seed:demo
+      - run: pnpm --filter @boikonika/backend build
+      - name: Build the website
+        run: pnpm --filter @boikonika/web build
+        env: { NEXT_PUBLIC_SITE_URL: 'http://localhost:3000', NEXT_PUBLIC_API_URL: 'http://localhost:3000', API_INTERNAL_URL: 'http://localhost:4000' }
+      - name: Start the API (development mode keeps sign-up codes in the dev outbox)
+        working-directory: platform/backend
+        run: node dist/src/main.js > api.log 2>&1 &
+        env:
+          NODE_ENV: development
+          PORT: '4000'
+          APP_URL: http://localhost:3000
+          API_URL: http://localhost:3000
+          CORS_ORIGINS: http://localhost:3000
+          REDIS_URL: redis://127.0.0.1:6379
+          JWT_ACCESS_SECRET: ci-only-access-secret-0123456789-abcdefghijklmnop
+          DATA_ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+          STORAGE_LOCAL_DIR: ./storage
+      - name: Start the website
+        working-directory: platform/web
+        run: npx next start -p 3000 > web.log 2>&1 &
+        env: { API_INTERNAL_URL: 'http://localhost:4000' }
+      - name: Wait for both servers
+        run: |
+          for i in $(seq 1 60); do
+            curl -fs http://localhost:4000/api/v1/health > /dev/null && curl -fs http://localhost:3000/robots.txt > /dev/null && exit 0
+            sleep 2
+          done
+          exit 1
+      - run: pnpm --filter @boikonika/tests exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            platform/tests/playwright-report
+            platform/tests/test-results
+            platform/backend/api.log
+            platform/web/web.log
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    needs: [checks]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f infrastructure/docker/api.Dockerfile -t boikonika-api .
+      - run: docker build -f infrastructure/docker/web.Dockerfile --build-arg NEXT_PUBLIC_SITE_URL=https://boikonika.com --build-arg NEXT_PUBLIC_API_URL=https://boikonika.com -t boikonika-web .
