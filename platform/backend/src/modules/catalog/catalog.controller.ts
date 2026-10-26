@@ -12,6 +12,7 @@ import { CatalogService } from './catalog.service';
 import { HomeService } from './home.service';
 import { RecommendationsService } from './recommendations.service';
 import { SearchService } from './search.service';
+import { SitemapService } from './sitemap.service';
 
 const searchQuery = z.object({ q: z.string().max(200).default('') });
 const recommendationQuery = z.object({ limit: z.coerce.number().int().min(1).max(48).default(24) });
@@ -25,7 +26,15 @@ export class CatalogController {
     private readonly search: SearchService,
     private readonly recommendations: RecommendationsService,
     private readonly home: HomeService,
+    private readonly sitemap: SitemapService,
   ) {}
+
+  @Public()
+  @Get('sitemap')
+  @ApiOperation({ summary: 'Public pages for the website sitemap (path and last change; private content left out)' })
+  sitemapEntries() {
+    return this.sitemap.entries();
+  }
 
   @Public()
   @Get('home')

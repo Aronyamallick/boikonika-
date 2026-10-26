@@ -26,6 +26,15 @@ describe('Book clubs (e2e)', () => {
   const username = async (u: RegisteredUser) => (await ctx.db.execute<{ username: string }>(sql`select username from users where id = ${u.id}`)).rows[0]!.username;
   const create = (body: Record<string, unknown>) => ctx.http.post(`${API}/clubs`).set(as(owner)).send(body);
 
+  it('lists public clubs in the sitemap and keeps private ones out', async () => {
+    const open = await create({ name: 'Open reading circle' }).expect(201);
+    const secret = await create({ name: 'Family readers', type: 'private', joinPolicy: 'invite' }).expect(201);
+    const paths = (await ctx.http.get(`${API}/sitemap`).expect(200)).body.data.map((e: { path: string }) => e.path);
+    expect(paths).toContain(`/clubs/${open.body.data.slug}`);
+    expect(paths).not.toContain(`/clubs/${secret.body.data.slug}`);
+    expect(paths.some((p: string) => p.startsWith('/u/'))).toBe(false);
+  });
+
   it('creates clubs with valid settings and lists them', async () => {
     expect((await create({ name: 'Study', purpose: 'study' }).expect(400)).body.errors[0].field).toBe('subject');
     expect((await create({ name: 'School club', type: 'school' }).expect(400)).body.errors[0].field).toBe('institutionName');

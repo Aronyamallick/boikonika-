@@ -12,6 +12,7 @@ import { CartProvider } from '@/components/cart/cart-provider';
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
 import { ServiceWorker } from '@/components/layout/service-worker';
 import { SiteFooter } from '@/components/layout/site-footer';
+import { NavigationProgress } from '@/components/layout/navigation-progress';
 import { SiteHeader } from '@/components/layout/site-header';
 import { themeInitScript } from '@/components/layout/theme-toggle';
 import { ToastProvider } from '@/components/ui/toast';
@@ -71,6 +72,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         >
           {t('skipToContent')}
         </a>
+        <NavigationProgress />
         <NextIntlClientProvider messages={clientMessages}>
           <AuthProvider>
             <CartProvider>
