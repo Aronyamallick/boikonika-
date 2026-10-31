@@ -1,0 +1,26 @@
+{
+  "name": "boikonika-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Boikonika — book-first marketplace, social reading and learning platform",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20.18"
+  },
+  "scripts": {
+    "build:libs": "pnpm --filter @boikonika/shared build && pnpm --filter @boikonika/database build",
+    "build": "pnpm build:libs && pnpm --filter @boikonika/backend build && pnpm --filter @boikonika/web build",
+    "dev:api": "pnpm --filter @boikonika/backend dev",
+    "dev:web": "pnpm --filter @boikonika/web dev",
+    "dev:mobile": "pnpm --filter @boikonika/mobile start",
+    "db:generate": "pnpm --filter @boikonika/database generate",
+    "db:migrate": "pnpm --filter @boikonika/database migrate",
+    "db:seed": "pnpm --filter @boikonika/database seed",
+    "db:seed:demo": "pnpm --filter @boikonika/database seed:demo",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
+    "test:e2e": "pnpm --filter @boikonika/tests e2e"
+  }
+}

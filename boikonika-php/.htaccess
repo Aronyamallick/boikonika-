@@ -1,0 +1,41 @@
+# Boikonika — Apache configuration (works on cPanel shared hosting).
+
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Uncomment to force HTTPS once your SSL certificate is active:
+    # RewriteCond %{HTTPS} !=on
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Never serve application code, data or private files directly.
+    RewriteRule ^(app|database|storage)(/|$) - [F,L]
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+    RewriteRule \.(sql|log|md|lock|ini|sh|bak|dist)$ - [F,L,NC]
+
+    # Real files (assets, uploads, install wizard) are served as they are.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    <FilesMatch "\.(css|js|woff2|svg|png|jpg|jpeg|webp|ico)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+    AddType font/woff2 .woff2
+    AddType image/webp .webp
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml application/manifest+json
+</IfModule>

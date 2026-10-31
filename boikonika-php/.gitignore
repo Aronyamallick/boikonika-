@@ -1,0 +1,14 @@
+/app/config.php
+/storage/installed.lock
+/storage/.installing
+/storage/logs/*
+/storage/cache/*
+/storage/private/*
+/storage/sessions/*
+/uploads/*
+!/storage/logs/.gitkeep
+!/storage/cache/.gitkeep
+!/storage/private/.gitkeep
+!/uploads/.gitkeep
+!/uploads/.htaccess
+!/storage/sessions/.gitkeep

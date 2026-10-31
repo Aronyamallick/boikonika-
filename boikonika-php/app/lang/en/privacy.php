@@ -1,0 +1,21 @@
+<?php
+return [
+    'title' => 'Privacy',
+    'whatWeKeep' => 'Your data',
+    'whatWeKeepText' => 'Download a copy of your profile, addresses, orders, reviews, wishlist, notifications and sign-in history as a JSON file.',
+    'download' => 'Download my data',
+    'policyLink' => 'How we use your data:',
+    'deleteTitle' => 'Delete account',
+    'deleteText' => 'Your profile, addresses, wishlist, reviews and notifications are removed and you are signed out everywhere. Order records are kept for accounting and tax law, without your contact details in your profile.',
+    'cannotYet' => 'You can delete your account after:',
+    'blockOrders' => 'your open orders are delivered or cancelled',
+    'blockRefunds' => 'your pending refunds are settled',
+    'blockSellerOrders' => 'your shop’s open orders are delivered or cancelled',
+    'blockBalance' => 'your shop’s remaining balance is paid out',
+    'blockLastAdmin' => 'another super admin is added (you are the only one)',
+    'typeDeleteLabel' => 'Type DELETE to confirm',
+    'typeDelete' => 'Type DELETE in capital letters to confirm.',
+    'deleteButton' => 'Delete my account',
+    'confirm' => 'This can’t be undone. Delete your account?',
+    'deleted' => 'Your account has been deleted. Thank you for reading with us.',
+];

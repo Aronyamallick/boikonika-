@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.next
+**/.expo
+backend/storage
+backend/storage-test
+**/test-results
+**/playwright-report
+**/.env
+**/.env.*
+!**/.env.example
+mobile/android
+mobile/ios
+.git

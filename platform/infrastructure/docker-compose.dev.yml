@@ -1,0 +1,28 @@
+# Databases for local development only: PostgreSQL (boikonika_dev + boikonika_test) and Redis, with the
+# same credentials as backend/.env.example and database/.env.example.
+#   docker compose -f infrastructure/docker-compose.dev.yml up -d
+name: boikonika-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: boikonika
+      POSTGRES_PASSWORD: boikonika_dev_pw
+      POSTGRES_DB: boikonika_dev
+    ports: ['5432:5432']
+    volumes:
+      - postgres-dev:/var/lib/postgresql/data
+      - ./postgres/create-test-database.sql:/docker-entrypoint-initdb.d/create-test-database.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U boikonika -d boikonika_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ['6379:6379']
+
+volumes:
+  postgres-dev:
