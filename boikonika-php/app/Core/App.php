@@ -37,6 +37,18 @@ final class App
         self::$after[] = $fn;
     }
 
+    /** For cron.php and command-line scripts: configuration and errors, no routing or session. */
+    public static function bootCli(array $config): void
+    {
+        self::$nonce = '';
+        ErrorHandler::register();
+        mb_internal_encoding('UTF-8');
+        self::$config = $config;
+        date_default_timezone_set($config['timezone'] ?? 'Asia/Dhaka');
+        self::$request = Request::capture();
+        self::$request->basePath = rtrim((string) parse_url((string) ($config['url'] ?? ''), PHP_URL_PATH), '/');
+    }
+
     public static function run(): void
     {
         self::$nonce = base64_encode(random_bytes(16));

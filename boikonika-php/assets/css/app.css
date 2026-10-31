@@ -554,3 +554,5 @@ dialog::backdrop { background: var(--overlay); }
 .notice-row:last-child { border-bottom: 0; }
 .notice-row.unread { background: var(--primary-soft); }
 .notice-row.unread strong a { color: var(--primary-soft-fg); }
+.install-card { max-width: 640px; }
+.inline-block { display: inline-block; }

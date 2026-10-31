@@ -79,6 +79,7 @@ return [
     'view' => 'View',
     'download' => 'Download',
     'saved' => 'Saved.',
+    'saving' => 'Saving…',
     'deleted' => 'Deleted.',
     'langBn' => 'বাংলা',
     'langEn' => 'English',

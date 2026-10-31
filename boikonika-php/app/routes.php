@@ -145,6 +145,8 @@ return static function (Router $r): void {
         $r->get('/publishers', 'Admin\TaxonomyController@publishers', ['perm' => 'catalog.manage']);
         $r->get('/publishers/{id:\d+}', 'Admin\TaxonomyController@editPublisher', ['perm' => 'catalog.manage']);
         $r->post('/publishers', 'Admin\TaxonomyController@savePublisher', ['perm' => 'catalog.manage']);
+        $r->get('/authors/new', 'Admin\TaxonomyController@newAuthor', ['perm' => 'catalog.manage']);
+        $r->get('/publishers/new', 'Admin\TaxonomyController@newPublisher', ['perm' => 'catalog.manage']);
         $r->get('/reviews', 'Admin\TaxonomyController@reviews', ['perm' => 'reviews.moderate']);
         $r->post('/reviews/{id:\d+}', 'Admin\TaxonomyController@moderateReview', ['perm' => 'reviews.moderate']);
 

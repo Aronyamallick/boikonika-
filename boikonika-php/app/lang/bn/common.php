@@ -79,6 +79,7 @@ return [
     'view' => 'দেখুন',
     'download' => 'ডাউনলোড',
     'saved' => 'সংরক্ষিত হয়েছে।',
+    'saving' => 'সংরক্ষণ হচ্ছে…',
     'deleted' => 'মুছে ফেলা হয়েছে।',
     'langBn' => 'বাংলা',
     'langEn' => 'English',
