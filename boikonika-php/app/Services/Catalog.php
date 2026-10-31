@@ -74,7 +74,7 @@ final class Catalog
             $where[] = "EXISTS (SELECT 1 FROM listings l3 WHERE l3.product_id = p.id AND l3.seller_id = ? AND l3.status = 'active' AND l3.stock > 0)";
             $params[] = (int) $f['seller_id'];
         }
-        $relevance = '0';
+        $relevance = '';
         $relParams = [];
         $q = trim((string) ($f['q'] ?? ''));
         if ($q !== '') {
@@ -94,7 +94,7 @@ final class Catalog
         }
         $sort = in_array($f['sort'] ?? '', self::SORTS, true) ? $f['sort'] : ($q !== '' ? 'relevance' : 'popular');
         $order = match ($sort) {
-            'relevance' => $relevance . ', p.sold_count DESC, p.id DESC',
+            'relevance' => ($relevance !== '' ? $relevance . ', ' : '') . 'p.sold_count DESC, p.id DESC',
             'newest' => 'p.created_at DESC, p.id DESC',
             'price_asc' => 'p.min_price ASC, p.id DESC',
             'price_desc' => 'p.min_price DESC, p.id DESC',

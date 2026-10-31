@@ -134,7 +134,7 @@ final class App
     public static function errorResponse(int $status, string $ref = ''): Response
     {
         if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
-            return Response::json(['ok' => false, 'error' => $status, 'message' => t('errors.' . $status . 'Text')], $status);
+            return Response::json(['ok' => false, 'error' => $status, 'message' => t('errors.' . $status . 'Text')], $status === 419 ? 403 : $status);
         }
         $known = [403, 404, 405, 419, 429, 500];
         $code = in_array($status, $known, true) ? $status : 500;
@@ -149,7 +149,8 @@ final class App
             ErrorHandler::report($e);
             $html = '<!doctype html><meta charset="utf-8"><title>' . $code . '</title><p>' . $code . ($ref ? ' · Ref ' . e($ref) : '') . '</p>';
         }
-        return new Response($html, $status, ['Content-Type' => 'text/html; charset=utf-8']);
+        // Apache doesn't know 419 and would turn it into a 500; the page still says "expired".
+        return new Response($html, $code === 419 ? 403 : $status, ['Content-Type' => 'text/html; charset=utf-8']);
     }
 
     private static function securityHeaders(Response $r): void
