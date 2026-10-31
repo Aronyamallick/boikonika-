@@ -13,7 +13,7 @@ $initial = $user ? mb_strtoupper(mb_substr($user['name'], 0, 1)) : '';
   <div class="container">
     <div class="header-main">
       <button type="button" class="icon-btn menu-toggle" data-drawer-open aria-controls="drawer" aria-label="<?= __('common.openMenu') ?>"><?= icon('menu') ?></button>
-      <a class="brand" href="<?= e(url()) ?>"><img src="<?= e(asset('img/logo.svg')) ?>" alt="" width="36" height="36"><span><?= e(site_name()) ?></span></a>
+      <a class="brand" href="<?= e(url()) ?>" aria-label="<?= e(site_name()) ?>"><img src="<?= e(asset('img/logo.svg')) ?>" alt="" width="36" height="36"><span class="brand-name"><?= e(site_name()) ?></span></a>
       <form class="header-search" role="search" action="<?= e(url('search')) ?>" method="get">
         <div class="search-field">
           <label class="sr-only" for="hq"><?= __('nav.searchLabel') ?></label>
@@ -23,7 +23,7 @@ $initial = $user ? mb_strtoupper(mb_substr($user['name'], 0, 1)) : '';
       </form>
       <div class="header-actions">
         <a class="lang-link" href="<?= e(switch_locale_url($other)) ?>" hreflang="<?= $other ?>" lang="<?= $other ?>" aria-label="<?= __('common.switchToLabel') ?>"><?= $other === 'en' ? 'EN' : 'বাং' ?></a>
-        <button type="button" class="icon-btn" data-theme-toggle aria-label="<?= __('common.themeToggle') ?>"><?= icon('moon') ?></button>
+        <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-label="<?= __('common.themeToggle') ?>"><?= icon('moon') ?></button>
         <?php if ($user): ?>
         <a class="icon-btn" href="<?= e(url('account/notifications')) ?>" aria-label="<?= e(t('nav.notifications') . ($unread ? ' (' . num($unread) . ')' : '')) ?>"><?= icon('bell') ?><?php if ($unread): ?><span class="count" aria-hidden="true"><?= e(num(min($unread, 99))) ?></span><?php endif; ?></a>
         <?php endif; ?>
@@ -94,6 +94,7 @@ $initial = $user ? mb_strtoupper(mb_substr($user['name'], 0, 1)) : '';
       <?php endif; ?>
       <a href="<?= e(url('sell')) ?>"><?= icon('store') ?><?= __('nav.sell') ?></a>
       <a href="<?= e(url('contact')) ?>"><?= icon('message') ?><?= __('nav.contact') ?></a>
+      <button type="button" class="drawer-theme" data-theme-toggle><?= icon('moon') ?><?= __('common.themeToggle') ?></button>
     </nav>
   </div>
 </div>

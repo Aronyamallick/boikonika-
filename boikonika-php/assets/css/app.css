@@ -238,7 +238,7 @@ input[type="checkbox"], input[type="radio"] { width: 1.15rem; height: 1.15rem; a
 .choice:has(input:checked) { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); background: var(--primary-soft); }
 .choice:has(input:disabled) { opacity: .6; cursor: not-allowed; }
 .choice .choice-body { flex: 1; min-width: 0; }
-.fieldset { border: 0; padding: 0; margin: 0 0 1.25rem; }
+.fieldset { border: 0; padding: 0; margin: 0 0 1.25rem; min-width: 0; }
 .fieldset legend { font-weight: 700; margin-bottom: .6rem; padding: 0; }
 
 /* ---------- surfaces ---------- */
@@ -556,3 +556,17 @@ dialog::backdrop { background: var(--overlay); }
 .notice-row.unread strong a { color: var(--primary-soft-fg); }
 .install-card { max-width: 640px; }
 .inline-block { display: inline-block; }
+
+/* Phones: keep the header inside the screen */
+.dash > * { min-width: 0; }
+.drawer-theme { display: flex; align-items: center; gap: .7rem; padding: .7rem .5rem; width: 100%; background: none; border: 0; color: var(--text); font: inherit; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); }
+.drawer-theme:hover { background: var(--bg-subtle); }
+@media (max-width: 559px) {
+  .header-main { gap: 6px; }
+  .header-actions { gap: 0; }
+  .brand span.brand-name { display: none; }
+  .icon-btn { width: 40px; height: 40px; }
+  .header-actions .theme-btn { display: none; }
+  .lang-link { padding: .4rem .5rem; }
+}
+input[type="file"] { width: 100%; }
